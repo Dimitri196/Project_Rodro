@@ -1,0 +1,1 @@
+export const priceFormatter = Intl.NumberFormat("cs-CZ", {style: "currency", currency: "CZK", minimumFractionDigits: 2})
