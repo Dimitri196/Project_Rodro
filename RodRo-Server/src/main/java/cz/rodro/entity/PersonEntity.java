@@ -2,6 +2,7 @@ package cz.rodro.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import cz.rodro.constant.CauseOfDeath;
 import cz.rodro.constant.Gender;
 import cz.rodro.constant.SocialStatus;
 import jakarta.persistence.*;
@@ -35,6 +36,9 @@ public class PersonEntity {
 
     @Enumerated(EnumType.STRING)
     private SocialStatus socialStatus;
+
+    @Enumerated(EnumType.STRING)
+    private CauseOfDeath causeOfDeath;
 
     private String identificationNumber;
     private String note;

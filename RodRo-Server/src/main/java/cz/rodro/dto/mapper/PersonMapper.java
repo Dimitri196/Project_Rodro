@@ -16,6 +16,7 @@ public interface PersonMapper {
     @Mapping(target = "mother", source = "mother")
     @Mapping(target = "father", source = "father")
     @Mapping(target = "socialStatus", source = "socialStatus")
+    @Mapping(target = "causeOfDeath", source = "causeOfDeath")
     @Mapping(target = "occupations", ignore = true) // handled manually
     PersonEntity toEntity(PersonDTO source);
 

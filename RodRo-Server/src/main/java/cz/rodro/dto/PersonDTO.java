@@ -2,6 +2,7 @@ package cz.rodro.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import cz.rodro.constant.CauseOfDeath;
 import cz.rodro.constant.Gender;
 import cz.rodro.constant.SocialStatus;
 import jakarta.validation.constraints.PastOrPresent;
@@ -38,6 +39,7 @@ public class PersonDTO {
     private PersonDTO father;
 
     private SocialStatus socialStatus;
+    private CauseOfDeath causeOfDeath;
     private List<PersonOccupationDTO> occupations;
     private String institutionLocationName;
 
