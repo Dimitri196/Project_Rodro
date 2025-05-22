@@ -5,6 +5,7 @@ import { Container, Row, Col, Card, ListGroup, Alert } from "react-bootstrap";
 import { apiGet } from "../utils/api";
 import dateStringFormatter from "../utils/dateStringFormatter";
 import socialStatusLabels from "../constants/socialStatusLabels";
+import causeOfDeathLabels from "../constants/causeOfDeathLabels";
 
 const PersonDetail = () => {
     const { id } = useParams();
@@ -23,55 +24,55 @@ const PersonDetail = () => {
         p ? `${p.givenName || ""} ${p.givenSurname || ""}`.trim() : "N/A";
 
     useEffect(() => {
-    const fetchData = async () => {
-        try {
-            const [
-                personData,
-                occupationData,
-                families,
-                evidences,
-                childrenData
-            ] = await Promise.all([
-                apiGet(`/api/persons/${id}`),
-                apiGet(`/api/persons/${id}/occupations`),
-                apiGet(`/api/persons/${id}/families`),
-                apiGet(`/api/persons/${id}/sourceEvidences`),
-                apiGet(`/api/persons/${id}/children`)
-            ]);
+        const fetchData = async () => {
+            try {
+                const [
+                    personData,
+                    occupationData,
+                    families,
+                    evidences,
+                    childrenData
+                ] = await Promise.all([
+                    apiGet(`/api/persons/${id}`),
+                    apiGet(`/api/persons/${id}/occupations`),
+                    apiGet(`/api/persons/${id}/families`),
+                    apiGet(`/api/persons/${id}/sourceEvidences`),
+                    apiGet(`/api/persons/${id}/children`)
+                ]);
 
-            setPerson(personData);
-            setOccupations(occupationData);
-            setFamilyData(families);
-            setSourceEvidences(evidences);
+                setPerson(personData);
+                setOccupations(occupationData);
+                setFamilyData(families);
+                setSourceEvidences(evidences);
 
-            const fetchedSpouses = families
-                .map(family => {
-                    if (family.spouseMale?.id === parseInt(id)) return family.spouseFemale;
-                    if (family.spouseFemale?.id === parseInt(id)) return family.spouseMale;
-                    return null;
-                })
-                .filter(Boolean);
-            setSpouses(fetchedSpouses);
+                const fetchedSpouses = families
+                    .map(family => {
+                        if (family.spouseMale?.id === parseInt(id)) return family.spouseFemale;
+                        if (family.spouseFemale?.id === parseInt(id)) return family.spouseMale;
+                        return null;
+                    })
+                    .filter(Boolean);
+                setSpouses(fetchedSpouses);
 
-            const parentFamilies = families.filter(f =>
-                f.childs?.some(child => child.id === parseInt(id))
-            );
-            const fetchedParents = parentFamilies.map(f => ({
-                father: f.father,
-                mother: f.mother
-            }));
-            setParents(fetchedParents);
+                const parentFamilies = families.filter(f =>
+                    f.childs?.some(child => child.id === parseInt(id))
+                );
+                const fetchedParents = parentFamilies.map(f => ({
+                    father: f.father,
+                    mother: f.mother
+                }));
+                setParents(fetchedParents);
 
-            setChilds(childrenData); // Use children from the dedicated endpoint
-        } catch (err) {
-            setError(`Error loading data: ${err.message || err}`);
-        } finally {
-            setLoading(false);
-        }
-    };
+                setChilds(childrenData); // Use children from the dedicated endpoint
+            } catch (err) {
+                setError(`Error loading data: ${err.message || err}`);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    fetchData();
-}, [id]);
+        fetchData();
+    }, [id]);
 
     if (loading) return <p>Loading...</p>;
     if (error) return <Alert variant="danger">{error}</Alert>;
@@ -86,8 +87,11 @@ const PersonDetail = () => {
                             <ListGroup variant="flush">
                                 <ListGroup.Item><strong>Note:</strong> {person.note || "N/A"}</ListGroup.Item>
                                 <ListGroup.Item><strong>Gender:</strong> {person.gender || "N/A"}</ListGroup.Item>
-                                <ListGroup.Item><strong>ID Number:</strong> {person.identificationNumber || "N/A"}</ListGroup.Item>
+                                <ListGroup.Item><strong>GenWeb ID:</strong> {person.identificationNumber || "N/A"}</ListGroup.Item>
                                 <ListGroup.Item><strong>Social Status:</strong> {socialStatusLabels[person.socialStatus] || "Unknown"}</ListGroup.Item>
+                                <ListGroup.Item>
+                                    <strong>Cause of Death:</strong> {causeOfDeathLabels[person.causeOfDeath] || "N/A"}
+                                </ListGroup.Item>
 
                                 {["birth", "baptization", "death", "burial"].map(type => (
                                     <React.Fragment key={type}>
@@ -165,23 +169,23 @@ const PersonDetail = () => {
 
                     {/* Children */}
 
-<Card className="mb-4">
-    <Card.Body>
-        <Card.Title>Children</Card.Title>
-        {childs.length > 0 ? (
-            <ListGroup variant="flush">
-                {childs.map((child, index) => (
-                    <ListGroup.Item key={index}>
-                        <strong>Name:</strong>{" "}
-                        <Link to={`/persons/show/${child._id}`}>{getFullName(child)}</Link><br />
-                        <strong>Gender:</strong> {child.gender}<br />
-                        <strong>Birth Date:</strong> {child.birthDate && dateStringFormatter(child.birthDate, true)}
-                    </ListGroup.Item>
-                ))}
-            </ListGroup>
-        ) : <p>No children available.</p>}
-    </Card.Body>
-</Card>
+                    <Card className="mb-4">
+                        <Card.Body>
+                            <Card.Title>Children</Card.Title>
+                            {childs.length > 0 ? (
+                                <ListGroup variant="flush">
+                                    {childs.map((child, index) => (
+                                        <ListGroup.Item key={index}>
+                                            <strong>Name:</strong>{" "}
+                                            <Link to={`/persons/show/${child._id}`}>{getFullName(child)}</Link><br />
+                                            <strong>Gender:</strong> {child.gender}<br />
+                                            <strong>Birth Date:</strong> {child.birthDate && dateStringFormatter(child.birthDate, true)}
+                                        </ListGroup.Item>
+                                    ))}
+                                </ListGroup>
+                            ) : <p>No children available.</p>}
+                        </Card.Body>
+                    </Card>
 
                     {/* Occupations */}
                     <Card className="mb-4">

@@ -8,6 +8,7 @@ import InputCheck from "../components/InputCheck";
 import FlashMessage from "../components/FlashMessage";
 import Gender from "./Gender";
 import socialStatusLabels from "../constants/socialStatusLabels";
+import causeOfDeathLabels from "../constants/causeOfDeathLabels";
 
 const PersonForm = () => {
     const navigate = useNavigate();
@@ -29,6 +30,7 @@ const PersonForm = () => {
         mother: null,
         father: null,
         socialStatus: "",
+        causeOfDeath: "",
         occupations: [],
         sourceEvidences: []
     });
@@ -322,6 +324,20 @@ const PersonForm = () => {
                         />
                     </Col>
                 </Row>
+                <Row>
+    <Col md={6}>
+        <InputSelect
+            name="causeOfDeath"
+            label="Cause of Death"
+            prompt="Select cause of death"
+            value={person.causeOfDeath || ""}
+            handleChange={(e) => setPerson({ ...person, causeOfDeath: e.target.value })}
+            items={Object.keys(causeOfDeathLabels)}
+            getLabel={(key) => causeOfDeathLabels[key]}
+            getValue={(key) => key}
+        />
+    </Col>
+</Row>
 
                 <Row className="mb-3">
                     <Col md={6}>
@@ -406,6 +422,8 @@ const PersonForm = () => {
                         />
                     </Col>
                 </Row>
+
+                
 
                 {/* Social Status */}
                 <Row>
