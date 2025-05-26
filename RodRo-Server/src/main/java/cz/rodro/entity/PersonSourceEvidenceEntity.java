@@ -32,4 +32,8 @@ public class PersonSourceEvidenceEntity {
     @JsonBackReference("source-source-evidence")
     @JoinColumn(name = "source_id", nullable = false)
     private SourceEntity source;
+
+    @ManyToOne
+    @JoinColumn(name = "person_military_service_id")
+    private PersonMilitaryServiceEntity personMilitaryService;
 }

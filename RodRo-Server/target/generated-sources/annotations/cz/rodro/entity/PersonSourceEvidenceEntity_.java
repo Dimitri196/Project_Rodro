@@ -21,6 +21,11 @@ public abstract class PersonSourceEvidenceEntity_ {
 	public static volatile SingularAttribute<PersonSourceEvidenceEntity, PersonEntity> person;
 	
 	/**
+	 * @see cz.rodro.entity.PersonSourceEvidenceEntity#personMilitaryService
+	 **/
+	public static volatile SingularAttribute<PersonSourceEvidenceEntity, PersonMilitaryServiceEntity> personMilitaryService;
+	
+	/**
 	 * @see cz.rodro.entity.PersonSourceEvidenceEntity#id
 	 **/
 	public static volatile SingularAttribute<PersonSourceEvidenceEntity, Long> id;
@@ -42,6 +47,7 @@ public abstract class PersonSourceEvidenceEntity_ {
 
 	public static final String PERSON_NAME = "personName";
 	public static final String PERSON = "person";
+	public static final String PERSON_MILITARY_SERVICE = "personMilitaryService";
 	public static final String ID = "id";
 	public static final String SOURCE_NAME = "sourceName";
 	public static final String SOURCE = "source";

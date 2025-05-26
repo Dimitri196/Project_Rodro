@@ -17,6 +17,11 @@ public abstract class PersonMilitaryServiceEntity_ {
 	public static volatile SingularAttribute<PersonMilitaryServiceEntity, String> enlistmentYear;
 	
 	/**
+	 * @see cz.rodro.entity.PersonMilitaryServiceEntity#militaryRank
+	 **/
+	public static volatile SingularAttribute<PersonMilitaryServiceEntity, MilitaryRankEntity> militaryRank;
+	
+	/**
 	 * @see cz.rodro.entity.PersonMilitaryServiceEntity#notes
 	 **/
 	public static volatile SingularAttribute<PersonMilitaryServiceEntity, String> notes;
@@ -24,7 +29,7 @@ public abstract class PersonMilitaryServiceEntity_ {
 	/**
 	 * @see cz.rodro.entity.PersonMilitaryServiceEntity#sourceEvidences
 	 **/
-	public static volatile ListAttribute<PersonMilitaryServiceEntity, MilitaryServiceSourceEvidenceEntity> sourceEvidences;
+	public static volatile ListAttribute<PersonMilitaryServiceEntity, PersonSourceEvidenceEntity> sourceEvidences;
 	
 	/**
 	 * @see cz.rodro.entity.PersonMilitaryServiceEntity#person
@@ -32,14 +37,14 @@ public abstract class PersonMilitaryServiceEntity_ {
 	public static volatile SingularAttribute<PersonMilitaryServiceEntity, PersonEntity> person;
 	
 	/**
+	 * @see cz.rodro.entity.PersonMilitaryServiceEntity#militaryStructure
+	 **/
+	public static volatile SingularAttribute<PersonMilitaryServiceEntity, MilitaryStructureEntity> militaryStructure;
+	
+	/**
 	 * @see cz.rodro.entity.PersonMilitaryServiceEntity#id
 	 **/
 	public static volatile SingularAttribute<PersonMilitaryServiceEntity, Long> id;
-	
-	/**
-	 * @see cz.rodro.entity.PersonMilitaryServiceEntity#militaryOccupation
-	 **/
-	public static volatile SingularAttribute<PersonMilitaryServiceEntity, MilitaryOccupationEntity> militaryOccupation;
 	
 	/**
 	 * @see cz.rodro.entity.PersonMilitaryServiceEntity
@@ -47,22 +52,17 @@ public abstract class PersonMilitaryServiceEntity_ {
 	public static volatile EntityType<PersonMilitaryServiceEntity> class_;
 	
 	/**
-	 * @see cz.rodro.entity.PersonMilitaryServiceEntity#structure
-	 **/
-	public static volatile SingularAttribute<PersonMilitaryServiceEntity, MilitaryStructureEntity> structure;
-	
-	/**
 	 * @see cz.rodro.entity.PersonMilitaryServiceEntity#dischargeYear
 	 **/
 	public static volatile SingularAttribute<PersonMilitaryServiceEntity, String> dischargeYear;
 
 	public static final String ENLISTMENT_YEAR = "enlistmentYear";
+	public static final String MILITARY_RANK = "militaryRank";
 	public static final String NOTES = "notes";
 	public static final String SOURCE_EVIDENCES = "sourceEvidences";
 	public static final String PERSON = "person";
+	public static final String MILITARY_STRUCTURE = "militaryStructure";
 	public static final String ID = "id";
-	public static final String MILITARY_OCCUPATION = "militaryOccupation";
-	public static final String STRUCTURE = "structure";
 	public static final String DISCHARGE_YEAR = "dischargeYear";
 
 }

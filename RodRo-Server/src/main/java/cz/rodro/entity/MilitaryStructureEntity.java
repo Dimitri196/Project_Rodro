@@ -10,25 +10,22 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MilitaryStructureEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String armyName;        // e.g. "Prussian Army"
-    private String armyBranch;      // e.g. "Infantry", "Cavalry"
-    private String unitName;        // e.g. "1st Regiment"
-    private String unitType;        // e.g. "Regiment", "Company"
+    private String unitName;
+    private String unitType;
+
+    @ManyToOne
+    @JoinColumn(name = "military_organization_id")
+    private MilitaryOrganizationEntity organization;
 
     @ManyToOne
     @JoinColumn(name = "country_id")
     private CountryEntity country;
 
-    private String countryName;     // optional redundancy
-
     private String activeFromYear;
     private String activeToYear;
-
     private String notes;
-
 }

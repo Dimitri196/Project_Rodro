@@ -15,14 +15,19 @@ public class PersonMilitaryServiceDTO {
     @JsonProperty("_id")
     private Long id;
 
-    private Long personId;              // FK to person record
-    private Long militaryStructureId;  // FK to MilitaryStructureDTO
-    private Long militaryOccupationId; // FK to MilitaryOccupationDTO
+    private Long personId;
+
+    private MilitaryStructureDTO militaryStructure; // Reference to structure DTO
+    private MilitaryRankDTO militaryRank;           // Reference to rank DTO
+
+    private String militaryStructureName; // Optional: for frontend display
+    private String armyBranch;            // Optional: for frontend display
+    private String rankName;              // Optional: for frontend display
 
     private String enlistmentYear;
     private String dischargeYear;
 
     private String notes;
 
-    private List<SourceDTO> sources;   // List of related source documents (not just IDs) or private List<Long> sourceIds; (just IDs)
+    private List<SourceDTO> sources;
 }

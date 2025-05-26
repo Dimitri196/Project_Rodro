@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -18,24 +19,24 @@ public class PersonMilitaryServiceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
     @JoinColumn(name = "person_id")
     private PersonEntity person;
 
     @ManyToOne
     @JoinColumn(name = "military_structure_id")
-    private MilitaryStructureEntity structure;
+    private MilitaryStructureEntity militaryStructure;
 
     @ManyToOne
-    @JoinColumn(name = "military_occupation_id")
-    private MilitaryOccupationEntity militaryOccupation;
+    @JoinColumn(name = "military_rank_id")
+    private MilitaryRankEntity militaryRank;
 
     private String enlistmentYear;
     private String dischargeYear;
 
     private String notes;
 
-    @OneToMany(mappedBy = "militaryService", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference("military-service-evidence")
-    private List<MilitaryServiceSourceEvidenceEntity> sourceEvidences;
+    @OneToMany(mappedBy = "personMilitaryService", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<PersonSourceEvidenceEntity> sourceEvidences = new ArrayList<>();
 }

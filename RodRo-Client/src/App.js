@@ -40,15 +40,15 @@ import CemeteryForm from "./cemetries/CemeteryForm";
 // Subdivision
 import SubdivisionDetail from "./countries/SubdivisionDetail";
 
-// ✅ NEW: Institutions & Occupations
+// Institutions
 import InstitutionIndex from "./institutions/InstitutionIndex";
-
 import InstitutionDetail from "./institutions/InstitutionDetail";
 
+// Occupations
 import OccupationIndex from "./occupations/OccupationIndex";
-
 import OccupationDetail from "./occupations/OccupationDetail";
 
+// Sources
 import SourceIndex from "./sources/SourceIndex";
 import SourceDetail from "./sources/SourceDetail";
 

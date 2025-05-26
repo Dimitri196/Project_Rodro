@@ -10,7 +10,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface CountryMapper {
 
-    @Mapping(target = "provinces", ignore = true)  // Prevent recursion
+    @Mapping(target = "provinces", ignore = true)
     CountryDTO toCountryDTO(CountryEntity countryEntity);
 
     CountryEntity toCountryEntity(CountryDTO countryDTO);

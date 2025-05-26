@@ -15,6 +15,7 @@ const PersonDetail = () => {
     const [childs, setChilds] = useState([]);
     const [spouses, setSpouses] = useState([]);
     const [occupations, setOccupations] = useState([]);
+    const [militaryServices, setMilitaryServices] = useState([]);
     const [sourceEvidences, setSourceEvidences] = useState([]);
     const [familyData, setFamilyData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -31,19 +32,22 @@ const PersonDetail = () => {
                     occupationData,
                     families,
                     evidences,
-                    childrenData
+                    childrenData,
+                    militaryServiceData
                 ] = await Promise.all([
                     apiGet(`/api/persons/${id}`),
                     apiGet(`/api/persons/${id}/occupations`),
                     apiGet(`/api/persons/${id}/families`),
                     apiGet(`/api/persons/${id}/sourceEvidences`),
-                    apiGet(`/api/persons/${id}/children`)
+                    apiGet(`/api/persons/${id}/children`),
+                    apiGet(`/api/personMilitaryServices?personId=${id}`)
                 ]);
 
                 setPerson(personData);
                 setOccupations(occupationData);
                 setFamilyData(families);
                 setSourceEvidences(evidences);
+                setMilitaryServices(militaryServiceData);
 
                 const fetchedSpouses = families
                     .map(family => {
@@ -63,7 +67,7 @@ const PersonDetail = () => {
                 }));
                 setParents(fetchedParents);
 
-                setChilds(childrenData); // Use children from the dedicated endpoint
+                setChilds(childrenData);
             } catch (err) {
                 setError(`Error loading data: ${err.message || err}`);
             } finally {
@@ -92,7 +96,6 @@ const PersonDetail = () => {
                                 <ListGroup.Item>
                                     <strong>Cause of Death:</strong> {causeOfDeathLabels[person.causeOfDeath] || "N/A"}
                                 </ListGroup.Item>
-
                                 {["birth", "baptization", "death", "burial"].map(type => (
                                     <React.Fragment key={type}>
                                         <ListGroup.Item>
@@ -136,6 +139,7 @@ const PersonDetail = () => {
                         </Card.Body>
                     </Card>
 
+                    {/* Spouses */}
                     <Card className="mb-4">
                         <Card.Body>
                             <Card.Title>Spouse(s)</Card.Title>
@@ -168,7 +172,6 @@ const PersonDetail = () => {
                     </Card>
 
                     {/* Children */}
-
                     <Card className="mb-4">
                         <Card.Body>
                             <Card.Title>Children</Card.Title>
@@ -222,6 +225,31 @@ const PersonDetail = () => {
                         </Card.Body>
                     </Card>
 
+                    {/* Military Service */}
+                    {person.gender === "MALE" && (
+                        <Card className="mb-4">
+                            <Card.Body>
+                                <Card.Title>Military Service</Card.Title>
+                                {militaryServices.length > 0 ? (
+                                    <ListGroup variant="flush">
+                                        {militaryServices.map((service, index) => (
+                                            <ListGroup.Item key={index}>
+                                                <strong>Unit:</strong> {service.militaryStructure?.unitName || "N/A"}<br />
+                                                <strong>Rank:</strong> {service.militaryRank?.rankName || "N/A"}<br />
+                                                <strong>Army:</strong> {service.militaryStructure?.organization?.armyName || "N/A"}<br />
+                                                <strong>Branch:</strong> {service.militaryStructure?.organization?.armyBranch || "N/A"}<br />
+                                                <strong>Country:</strong> {service.militaryStructure?.organization?.country?.countryNameInPolish || "N/A"}<br />
+                                                <strong>Enlistment Year:</strong> {service.enlistmentYear || "N/A"}<br />
+                                                <strong>Discharge Year:</strong> {service.dischargeYear || "N/A"}<br />
+                                                <strong>Notes:</strong> {service.notes || "N/A"}
+                                            </ListGroup.Item>
+                                        ))}
+                                    </ListGroup>
+                                ) : <p>No military service records available.</p>}
+                            </Card.Body>
+                        </Card>
+                    )}
+
                     {/* Source Evidences */}
                     <Card className="mb-4">
                         <Card.Body>
@@ -243,7 +271,6 @@ const PersonDetail = () => {
                             ) : <p>No source evidence available.</p>}
                         </Card.Body>
                     </Card>
-
                 </Col>
             </Row>
         </Container>

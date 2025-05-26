@@ -1,7 +1,5 @@
 package cz.rodro.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -41,4 +39,7 @@ public class CountryEntity {
     @OneToMany(mappedBy = "country", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<ProvinceEntity> provinces = new ArrayList<>();
+
+    @OneToMany(mappedBy = "country", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MilitaryStructureEntity> militaryStructures = new ArrayList<>();
 }

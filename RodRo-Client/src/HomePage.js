@@ -43,8 +43,8 @@ function HomePage() {
             </div>
           </div>
 
-                    {/* Location Section */}
-                    <div className="col-md-4 mb-4">
+          {/* Location Section */}
+          <div className="col-md-4 mb-4">
             <div className="card text-center">
               <div className="card-body" style={{ height: '200px', overflow: 'hidden' }}>
                 <h5 className="card-title">Manage Countries</h5>
@@ -95,7 +95,33 @@ function HomePage() {
             </div>
           </div>
 
-                    {/* Source Section */}
+          {/* Institutions Section */}
+          <div className="col-md-4 mb-4">
+            <div className="card text-center">
+              <div className="card-body" style={{ height: '200px', overflow: 'hidden' }}>
+                <h5 className="card-title">Manage Institutions</h5>
+                <p className="card-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Create, edit, and view your institutions in your system.
+                </p>
+                <Link to="/institutions" className="btn btn-primary">Go to Institutions</Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Occupations Section */}
+          <div className="col-md-4 mb-4">
+            <div className="card text-center">
+              <div className="card-body" style={{ height: '200px', overflow: 'hidden' }}>
+                <h5 className="card-title">Manage Occupations</h5>
+                <p className="card-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Create, edit, and view your occupations in your system.
+                </p>
+                <Link to="/occupations" className="btn btn-primary">Go to Occupations</Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Sources Section */}
           <div className="col-md-4 mb-4">
             <div className="card text-center">
               <div className="card-body" style={{ height: '200px', overflow: 'hidden' }}>
