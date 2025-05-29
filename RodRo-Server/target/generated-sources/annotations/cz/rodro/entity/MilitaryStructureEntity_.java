@@ -16,11 +16,6 @@ public abstract class MilitaryStructureEntity_ {
 	public static volatile SingularAttribute<MilitaryStructureEntity, String> unitType;
 	
 	/**
-	 * @see cz.rodro.entity.MilitaryStructureEntity#country
-	 **/
-	public static volatile SingularAttribute<MilitaryStructureEntity, CountryEntity> country;
-	
-	/**
 	 * @see cz.rodro.entity.MilitaryStructureEntity#notes
 	 **/
 	public static volatile SingularAttribute<MilitaryStructureEntity, String> notes;
@@ -56,7 +51,6 @@ public abstract class MilitaryStructureEntity_ {
 	public static volatile EntityType<MilitaryStructureEntity> class_;
 
 	public static final String UNIT_TYPE = "unitType";
-	public static final String COUNTRY = "country";
 	public static final String NOTES = "notes";
 	public static final String UNIT_NAME = "unitName";
 	public static final String ORGANIZATION = "organization";

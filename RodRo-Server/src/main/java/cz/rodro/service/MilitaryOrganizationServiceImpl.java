@@ -32,7 +32,7 @@ public class MilitaryOrganizationServiceImpl implements MilitaryOrganizationServ
     }
 
     @Override
-    public MilitaryOrganizationDTO getMilitaryOrganization(long organizationId) {
+    public MilitaryOrganizationDTO getMilitaryOrganization(Long organizationId) {
         MilitaryOrganizationEntity entity = militaryOrganizationRepository.getReferenceById(organizationId);
         return militaryOrganizationMapper.toMilitaryOrganizationDTO(entity);
     }
@@ -45,7 +45,7 @@ public class MilitaryOrganizationServiceImpl implements MilitaryOrganizationServ
     }
 
     @Override
-    public MilitaryOrganizationDTO removeMilitaryOrganization(long organizationId) {
+    public MilitaryOrganizationDTO removeMilitaryOrganization(Long organizationId) {
         MilitaryOrganizationEntity entity = militaryOrganizationRepository.findById(organizationId)
                 .orElseThrow(EntityNotFoundException::new);
         MilitaryOrganizationDTO dto = militaryOrganizationMapper.toMilitaryOrganizationDTO(entity);

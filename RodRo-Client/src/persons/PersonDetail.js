@@ -226,30 +226,61 @@ const PersonDetail = () => {
                     </Card>
 
                     {/* Military Service */}
-                    {person.gender === "MALE" && (
-                        <Card className="mb-4">
-                            <Card.Body>
-                                <Card.Title>Military Service</Card.Title>
-                                {militaryServices.length > 0 ? (
-                                    <ListGroup variant="flush">
-                                        {militaryServices.map((service, index) => (
-                                            <ListGroup.Item key={index}>
-                                                <strong>Unit:</strong> {service.militaryStructure?.unitName || "N/A"}<br />
-                                                <strong>Rank:</strong> {service.militaryRank?.rankName || "N/A"}<br />
-                                                <strong>Army:</strong> {service.militaryStructure?.organization?.armyName || "N/A"}<br />
-                                                <strong>Branch:</strong> {service.militaryStructure?.organization?.armyBranch || "N/A"}<br />
-                                                <strong>Country:</strong> {service.militaryStructure?.organization?.country?.countryNameInPolish || "N/A"}<br />
-                                                <strong>Enlistment Year:</strong> {service.enlistmentYear || "N/A"}<br />
-                                                <strong>Discharge Year:</strong> {service.dischargeYear || "N/A"}<br />
-                                                <strong>Notes:</strong> {service.notes || "N/A"}
-                                            </ListGroup.Item>
-                                        ))}
-                                    </ListGroup>
-                                ) : <p>No military service records available.</p>}
-                            </Card.Body>
-                        </Card>
-                    )}
+                    {/* Military Service */}
+{person.gender === "MALE" && (
+    <Card className="mb-4">
+        <Card.Body>
+            <Card.Title>Military Service</Card.Title>
+            {militaryServices.length > 0 ? (
+                <ListGroup variant="flush">
+                    {militaryServices.map((service, index) => (
+                        <ListGroup.Item key={index}>
+                            <strong>Unit:</strong>{" "}
+                            {service.militaryStructure?._id ? (
+                                <Link to={`/militaryStructures/show/${service.militaryStructure._id}`}>
+                                    {service.militaryStructure.unitName || "N/A"}
+                                </Link>
+                            ) : "N/A"}
+                            <br />
 
+                            <strong>Rank:</strong>{" "}
+                            {service.militaryRank?._id ? (
+                                <Link to={`/militaryRanks/show/${service.militaryRank._id}`}>
+                                    {service.militaryRank.rankName || "N/A"}
+                                </Link>
+                            ) : "N/A"}
+                            <br />
+
+                            <strong>Army:</strong>{" "}
+                            {service.militaryStructure?.organization?._id ? (
+                                <Link to={`/militaryOrganizations/show/${service.militaryStructure.organization._id}`}>
+                                    {service.militaryStructure.organization.armyName || "N/A"}
+                                </Link>
+                            ) : "N/A"}
+                            <br />
+
+                            <strong>Branch:</strong>{" "}
+                            {service.militaryStructure?.organization?.armyBranch || "N/A"}
+                            <br />
+
+                            <strong>Country:</strong>{" "}
+                            {service.militaryStructure?.organization?.country?._id ? (
+                                <Link to={`/countries/show/${service.militaryStructure.organization.country._id}`}>
+                                    {service.militaryStructure.organization.country.countryNameInPolish || "N/A"}
+                                </Link>
+                            ) : "N/A"}
+                            <br />
+
+                            <strong>Enlistment Year:</strong> {service.enlistmentYear || "N/A"}<br />
+                            <strong>Discharge Year:</strong> {service.dischargeYear || "N/A"}<br />
+                            <strong>Notes:</strong> {service.notes || "N/A"}
+                        </ListGroup.Item>
+                    ))}
+                </ListGroup>
+            ) : <p>No military service records available.</p>}
+        </Card.Body>
+    </Card>
+)}
                     {/* Source Evidences */}
                     <Card className="mb-4">
                         <Card.Body>

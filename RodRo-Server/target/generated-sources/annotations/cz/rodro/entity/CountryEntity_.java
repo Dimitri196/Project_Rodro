@@ -27,14 +27,14 @@ public abstract class CountryEntity_ {
 	public static volatile SingularAttribute<CountryEntity, String> countryEstablishmentYear;
 	
 	/**
+	 * @see cz.rodro.entity.CountryEntity#militaryOrganizations
+	 **/
+	public static volatile ListAttribute<CountryEntity, MilitaryOrganizationEntity> militaryOrganizations;
+	
+	/**
 	 * @see cz.rodro.entity.CountryEntity#countryNameInEnglish
 	 **/
 	public static volatile SingularAttribute<CountryEntity, String> countryNameInEnglish;
-	
-	/**
-	 * @see cz.rodro.entity.CountryEntity#militaryStructures
-	 **/
-	public static volatile ListAttribute<CountryEntity, MilitaryStructureEntity> militaryStructures;
 	
 	/**
 	 * @see cz.rodro.entity.CountryEntity#id
@@ -54,8 +54,8 @@ public abstract class CountryEntity_ {
 	public static final String COUNTRY_NAME_IN_POLISH = "countryNameInPolish";
 	public static final String PROVINCES = "provinces";
 	public static final String COUNTRY_ESTABLISHMENT_YEAR = "countryEstablishmentYear";
+	public static final String MILITARY_ORGANIZATIONS = "militaryOrganizations";
 	public static final String COUNTRY_NAME_IN_ENGLISH = "countryNameInEnglish";
-	public static final String MILITARY_STRUCTURES = "militaryStructures";
 	public static final String ID = "id";
 	public static final String COUNTRY_CANCELLATION_YEAR = "countryCancellationYear";
 

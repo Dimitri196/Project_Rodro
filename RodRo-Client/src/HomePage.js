@@ -134,6 +134,44 @@ function HomePage() {
             </div>
           </div>
 
+                    {/* Military Service Section */}
+          <div className="col-md-4 mb-4">
+            <div className="card text-center">
+              <div className="card-body" style={{ height: '200px', overflow: 'hidden' }}>
+                <h5 className="card-title">Military Services</h5>
+                <p className="card-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Create, edit, and view your military service in your system.
+                </p>
+                <Link to="/militaryOrganizations" className="btn btn-primary">Go to Military Service</Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-md-4 mb-4">
+            <div className="card text-center">
+              <div className="card-body" style={{ height: '200px', overflow: 'hidden' }}>
+                <h5 className="card-title">Military Structures</h5>
+                <p className="card-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Create, edit, and view your military structure in your system.
+                </p>
+                <Link to="/militaryStructures" className="btn btn-primary">Go to Military Structures</Link>
+              </div>
+            </div>
+          </div>
+
+          
+          <div className="col-md-4 mb-4">
+            <div className="card text-center">
+              <div className="card-body" style={{ height: '200px', overflow: 'hidden' }}>
+                <h5 className="card-title">Military Ranks</h5>
+                <p className="card-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Create, edit, and view your military rank in your system.
+                </p>
+                <Link to="/militaryRanks" className="btn btn-primary">Go to Military Ranks</Link>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

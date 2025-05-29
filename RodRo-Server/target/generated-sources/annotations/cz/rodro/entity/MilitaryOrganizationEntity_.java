@@ -2,6 +2,7 @@ package cz.rodro.entity;
 
 import jakarta.annotation.Generated;
 import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ListAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.StaticMetamodel;
 
@@ -19,6 +20,11 @@ public abstract class MilitaryOrganizationEntity_ {
 	 * @see cz.rodro.entity.MilitaryOrganizationEntity#activeToYear
 	 **/
 	public static volatile SingularAttribute<MilitaryOrganizationEntity, String> activeToYear;
+	
+	/**
+	 * @see cz.rodro.entity.MilitaryOrganizationEntity#structures
+	 **/
+	public static volatile ListAttribute<MilitaryOrganizationEntity, MilitaryStructureEntity> structures;
 	
 	/**
 	 * @see cz.rodro.entity.MilitaryOrganizationEntity#activeFromYear
@@ -47,6 +53,7 @@ public abstract class MilitaryOrganizationEntity_ {
 
 	public static final String COUNTRY = "country";
 	public static final String ACTIVE_TO_YEAR = "activeToYear";
+	public static final String STRUCTURES = "structures";
 	public static final String ACTIVE_FROM_YEAR = "activeFromYear";
 	public static final String ID = "id";
 	public static final String ARMY_BRANCH = "armyBranch";

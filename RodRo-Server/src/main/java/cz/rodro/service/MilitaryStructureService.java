@@ -8,15 +8,10 @@ import java.util.List;
 public interface MilitaryStructureService {
 
     List<MilitaryStructureDTO> getAll();
-
     MilitaryStructureDTO getMilitaryStructure(long structureId);
-
     MilitaryStructureDTO addMilitaryStructure(MilitaryStructureDTO militaryStructureDTO);
-
     MilitaryStructureDTO removeMilitaryStructure(long structureId);
-
     MilitaryStructureDTO updateMilitaryStructure(Long structureId, MilitaryStructureDTO militaryStructureDTO);
-
     MilitaryStructureEntity fetchMilitaryStructureById(Long id, String type);
 
 }

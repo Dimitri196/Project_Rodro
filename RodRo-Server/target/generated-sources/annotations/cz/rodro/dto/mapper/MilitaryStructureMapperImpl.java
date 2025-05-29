@@ -6,6 +6,8 @@ import cz.rodro.dto.MilitaryStructureDTO;
 import cz.rodro.entity.CountryEntity;
 import cz.rodro.entity.MilitaryOrganizationEntity;
 import cz.rodro.entity.MilitaryStructureEntity;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.processing.Generated;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,7 +20,7 @@ import org.springframework.stereotype.Component;
 public class MilitaryStructureMapperImpl implements MilitaryStructureMapper {
 
     @Autowired
-    private MilitaryOrganizationMapper militaryOrganizationMapper;
+    private CountryMapper countryMapper;
 
     @Override
     public MilitaryStructureDTO toMilitaryStructureDTO(MilitaryStructureEntity entity) {
@@ -50,7 +52,7 @@ public class MilitaryStructureMapperImpl implements MilitaryStructureMapper {
         militaryStructureEntity.setId( dto.getId() );
         militaryStructureEntity.setUnitName( dto.getUnitName() );
         militaryStructureEntity.setUnitType( dto.getUnitType() );
-        militaryStructureEntity.setOrganization( militaryOrganizationMapper.toMilitaryOrganizationEntity( dto.getOrganization() ) );
+        militaryStructureEntity.setOrganization( militaryOrganizationDTOToMilitaryOrganizationEntity( dto.getOrganization() ) );
         militaryStructureEntity.setActiveFromYear( dto.getActiveFromYear() );
         militaryStructureEntity.setActiveToYear( dto.getActiveToYear() );
         militaryStructureEntity.setNotes( dto.getNotes() );
@@ -71,7 +73,7 @@ public class MilitaryStructureMapperImpl implements MilitaryStructureMapper {
             if ( entity.getOrganization() == null ) {
                 entity.setOrganization( new MilitaryOrganizationEntity() );
             }
-            militaryOrganizationMapper.updateMilitaryOrganizationEntity( dto.getOrganization(), entity.getOrganization() );
+            militaryOrganizationDTOToMilitaryOrganizationEntity1( dto.getOrganization(), entity.getOrganization() );
         }
         else {
             entity.setOrganization( null );
@@ -112,5 +114,65 @@ public class MilitaryStructureMapperImpl implements MilitaryStructureMapper {
         militaryOrganizationDTO.setActiveToYear( militaryOrganizationEntity.getActiveToYear() );
 
         return militaryOrganizationDTO;
+    }
+
+    protected List<MilitaryStructureEntity> militaryStructureDTOListToMilitaryStructureEntityList(List<MilitaryStructureDTO> list) {
+        if ( list == null ) {
+            return null;
+        }
+
+        List<MilitaryStructureEntity> list1 = new ArrayList<MilitaryStructureEntity>( list.size() );
+        for ( MilitaryStructureDTO militaryStructureDTO : list ) {
+            list1.add( toMilitaryStructureEntity( militaryStructureDTO ) );
+        }
+
+        return list1;
+    }
+
+    protected MilitaryOrganizationEntity militaryOrganizationDTOToMilitaryOrganizationEntity(MilitaryOrganizationDTO militaryOrganizationDTO) {
+        if ( militaryOrganizationDTO == null ) {
+            return null;
+        }
+
+        MilitaryOrganizationEntity militaryOrganizationEntity = new MilitaryOrganizationEntity();
+
+        militaryOrganizationEntity.setId( militaryOrganizationDTO.getId() );
+        militaryOrganizationEntity.setArmyName( militaryOrganizationDTO.getArmyName() );
+        militaryOrganizationEntity.setArmyBranch( militaryOrganizationDTO.getArmyBranch() );
+        militaryOrganizationEntity.setCountry( countryMapper.toCountryEntity( militaryOrganizationDTO.getCountry() ) );
+        militaryOrganizationEntity.setActiveFromYear( militaryOrganizationDTO.getActiveFromYear() );
+        militaryOrganizationEntity.setActiveToYear( militaryOrganizationDTO.getActiveToYear() );
+        militaryOrganizationEntity.setStructures( militaryStructureDTOListToMilitaryStructureEntityList( militaryOrganizationDTO.getStructures() ) );
+
+        return militaryOrganizationEntity;
+    }
+
+    protected void militaryOrganizationDTOToMilitaryOrganizationEntity1(MilitaryOrganizationDTO militaryOrganizationDTO, MilitaryOrganizationEntity mappingTarget) {
+        if ( militaryOrganizationDTO == null ) {
+            return;
+        }
+
+        mappingTarget.setId( militaryOrganizationDTO.getId() );
+        mappingTarget.setArmyName( militaryOrganizationDTO.getArmyName() );
+        mappingTarget.setArmyBranch( militaryOrganizationDTO.getArmyBranch() );
+        mappingTarget.setCountry( countryMapper.toCountryEntity( militaryOrganizationDTO.getCountry() ) );
+        mappingTarget.setActiveFromYear( militaryOrganizationDTO.getActiveFromYear() );
+        mappingTarget.setActiveToYear( militaryOrganizationDTO.getActiveToYear() );
+        if ( mappingTarget.getStructures() != null ) {
+            List<MilitaryStructureEntity> list = militaryStructureDTOListToMilitaryStructureEntityList( militaryOrganizationDTO.getStructures() );
+            if ( list != null ) {
+                mappingTarget.getStructures().clear();
+                mappingTarget.getStructures().addAll( list );
+            }
+            else {
+                mappingTarget.setStructures( null );
+            }
+        }
+        else {
+            List<MilitaryStructureEntity> list = militaryStructureDTOListToMilitaryStructureEntityList( militaryOrganizationDTO.getStructures() );
+            if ( list != null ) {
+                mappingTarget.setStructures( list );
+            }
+        }
     }
 }

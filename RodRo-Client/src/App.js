@@ -52,7 +52,17 @@ import OccupationDetail from "./occupations/OccupationDetail";
 import SourceIndex from "./sources/SourceIndex";
 import SourceDetail from "./sources/SourceDetail";
 
+// Military Organizations
+import MilitaryOrganizationIndex from "./military_service/MilitaryOrganizationIndex";
+import MilitaryOrganizationDetail from "./military_service/MilitaryOrganizationDetail";
 
+// Military Structures
+import MilitaryStructureIndex from "./military_service/MilitaryStructureIndex";
+import MilitaryStructureDetail from "./military_service/MilitaryStructureDetail";
+
+// Military Ranks
+import MilitaryRankIndex from "./military_service/MilitaryRankIndex";
+import MilitaryRankDetail from "./military_service/MilitaryRankDetail";
 
 export function App() {
   return (
@@ -77,6 +87,9 @@ export function App() {
                 <li className="nav-item"><Link to="/institutions" className="nav-link">Institutions</Link></li>
                 <li className="nav-item"><Link to="/occupations" className="nav-link">Occupations</Link></li>
                 <li className="nav-item"><Link to="/sources" className="nav-link">Sources</Link></li>
+                <li className="nav-item"><Link to="/militaryOrganizations" className="nav-link">Military Organizations</Link></li>
+                <li className="nav-item"><Link to="/militaryStructures" className="nav-link">Military Structures</Link></li>
+                <li className="nav-item"><Link to="/militaryRanks" className="nav-link">Military Ranks</Link></li>
               </ul>
             </div>
           </div>
@@ -154,10 +167,29 @@ export function App() {
               <Route path="show/:id" element={<OccupationDetail />} />
             </Route>
 
-                                {/* ✅ Sources */}
+            {/* ✅ Sources */}
             <Route path="/sources">
               <Route index element={<SourceIndex />} />
               <Route path="show/:id" element={<SourceDetail />} />
+            </Route>
+
+            {/* ✅ Military Organizations */}
+            <Route path="/militaryOrganizations">
+              <Route index element={<MilitaryOrganizationIndex />} />
+              <Route path="show/:id" element={<MilitaryOrganizationDetail />} />
+            </Route>
+
+
+            {/* ✅ Military Structures */}
+            <Route path="/militaryStructures">
+              <Route index element={<MilitaryStructureIndex />} />
+              <Route path="show/:id" element={<MilitaryStructureDetail />} />
+            </Route>
+
+            {/* ✅ Military Ranks */}
+            <Route path="/militaryRanks">
+              <Route index element={<MilitaryRankIndex />} />
+              <Route path="show/:id" element={<MilitaryRankDetail />} />
             </Route>
 
           </Routes>

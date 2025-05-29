@@ -1,5 +1,6 @@
 package cz.rodro.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,13 +18,10 @@ public class MilitaryStructureEntity {
     private String unitName;
     private String unitType;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "military_organization_id")
+    @JsonBackReference
     private MilitaryOrganizationEntity organization;
-
-    @ManyToOne
-    @JoinColumn(name = "country_id")
-    private CountryEntity country;
 
     private String activeFromYear;
     private String activeToYear;

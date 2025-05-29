@@ -41,5 +41,6 @@ public class CountryEntity {
     private List<ProvinceEntity> provinces = new ArrayList<>();
 
     @OneToMany(mappedBy = "country", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MilitaryStructureEntity> militaryStructures = new ArrayList<>();
+    @JsonManagedReference
+    private List<MilitaryOrganizationEntity> militaryOrganizations = new ArrayList<>();
 }

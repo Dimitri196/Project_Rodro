@@ -1,7 +1,13 @@
 package cz.rodro.dto.mapper;
 
+import cz.rodro.dto.CountryDTO;
 import cz.rodro.dto.MilitaryOrganizationDTO;
+import cz.rodro.dto.MilitaryStructureDTO;
+import cz.rodro.entity.CountryEntity;
 import cz.rodro.entity.MilitaryOrganizationEntity;
+import cz.rodro.entity.MilitaryStructureEntity;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.processing.Generated;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,6 +19,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class MilitaryOrganizationMapperImpl implements MilitaryOrganizationMapper {
 
+    @Autowired
+    private MilitaryStructureMapper militaryStructureMapper;
     @Autowired
     private CountryMapper countryMapper;
 
@@ -27,9 +35,10 @@ public class MilitaryOrganizationMapperImpl implements MilitaryOrganizationMappe
         militaryOrganizationDTO.setId( entity.getId() );
         militaryOrganizationDTO.setArmyName( entity.getArmyName() );
         militaryOrganizationDTO.setArmyBranch( entity.getArmyBranch() );
-        militaryOrganizationDTO.setCountry( countryMapper.toCountryDTO( entity.getCountry() ) );
+        militaryOrganizationDTO.setCountry( countryEntityToCountryDTO( entity.getCountry() ) );
         militaryOrganizationDTO.setActiveFromYear( entity.getActiveFromYear() );
         militaryOrganizationDTO.setActiveToYear( entity.getActiveToYear() );
+        militaryOrganizationDTO.setStructures( militaryStructureEntityListToMilitaryStructureDTOList( entity.getStructures() ) );
 
         return militaryOrganizationDTO;
     }
@@ -48,6 +57,7 @@ public class MilitaryOrganizationMapperImpl implements MilitaryOrganizationMappe
         militaryOrganizationEntity.setCountry( countryMapper.toCountryEntity( dto.getCountry() ) );
         militaryOrganizationEntity.setActiveFromYear( dto.getActiveFromYear() );
         militaryOrganizationEntity.setActiveToYear( dto.getActiveToYear() );
+        militaryOrganizationEntity.setStructures( militaryStructureDTOListToMilitaryStructureEntityList( dto.getStructures() ) );
 
         return militaryOrganizationEntity;
     }
@@ -64,5 +74,63 @@ public class MilitaryOrganizationMapperImpl implements MilitaryOrganizationMappe
         entity.setCountry( countryMapper.toCountryEntity( dto.getCountry() ) );
         entity.setActiveFromYear( dto.getActiveFromYear() );
         entity.setActiveToYear( dto.getActiveToYear() );
+        if ( entity.getStructures() != null ) {
+            List<MilitaryStructureEntity> list = militaryStructureDTOListToMilitaryStructureEntityList( dto.getStructures() );
+            if ( list != null ) {
+                entity.getStructures().clear();
+                entity.getStructures().addAll( list );
+            }
+            else {
+                entity.setStructures( null );
+            }
+        }
+        else {
+            List<MilitaryStructureEntity> list = militaryStructureDTOListToMilitaryStructureEntityList( dto.getStructures() );
+            if ( list != null ) {
+                entity.setStructures( list );
+            }
+        }
+    }
+
+    protected CountryDTO countryEntityToCountryDTO(CountryEntity countryEntity) {
+        if ( countryEntity == null ) {
+            return null;
+        }
+
+        CountryDTO countryDTO = new CountryDTO();
+
+        countryDTO.setId( countryEntity.getId() );
+        countryDTO.setCountryNameInPolish( countryEntity.getCountryNameInPolish() );
+        countryDTO.setCountryNameInEnglish( countryEntity.getCountryNameInEnglish() );
+        countryDTO.setCountryEstablishmentYear( countryEntity.getCountryEstablishmentYear() );
+        countryDTO.setCountryCancellationYear( countryEntity.getCountryCancellationYear() );
+
+        return countryDTO;
+    }
+
+    protected List<MilitaryStructureDTO> militaryStructureEntityListToMilitaryStructureDTOList(List<MilitaryStructureEntity> list) {
+        if ( list == null ) {
+            return null;
+        }
+
+        List<MilitaryStructureDTO> list1 = new ArrayList<MilitaryStructureDTO>( list.size() );
+        for ( MilitaryStructureEntity militaryStructureEntity : list ) {
+            list1.add( militaryStructureMapper.toMilitaryStructureDTO( militaryStructureEntity ) );
+        }
+
+        return list1;
+    }
+
+    protected List<MilitaryStructureEntity> militaryStructureDTOListToMilitaryStructureEntityList(List<MilitaryStructureDTO> list) {
+        if ( list == null ) {
+            return null;
+        }
+
+        List<MilitaryStructureEntity> list1 = new ArrayList<MilitaryStructureEntity>( list.size() );
+        for ( MilitaryStructureDTO militaryStructureDTO : list ) {
+            list1.add( militaryStructureMapper.toMilitaryStructureEntity( militaryStructureDTO ) );
+        }
+
+        return list1;
     }
 }

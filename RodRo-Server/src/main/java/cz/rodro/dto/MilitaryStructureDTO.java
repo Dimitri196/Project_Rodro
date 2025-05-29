@@ -13,9 +13,9 @@ public class MilitaryStructureDTO {
     @JsonProperty("_id")
     private Long id;
 
-    private String unitName;                 // e.g., "3rd Infantry Regiment"
-    private String unitType;                 // e.g., "Regiment"
-    private MilitaryOrganizationDTO organization; // Reference to army/branch/country
+    private String unitName;
+    private String unitType;
+    private MilitaryOrganizationDTO organization; // 👈 Use this instead of full DTO to avoid recursion
     private String activeFromYear;
     private String activeToYear;
     private String notes;

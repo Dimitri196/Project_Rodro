@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,4 +20,7 @@ public class MilitaryOrganizationDTO {
     private CountryDTO country;   // Country info
     private String activeFromYear;
     private String activeToYear;
+
+    private List<MilitaryStructureDTO> structures;
+
 }
