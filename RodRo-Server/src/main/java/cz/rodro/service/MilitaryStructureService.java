@@ -1,5 +1,6 @@
 package cz.rodro.service;
 
+import cz.rodro.dto.MilitaryRankDTO;
 import cz.rodro.dto.MilitaryStructureDTO;
 import cz.rodro.entity.MilitaryStructureEntity;
 
@@ -14,4 +15,7 @@ public interface MilitaryStructureService {
     MilitaryStructureDTO updateMilitaryStructure(Long structureId, MilitaryStructureDTO militaryStructureDTO);
     MilitaryStructureEntity fetchMilitaryStructureById(Long id, String type);
 
+
+    // Add this method
+    List<MilitaryRankDTO> getRanksForStructure(Long structureId);
 }

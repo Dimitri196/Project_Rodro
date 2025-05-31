@@ -20,11 +20,13 @@ public class MilitaryRankEntity {
     private String rankLevel;
 
     @ManyToOne
-    @JoinColumn(name = "military_organization_id")
-    private MilitaryOrganizationEntity organization;
+    @JoinColumn(name = "army_branch_id")
+    private MilitaryArmyBranchEntity armyBranch;
 
     private String activeFromYear;
     private String activeToYear;
 
     private String notes;
+
+
 }

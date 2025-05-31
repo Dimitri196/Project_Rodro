@@ -23,7 +23,10 @@ public class MilitaryOrganizationEntity {
     private Long id;
 
     private String armyName;
-    private String armyBranch;
+
+    @ManyToOne
+    @JoinColumn(name = "army_branch_id")
+    private MilitaryArmyBranchEntity armyBranch;
 
     @ManyToOne
     @JoinColumn(name = "country_id")

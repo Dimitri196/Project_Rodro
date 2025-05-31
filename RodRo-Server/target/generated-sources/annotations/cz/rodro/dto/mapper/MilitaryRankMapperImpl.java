@@ -1,10 +1,9 @@
 package cz.rodro.dto.mapper;
 
 import cz.rodro.dto.MilitaryRankDTO;
-import cz.rodro.entity.MilitaryOrganizationEntity;
+import cz.rodro.entity.MilitaryArmyBranchEntity;
 import cz.rodro.entity.MilitaryRankEntity;
 import javax.annotation.processing.Generated;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Generated(
@@ -14,9 +13,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class MilitaryRankMapperImpl implements MilitaryRankMapper {
 
-    @Autowired
-    private MilitaryOrganizationMapper militaryOrganizationMapper;
-
     @Override
     public MilitaryRankDTO toMilitaryRankDTO(MilitaryRankEntity entity) {
         if ( entity == null ) {
@@ -25,11 +21,11 @@ public class MilitaryRankMapperImpl implements MilitaryRankMapper {
 
         MilitaryRankDTO militaryRankDTO = new MilitaryRankDTO();
 
+        militaryRankDTO.setArmyBranchName( entityArmyBranchArmyBranchName( entity ) );
         militaryRankDTO.setId( entity.getId() );
         militaryRankDTO.setRankName( entity.getRankName() );
         militaryRankDTO.setRankDescription( entity.getRankDescription() );
         militaryRankDTO.setRankLevel( entity.getRankLevel() );
-        militaryRankDTO.setOrganization( militaryOrganizationMapper.toMilitaryOrganizationDTO( entity.getOrganization() ) );
         militaryRankDTO.setActiveFromYear( entity.getActiveFromYear() );
         militaryRankDTO.setActiveToYear( entity.getActiveToYear() );
         militaryRankDTO.setNotes( entity.getNotes() );
@@ -49,7 +45,6 @@ public class MilitaryRankMapperImpl implements MilitaryRankMapper {
         militaryRankEntity.setRankName( dto.getRankName() );
         militaryRankEntity.setRankDescription( dto.getRankDescription() );
         militaryRankEntity.setRankLevel( dto.getRankLevel() );
-        militaryRankEntity.setOrganization( militaryOrganizationMapper.toMilitaryOrganizationEntity( dto.getOrganization() ) );
         militaryRankEntity.setActiveFromYear( dto.getActiveFromYear() );
         militaryRankEntity.setActiveToYear( dto.getActiveToYear() );
         militaryRankEntity.setNotes( dto.getNotes() );
@@ -67,17 +62,23 @@ public class MilitaryRankMapperImpl implements MilitaryRankMapper {
         entity.setRankName( dto.getRankName() );
         entity.setRankDescription( dto.getRankDescription() );
         entity.setRankLevel( dto.getRankLevel() );
-        if ( dto.getOrganization() != null ) {
-            if ( entity.getOrganization() == null ) {
-                entity.setOrganization( new MilitaryOrganizationEntity() );
-            }
-            militaryOrganizationMapper.updateMilitaryOrganizationEntity( dto.getOrganization(), entity.getOrganization() );
-        }
-        else {
-            entity.setOrganization( null );
-        }
         entity.setActiveFromYear( dto.getActiveFromYear() );
         entity.setActiveToYear( dto.getActiveToYear() );
         entity.setNotes( dto.getNotes() );
+    }
+
+    private String entityArmyBranchArmyBranchName(MilitaryRankEntity militaryRankEntity) {
+        if ( militaryRankEntity == null ) {
+            return null;
+        }
+        MilitaryArmyBranchEntity armyBranch = militaryRankEntity.getArmyBranch();
+        if ( armyBranch == null ) {
+            return null;
+        }
+        String armyBranchName = armyBranch.getArmyBranchName();
+        if ( armyBranchName == null ) {
+            return null;
+        }
+        return armyBranchName;
     }
 }

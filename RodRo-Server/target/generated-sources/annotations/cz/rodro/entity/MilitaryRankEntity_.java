@@ -26,11 +26,6 @@ public abstract class MilitaryRankEntity_ {
 	public static volatile SingularAttribute<MilitaryRankEntity, String> rankName;
 	
 	/**
-	 * @see cz.rodro.entity.MilitaryRankEntity#organization
-	 **/
-	public static volatile SingularAttribute<MilitaryRankEntity, MilitaryOrganizationEntity> organization;
-	
-	/**
 	 * @see cz.rodro.entity.MilitaryRankEntity#activeToYear
 	 **/
 	public static volatile SingularAttribute<MilitaryRankEntity, String> activeToYear;
@@ -51,6 +46,11 @@ public abstract class MilitaryRankEntity_ {
 	public static volatile SingularAttribute<MilitaryRankEntity, Long> id;
 	
 	/**
+	 * @see cz.rodro.entity.MilitaryRankEntity#armyBranch
+	 **/
+	public static volatile SingularAttribute<MilitaryRankEntity, MilitaryArmyBranchEntity> armyBranch;
+	
+	/**
 	 * @see cz.rodro.entity.MilitaryRankEntity
 	 **/
 	public static volatile EntityType<MilitaryRankEntity> class_;
@@ -58,11 +58,11 @@ public abstract class MilitaryRankEntity_ {
 	public static final String NOTES = "notes";
 	public static final String RANK_LEVEL = "rankLevel";
 	public static final String RANK_NAME = "rankName";
-	public static final String ORGANIZATION = "organization";
 	public static final String ACTIVE_TO_YEAR = "activeToYear";
 	public static final String RANK_DESCRIPTION = "rankDescription";
 	public static final String ACTIVE_FROM_YEAR = "activeFromYear";
 	public static final String ID = "id";
+	public static final String ARMY_BRANCH = "armyBranch";
 
 }
 

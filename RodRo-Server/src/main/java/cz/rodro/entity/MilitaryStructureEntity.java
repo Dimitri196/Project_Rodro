@@ -1,8 +1,12 @@
 package cz.rodro.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "military_structure")
@@ -23,7 +27,12 @@ public class MilitaryStructureEntity {
     @JsonBackReference
     private MilitaryOrganizationEntity organization;
 
+    @ManyToOne
+    @JoinColumn(name = "army_branch_id")
+    private MilitaryArmyBranchEntity armyBranch;
+
     private String activeFromYear;
     private String activeToYear;
     private String notes;
+
 }

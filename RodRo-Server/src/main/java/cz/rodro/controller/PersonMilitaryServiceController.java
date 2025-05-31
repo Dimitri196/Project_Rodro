@@ -10,41 +10,39 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/personMilitaryServices")
+@RequestMapping("/api")
 public class PersonMilitaryServiceController {
 
     @Autowired
     private PersonMilitaryService personMilitaryService;
 
-    @GetMapping
-    public List<PersonMilitaryServiceDTO> getAll() {
+    @GetMapping("/personMilitaryServices")
+    public List<PersonMilitaryServiceDTO> getAllOrByPersonId(@RequestParam(required = false) Long personId) {
+        if (personId != null) {
+            return personMilitaryService.getByPersonId(personId);
+        }
         return personMilitaryService.getAll();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/personMilitaryServices/{id}")
     public PersonMilitaryServiceDTO getById(@PathVariable Long id) {
         return personMilitaryService.getPersonMilitaryService(id);
     }
 
-    @PostMapping
+    @PostMapping("/personMilitaryServices")
     @ResponseStatus(HttpStatus.CREATED)
     public PersonMilitaryServiceDTO add(@Valid @RequestBody PersonMilitaryServiceDTO dto) {
         return personMilitaryService.addPersonMilitaryService(dto);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/personMilitaryServices/{id}")
     public PersonMilitaryServiceDTO update(@PathVariable Long id, @Valid @RequestBody PersonMilitaryServiceDTO dto) {
         return personMilitaryService.updatePersonMilitaryService(id, dto);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/personMilitaryServices/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         personMilitaryService.removePersonMilitaryService(id);
-    }
-
-    @GetMapping(params = "personId")
-    public List<PersonMilitaryServiceDTO> getByPersonId(@RequestParam Long personId) {
-        return personMilitaryService.getByPersonId(personId);
     }
 }

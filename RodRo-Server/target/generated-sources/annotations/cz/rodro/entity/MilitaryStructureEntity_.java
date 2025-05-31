@@ -46,6 +46,11 @@ public abstract class MilitaryStructureEntity_ {
 	public static volatile SingularAttribute<MilitaryStructureEntity, Long> id;
 	
 	/**
+	 * @see cz.rodro.entity.MilitaryStructureEntity#armyBranch
+	 **/
+	public static volatile SingularAttribute<MilitaryStructureEntity, MilitaryArmyBranchEntity> armyBranch;
+	
+	/**
 	 * @see cz.rodro.entity.MilitaryStructureEntity
 	 **/
 	public static volatile EntityType<MilitaryStructureEntity> class_;
@@ -57,6 +62,7 @@ public abstract class MilitaryStructureEntity_ {
 	public static final String ACTIVE_TO_YEAR = "activeToYear";
 	public static final String ACTIVE_FROM_YEAR = "activeFromYear";
 	public static final String ID = "id";
+	public static final String ARMY_BRANCH = "armyBranch";
 
 }
 

@@ -16,8 +16,9 @@ public class MilitaryRankDTO {
     private String rankName; // e.g., "Major", "General"
     private String rankDescription; // Description or notes about the role
     private String rankLevel; // e.g., "Officer", "NCO", "Enlisted"
-    private MilitaryOrganizationDTO organization; // Reference to army/branch/country
     private String activeFromYear; // Optional: when this rank existed
     private String activeToYear;
     private String notes; // Additional remarks
+
+    private String armyBranchName;
 }

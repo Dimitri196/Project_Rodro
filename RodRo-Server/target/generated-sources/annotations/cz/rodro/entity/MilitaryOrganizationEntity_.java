@@ -39,7 +39,7 @@ public abstract class MilitaryOrganizationEntity_ {
 	/**
 	 * @see cz.rodro.entity.MilitaryOrganizationEntity#armyBranch
 	 **/
-	public static volatile SingularAttribute<MilitaryOrganizationEntity, String> armyBranch;
+	public static volatile SingularAttribute<MilitaryOrganizationEntity, MilitaryArmyBranchEntity> armyBranch;
 	
 	/**
 	 * @see cz.rodro.entity.MilitaryOrganizationEntity

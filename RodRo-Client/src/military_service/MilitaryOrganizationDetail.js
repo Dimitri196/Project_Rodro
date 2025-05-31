@@ -37,7 +37,7 @@ const MilitaryOrganizationDetail = () => {
                             <Card.Title>{organization.armyName}</Card.Title>
                             <ListGroup variant="flush">
                                 <ListGroup.Item>
-                                    <strong>Branch:</strong> {organization.armyBranch || "-"}
+                                    <strong>Branch:</strong> {organization.armyBranch?.armyBranchName}
                                 </ListGroup.Item>
                                 <ListGroup.Item>
                                     <strong>Country:</strong>{" "}

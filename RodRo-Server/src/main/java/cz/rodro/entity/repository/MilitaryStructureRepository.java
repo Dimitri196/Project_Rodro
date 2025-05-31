@@ -21,4 +21,8 @@ public interface MilitaryStructureRepository extends JpaRepository<MilitaryStruc
     @Query("SELECT s FROM MilitaryStructureEntity s WHERE :year BETWEEN s.activeFromYear AND s.activeToYear")
     List<MilitaryStructureEntity> findStructuresActiveInYear(@Param("year") String year);
 
+    List<MilitaryStructureEntity> findByArmyBranch_Id(Long branchId);
+
+    List<MilitaryStructureEntity> findByOrganization_IdAndArmyBranch_Id(Long orgId, Long branchId);
+
 }

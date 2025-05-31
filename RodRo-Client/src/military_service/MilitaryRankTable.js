@@ -97,7 +97,6 @@ const MilitaryRankTable = ({ items, deleteRank }) => {
                             <th>Rank Name</th>
                             <th>Description</th>
                             <th>Level</th>
-                            <th>Organization</th>
                             <th>Active From</th>
                             <th>Active To</th>
                             <th>Notes</th>
@@ -111,13 +110,6 @@ const MilitaryRankTable = ({ items, deleteRank }) => {
                                 <td>{item.rankName}</td>
                                 <td>{item.rankDescription || "-"}</td>
                                 <td>{item.rankLevel || "-"}</td>
-                                <td>
-                                    {item.organization ? (
-                                        <Link to={`/militaryOrganizations/show/${item.organization._id}`}>
-                                            {item.organization.armyName}
-                                        </Link>
-                                    ) : "-"}
-                                </td>
                                 <td>{item.activeFromYear || "-"}</td>
                                 <td>{item.activeToYear || "-"}</td>
                                 <td>{item.notes || "-"}</td>

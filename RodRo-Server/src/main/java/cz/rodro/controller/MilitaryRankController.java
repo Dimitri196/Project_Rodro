@@ -10,34 +10,34 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/militaryRanks")
+@RequestMapping("/api")
 public class MilitaryRankController {
 
     @Autowired
     private MilitaryRankService militaryRankService;
 
-    @GetMapping
+    @GetMapping("/militaryRanks")
     public List<MilitaryRankDTO> getAll() {
         return militaryRankService.getAll();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/militaryRanks/{id}")
     public MilitaryRankDTO getById(@PathVariable Long id) {
         return militaryRankService.getMilitaryRank(id);
     }
 
-    @PostMapping
+    @PostMapping("/militaryRanks")
     @ResponseStatus(HttpStatus.CREATED)
     public MilitaryRankDTO add(@Valid @RequestBody MilitaryRankDTO dto) {
         return militaryRankService.addMilitaryRank(dto);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/militaryRanks/{id}")
     public MilitaryRankDTO update(@PathVariable Long id, @Valid @RequestBody MilitaryRankDTO dto) {
         return militaryRankService.updateMilitaryRank(id, dto);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/militaryRanks/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         militaryRankService.removeMilitaryRank(id);

@@ -16,7 +16,7 @@ public class MilitaryOrganizationDTO {
     private Long id;
 
     private String armyName;      // e.g., "Prussian Army"
-    private String armyBranch;    // e.g., "Infantry"
+    private MilitaryArmyBranchDTO armyBranch;
     private CountryDTO country;   // Country info
     private String activeFromYear;
     private String activeToYear;

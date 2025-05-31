@@ -1,8 +1,11 @@
 // src/main/java/cz/rodro/service/MilitaryStructureServiceImpl.java
 package cz.rodro.service;
 
+import cz.rodro.dto.MilitaryRankDTO;
 import cz.rodro.dto.MilitaryStructureDTO;
+import cz.rodro.dto.mapper.MilitaryRankMapper;
 import cz.rodro.dto.mapper.MilitaryStructureMapper;
+import cz.rodro.entity.MilitaryRankEntity;
 import cz.rodro.entity.MilitaryStructureEntity;
 import cz.rodro.entity.repository.MilitaryStructureRepository;
 import cz.rodro.exception.NotFoundException;
@@ -22,6 +25,9 @@ public class MilitaryStructureServiceImpl implements MilitaryStructureService {
 
     @Autowired
     MilitaryStructureMapper militaryStructureMapper;
+
+    @Autowired
+    MilitaryRankMapper militaryRankMapper;
 
     @Override
     public List<MilitaryStructureDTO> getAll() {
@@ -68,5 +74,19 @@ public class MilitaryStructureServiceImpl implements MilitaryStructureService {
     public MilitaryStructureEntity fetchMilitaryStructureById(Long id, String type) {
         return militaryStructureRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(type + " with id " + id + " wasn't found in the database."));
+    }
+
+    // Returns all ranks for the branch of the given structure
+    public List<MilitaryRankDTO> getRanksForStructure(Long structureId) {
+        MilitaryStructureEntity structure = militaryStructureRepository.findById(structureId)
+                .orElseThrow(() -> new NotFoundException("Structure not found"));
+        if (structure.getArmyBranch() == null) {
+            return List.of();
+        }
+        List<MilitaryRankEntity> ranks = structure.getArmyBranch().getRanks();
+        // You may need to inject MilitaryRankMapper if not already
+        return ranks.stream()
+                .map(militaryRankMapper::toMilitaryRankDTO)
+                .collect(Collectors.toList());
     }
 }

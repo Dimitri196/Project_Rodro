@@ -30,6 +30,7 @@ public class PersonMilitaryServiceMapperImpl implements PersonMilitaryServiceMap
         PersonMilitaryServiceDTO personMilitaryServiceDTO = new PersonMilitaryServiceDTO();
 
         personMilitaryServiceDTO.setPersonId( entityPersonId( entity ) );
+        personMilitaryServiceDTO.setRankName( entityMilitaryRankRankName( entity ) );
         personMilitaryServiceDTO.setId( entity.getId() );
         personMilitaryServiceDTO.setMilitaryStructure( militaryStructureMapper.toMilitaryStructureDTO( entity.getMilitaryStructure() ) );
         personMilitaryServiceDTO.setMilitaryRank( militaryRankMapper.toMilitaryRankDTO( entity.getMilitaryRank() ) );
@@ -101,5 +102,20 @@ public class PersonMilitaryServiceMapperImpl implements PersonMilitaryServiceMap
             return null;
         }
         return id;
+    }
+
+    private String entityMilitaryRankRankName(PersonMilitaryServiceEntity personMilitaryServiceEntity) {
+        if ( personMilitaryServiceEntity == null ) {
+            return null;
+        }
+        MilitaryRankEntity militaryRank = personMilitaryServiceEntity.getMilitaryRank();
+        if ( militaryRank == null ) {
+            return null;
+        }
+        String rankName = militaryRank.getRankName();
+        if ( rankName == null ) {
+            return null;
+        }
+        return rankName;
     }
 }

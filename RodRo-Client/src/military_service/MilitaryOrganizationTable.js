@@ -107,7 +107,7 @@ const MilitaryOrganizationTable = ({ items, deleteOrganization }) => {
                             <tr key={item.id}>
                                 <td>{startIndex + index + 1}</td>
                                 <td>{item.armyName}</td>
-                                <td>{item.armyBranch || "-"}</td>
+                                <td>{item.armyBranch?.armyBranchName}</td>
                                 <td>{item.country?.countryNameInPolish || "-"}</td>
                                 <td>{item.activeFromYear || "-"}</td>
                                 <td>{item.activeToYear || "-"}</td>

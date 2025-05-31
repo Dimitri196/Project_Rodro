@@ -3,11 +3,13 @@ package cz.rodro.dto.mapper;
 import cz.rodro.dto.MilitaryRankDTO;
 import cz.rodro.entity.MilitaryRankEntity;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring", uses = { MilitaryOrganizationMapper.class })
+@Mapper(componentModel = "spring", uses = {MilitaryStructureMapper.class})
 public interface MilitaryRankMapper {
 
+    @Mapping(source = "armyBranch.armyBranchName", target = "armyBranchName")
     MilitaryRankDTO toMilitaryRankDTO(MilitaryRankEntity entity);
 
     MilitaryRankEntity toMilitaryRankEntity(MilitaryRankDTO dto);

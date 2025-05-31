@@ -21,4 +21,6 @@ public interface MilitaryOrganizationRepository extends JpaRepository<MilitaryOr
     // Find all organizations for a specific country
     List<MilitaryOrganizationEntity> findByCountry_Id(Long countryId);
 
+    List<MilitaryOrganizationEntity> findByArmyBranch_Id(Long branchId);
+
 }

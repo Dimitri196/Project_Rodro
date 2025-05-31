@@ -16,6 +16,7 @@ import cz.rodro.entity.PersonMilitaryServiceEntity;
 public interface PersonMilitaryServiceMapper {
 
     @Mapping(target = "personId", source = "person.id")
+    @Mapping(target = "rankName", source = "militaryRank.rankName")
     PersonMilitaryServiceDTO toDto(PersonMilitaryServiceEntity entity);
 
     PersonMilitaryServiceEntity toEntity(PersonMilitaryServiceDTO dto);

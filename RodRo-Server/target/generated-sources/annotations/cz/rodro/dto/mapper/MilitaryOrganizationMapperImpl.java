@@ -20,9 +20,11 @@ import org.springframework.stereotype.Component;
 public class MilitaryOrganizationMapperImpl implements MilitaryOrganizationMapper {
 
     @Autowired
-    private MilitaryStructureMapper militaryStructureMapper;
-    @Autowired
     private CountryMapper countryMapper;
+    @Autowired
+    private MilitaryArmyBranchMapper militaryArmyBranchMapper;
+    @Autowired
+    private MilitaryStructureMapper militaryStructureMapper;
 
     @Override
     public MilitaryOrganizationDTO toMilitaryOrganizationDTO(MilitaryOrganizationEntity entity) {
@@ -34,7 +36,7 @@ public class MilitaryOrganizationMapperImpl implements MilitaryOrganizationMappe
 
         militaryOrganizationDTO.setId( entity.getId() );
         militaryOrganizationDTO.setArmyName( entity.getArmyName() );
-        militaryOrganizationDTO.setArmyBranch( entity.getArmyBranch() );
+        militaryOrganizationDTO.setArmyBranch( militaryArmyBranchMapper.toDto( entity.getArmyBranch() ) );
         militaryOrganizationDTO.setCountry( countryEntityToCountryDTO( entity.getCountry() ) );
         militaryOrganizationDTO.setActiveFromYear( entity.getActiveFromYear() );
         militaryOrganizationDTO.setActiveToYear( entity.getActiveToYear() );
@@ -53,7 +55,7 @@ public class MilitaryOrganizationMapperImpl implements MilitaryOrganizationMappe
 
         militaryOrganizationEntity.setId( dto.getId() );
         militaryOrganizationEntity.setArmyName( dto.getArmyName() );
-        militaryOrganizationEntity.setArmyBranch( dto.getArmyBranch() );
+        militaryOrganizationEntity.setArmyBranch( militaryArmyBranchMapper.toEntity( dto.getArmyBranch() ) );
         militaryOrganizationEntity.setCountry( countryMapper.toCountryEntity( dto.getCountry() ) );
         militaryOrganizationEntity.setActiveFromYear( dto.getActiveFromYear() );
         militaryOrganizationEntity.setActiveToYear( dto.getActiveToYear() );
@@ -70,7 +72,7 @@ public class MilitaryOrganizationMapperImpl implements MilitaryOrganizationMappe
 
         entity.setId( dto.getId() );
         entity.setArmyName( dto.getArmyName() );
-        entity.setArmyBranch( dto.getArmyBranch() );
+        entity.setArmyBranch( militaryArmyBranchMapper.toEntity( dto.getArmyBranch() ) );
         entity.setCountry( countryMapper.toCountryEntity( dto.getCountry() ) );
         entity.setActiveFromYear( dto.getActiveFromYear() );
         entity.setActiveToYear( dto.getActiveToYear() );

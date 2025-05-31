@@ -1,5 +1,6 @@
 package cz.rodro.controller;
 
+import cz.rodro.dto.MilitaryRankDTO;
 import cz.rodro.dto.MilitaryStructureDTO;
 import cz.rodro.service.MilitaryStructureService;
 import jakarta.validation.Valid;
@@ -41,5 +42,10 @@ public class MilitaryStructureController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         militaryStructureService.removeMilitaryStructure(id);
+    }
+
+    @GetMapping("/militaryStructures/{id}/ranks")
+    public List<MilitaryRankDTO> getRanksForStructure(@PathVariable Long id) {
+        return militaryStructureService.getRanksForStructure(id);
     }
 }

@@ -9,6 +9,9 @@ const MilitaryStructureDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const [ranks, setRanks] = useState([]);
+    const [ranksError, setRanksError] = useState(null);
+
     useEffect(() => {
         const fetchStructure = async () => {
             try {
@@ -22,6 +25,19 @@ const MilitaryStructureDetail = () => {
         };
 
         fetchStructure();
+    }, [id]);
+
+    useEffect(() => {
+        const fetchRanks = async () => {
+            try {
+                const data = await apiGet(`/api/militaryStructures/${id}/ranks`);
+                setRanks(data);
+            } catch (err) {
+                setRanksError(`Error loading ranks: ${err.message || err}`);
+            }
+        };
+
+        fetchRanks();
     }, [id]);
 
     if (loading) return <p>Loading structure details...</p>;
@@ -50,7 +66,7 @@ const MilitaryStructureDetail = () => {
                                 </ListGroup.Item>
                                 <ListGroup.Item>
                                     <strong>Branch:</strong>{" "}
-                                    {structure.organization?.armyBranch || "-"}
+                                    {structure.organization?.armyBranch?.armyBranchName}
                                 </ListGroup.Item>
                                 <ListGroup.Item>
                                     <strong>Active From:</strong> {structure.activeFromYear || "-"}
@@ -62,6 +78,33 @@ const MilitaryStructureDetail = () => {
                                     <strong>Notes:</strong> {structure.notes || "-"}
                                 </ListGroup.Item>
                             </ListGroup>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
+            <Row>
+                <Col md={8}>
+                    <Card className="mt-4">
+                        <Card.Body>
+                            <Card.Title>Ranks</Card.Title>
+                            {ranksError && <Alert variant="danger">{ranksError}</Alert>}
+                            {ranks.length === 0 ? (
+                                <p>No ranks found for this structure.</p>
+                            ) : (
+                                <ListGroup>
+                                    {ranks.map(rank => (
+                                        <ListGroup.Item key={rank._id}>
+                                            <strong>
+                                                <Link to={`/militaryRanks/show/${rank._id}`}>
+                                                    {rank.rankName}
+                                                </Link>
+                                            </strong>
+                                            {rank.rankLevel && <> ({rank.rankLevel})</>}
+                                            {rank.rankDescription && <> - {rank.rankDescription}</>}
+                                        </ListGroup.Item>
+                                    ))}
+                                </ListGroup>
+                            )}
                         </Card.Body>
                     </Card>
                 </Col>

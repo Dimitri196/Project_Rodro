@@ -42,16 +42,6 @@ const MilitaryRankDetail = () => {
                                     <strong>Level:</strong> {rank.rankLevel || "-"}
                                 </ListGroup.Item>
                                 <ListGroup.Item>
-                                    <strong>Organization:</strong>{" "}
-                                    {rank.organization ? (
-                                        <Link to={`/militaryOrganizations/show/${rank.organization._id}`}>
-                                            {rank.organization.armyName}
-                                        </Link>
-                                    ) : (
-                                        "Unknown"
-                                    )}
-                                </ListGroup.Item>
-                                <ListGroup.Item>
                                     <strong>Active From:</strong> {rank.activeFromYear || "Unknown"}
                                 </ListGroup.Item>
                                 <ListGroup.Item>

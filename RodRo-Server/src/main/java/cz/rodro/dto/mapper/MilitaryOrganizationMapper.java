@@ -6,10 +6,14 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring", uses = { MilitaryStructureMapper.class, CountryMapper.class })
+@Mapper(componentModel = "spring", uses = {
+        CountryMapper.class,
+        MilitaryArmyBranchMapper.class,
+        MilitaryStructureMapper.class
+})
 public interface MilitaryOrganizationMapper {
 
-    @Mapping(target = "country.provinces", ignore = true) // break country loop
+    @Mapping(target = "country.provinces", ignore = true)
     MilitaryOrganizationDTO toMilitaryOrganizationDTO(MilitaryOrganizationEntity entity);
 
     MilitaryOrganizationEntity toMilitaryOrganizationEntity(MilitaryOrganizationDTO dto);
