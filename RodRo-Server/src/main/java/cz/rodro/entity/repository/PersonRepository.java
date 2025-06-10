@@ -24,5 +24,11 @@ import java.util.List;
     @Query("SELECT p FROM person p WHERE p.father = :parent OR p.mother = :parent")
     List<PersonEntity> findChildrenByParent(@Param("parent") PersonEntity parent);
 
+    @Query("SELECT p FROM person p WHERE p.father.id = :id OR p.mother.id = :id")
+    List<PersonEntity> findChildrenByParentId(@Param("id") Long id);
+
+    List<PersonEntity> findByFatherIdAndMotherId(Long fatherId, Long motherId);
+
+
     }
 

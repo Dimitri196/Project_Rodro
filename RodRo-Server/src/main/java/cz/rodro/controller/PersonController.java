@@ -1,14 +1,12 @@
 package cz.rodro.controller;
 
-import cz.rodro.dto.FamilyDTO;
-import cz.rodro.dto.PersonDTO;
-import cz.rodro.dto.PersonOccupationDTO;
-import cz.rodro.dto.PersonSourceEvidenceDTO;
+import cz.rodro.dto.*;
 import cz.rodro.dto.mapper.FamilyMapper;
 import cz.rodro.dto.mapper.PersonMapper;
 import cz.rodro.entity.PersonEntity;
 import cz.rodro.entity.repository.PersonRepository;
 import cz.rodro.entity.repository.PersonSourceEvidenceRepository;
+import cz.rodro.service.DTreeService;
 import cz.rodro.service.PersonOccupationService;
 import cz.rodro.service.PersonService;
 import jakarta.validation.Valid;
@@ -47,6 +45,9 @@ public class PersonController {
 
     @Autowired
     private PersonMapper personMapper;
+
+    @Autowired
+    private DTreeService dTreeService; // <-- added DTreeService injection
 
     // Add a new person
     @PostMapping("/persons")
@@ -132,4 +133,10 @@ public class PersonController {
         return children.stream().map(personMapper::toDTO).collect(Collectors.toList());
     }
 
+    // ==== Added family tree endpoint ====
+    @GetMapping("persons/{id}/tree")
+    public List<DTreeNodeDTO> getFamilyTreeForPerson(@PathVariable Long id) {
+        return dTreeService.generateDTreeForPerson(id);
+    }
 }
+

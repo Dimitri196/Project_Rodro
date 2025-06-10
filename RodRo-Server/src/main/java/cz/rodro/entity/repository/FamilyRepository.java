@@ -17,4 +17,11 @@ public interface FamilyRepository extends JpaRepository<FamilyEntity, Long>, Jpa
     // Fetch families where the person is the female spouse
     @Query("SELECT f FROM family f WHERE f.spouseFemale.id = :personId")
     List<FamilyEntity> findBySpouseFemaleId(@Param("personId") Long personId);
+
+    List<FamilyEntity> findBySpouseMaleIdOrSpouseFemaleId(Long maleId, Long femaleId);
+
+    @Query("SELECT f FROM family f JOIN f.children c WHERE c.id = :childId")
+    List<FamilyEntity> findByChildrenId(@Param("childId") Long childId);
+
+
 }

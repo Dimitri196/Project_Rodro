@@ -1,0 +1,16 @@
+.family-tree-container {
+  overflow: auto;
+  padding: 1rem;
+}
+.family-tree-container svg {
+  border: 1px solid #ddd;
+  background: #fafafa;
+}
+.family-tree-container circle {
+  stroke: #333;
+  stroke-width: 1px;
+}
+.family-tree-container text {
+  font-family: sans-serif;
+  font-size: 12px;
+}

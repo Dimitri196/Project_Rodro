@@ -1,0 +1,11 @@
+.male .node rect {
+  fill: #007bff !important;
+}
+
+.female .node rect {
+  fill: #e83e8c !important;
+}
+
+.emphasis {
+  font-weight: bold;
+}

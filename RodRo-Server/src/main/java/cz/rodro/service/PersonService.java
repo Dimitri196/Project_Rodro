@@ -1,8 +1,6 @@
 package cz.rodro.service;
 
-import cz.rodro.dto.PersonDTO;
-import cz.rodro.dto.PersonSourceEvidenceDTO;
-import cz.rodro.dto.ProvinceDTO;
+import cz.rodro.dto.*;
 import cz.rodro.entity.FamilyEntity;
 
 import java.util.List;
@@ -10,14 +8,23 @@ import java.util.List;
 public interface PersonService {
 
     PersonDTO addPerson(PersonDTO personDTO);
-    void removePerson(long id);
-    List<PersonDTO> getAll();
+
     PersonDTO getPerson(long personId);
-    PersonDTO updatePerson(Long personId, PersonDTO personDTO);
+
+    void removePerson(long personId);
+
+    List<PersonDTO> getAll();
+
+    PersonDTO updatePerson(Long id, PersonDTO personDTO);
 
     List<FamilyEntity> getSpousesAsMale(Long personId);
+
     List<FamilyEntity> getSpousesAsFemale(Long personId);
+
     List<FamilyEntity> getSpouses(Long personId);
+
     List<PersonSourceEvidenceDTO> getSourceEvidences(Long personId);
+
+    List<PersonDTO> getSiblings(Long personId);
 
 }

@@ -3,6 +3,7 @@ package cz.rodro.entity;
 import cz.rodro.constant.MaritalStatus;
 import jakarta.annotation.Generated;
 import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ListAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.StaticMetamodel;
 import java.time.LocalDate;
@@ -58,6 +59,11 @@ public abstract class FamilyEntity_ {
 	public static volatile SingularAttribute<FamilyEntity, PersonEntity> witnessesFemaleSide2;
 	
 	/**
+	 * @see cz.rodro.entity.FamilyEntity#children
+	 **/
+	public static volatile ListAttribute<FamilyEntity, PersonEntity> children;
+	
+	/**
 	 * @see cz.rodro.entity.FamilyEntity#maritalStatusForSpouseFemale
 	 **/
 	public static volatile SingularAttribute<FamilyEntity, MaritalStatus> maritalStatusForSpouseFemale;
@@ -91,6 +97,7 @@ public abstract class FamilyEntity_ {
 	public static final String MARITAL_STATUS_FOR_SPOUSE_MALE = "maritalStatusForSpouseMale";
 	public static final String SPOUSE_FEMALE = "spouseFemale";
 	public static final String WITNESSES_FEMALE_SIDE2 = "witnessesFemaleSide2";
+	public static final String CHILDREN = "children";
 	public static final String MARITAL_STATUS_FOR_SPOUSE_FEMALE = "maritalStatusForSpouseFemale";
 	public static final String SPOUSE_MALE = "spouseMale";
 	public static final String ID = "id";

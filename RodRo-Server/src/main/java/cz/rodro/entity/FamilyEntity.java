@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity(name = "family")
 @Getter
@@ -60,4 +62,12 @@ public class FamilyEntity {
 
         @Column(name = "note", length = 500)
         private String note;
+
+        @OneToMany
+        @JoinTable(
+                name = "family_children",
+                joinColumns = @JoinColumn(name = "family_id"),
+                inverseJoinColumns = @JoinColumn(name = "child_id")
+        )
+        private List<PersonEntity> children = new ArrayList<>();
 }

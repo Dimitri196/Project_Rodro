@@ -14,4 +14,10 @@ public interface FamilyService {
 
    List<FamilyDTO> getAllFamilies(FamilyFilter familyFilter);
 
+    List<FamilyDTO> getAllFamilies();
+
+    List<FamilyDTO> findFamiliesByChild(Long personId);
+
+    List<FamilyDTO> getSpouses(Long personId);
+
 }

@@ -64,6 +64,9 @@ import MilitaryStructureDetail from "./military_service/MilitaryStructureDetail"
 import MilitaryRankIndex from "./military_service/MilitaryRankIndex";
 import MilitaryRankDetail from "./military_service/MilitaryRankDetail";
 
+// Family Tree Component
+import FamilyTreeComponent from "./components/FamilyTreeComponent"; // adjust path if needed
+
 export function App() {
   return (
     <Router>
@@ -90,6 +93,7 @@ export function App() {
                 <li className="nav-item"><Link to="/militaryOrganizations" className="nav-link">Military Organizations</Link></li>
                 <li className="nav-item"><Link to="/militaryStructures" className="nav-link">Military Structures</Link></li>
                 <li className="nav-item"><Link to="/militaryRanks" className="nav-link">Military Ranks</Link></li>
+                {/* 🔥 REMOVED: <li className="nav-item"><Link to="/family-tree/1" className="nav-link">Family Tree</Link></li> */}
               </ul>
             </div>
           </div>
@@ -125,7 +129,7 @@ export function App() {
               <Route path="edit/:id" element={<LocationForm />} />
             </Route>
 
-            {/* Countries + Provinces + Districts */}
+            {/* Countries */}
             <Route path="/countries">
               <Route index element={<CountryIndex />} />
               <Route path="show/:id" element={<CountryDetail />} />
@@ -154,48 +158,46 @@ export function App() {
             {/* Subdivision */}
             <Route path="/subdivisions/show/:id" element={<SubdivisionDetail />} />
 
-            {/* ✅ Institutions */}
+            {/* Institutions */}
             <Route path="/institutions">
               <Route index element={<InstitutionIndex />} />
               <Route path="show/:id" element={<InstitutionDetail />} />
-
             </Route>
 
-            {/* ✅ Occupations */}
+            {/* Occupations */}
             <Route path="/occupations">
               <Route index element={<OccupationIndex />} />
               <Route path="show/:id" element={<OccupationDetail />} />
             </Route>
 
-            {/* ✅ Sources */}
+            {/* Sources */}
             <Route path="/sources">
               <Route index element={<SourceIndex />} />
               <Route path="show/:id" element={<SourceDetail />} />
             </Route>
 
-            {/* ✅ Military Organizations */}
+            {/* Military Organizations */}
             <Route path="/militaryOrganizations">
               <Route index element={<MilitaryOrganizationIndex />} />
               <Route path="show/:id" element={<MilitaryOrganizationDetail />} />
             </Route>
 
-
-            {/* ✅ Military Structures */}
+            {/* Military Structures */}
             <Route path="/militaryStructures">
               <Route index element={<MilitaryStructureIndex />} />
               <Route path="show/:id" element={<MilitaryStructureDetail />} />
             </Route>
 
-            {/* ✅ Military Ranks */}
+            {/* Military Ranks */}
             <Route path="/militaryRanks">
               <Route index element={<MilitaryRankIndex />} />
               <Route path="show/:id" element={<MilitaryRankDetail />} />
             </Route>
 
+            {/* ✅ Family Tree Route */}
+            <Route path="/family-tree/:id" element={<FamilyTreeComponent />} />
           </Routes>
         </div>
-
-
 
         {/* Footer */}
         <footer className="bg-dark text-white text-center py-3 mt-auto">

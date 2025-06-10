@@ -87,7 +87,18 @@ const PersonDetail = () => {
                 <Col md={4}>
                     <Card>
                         <Card.Body>
+
+
                             <Card.Title>{getFullName(person)}</Card.Title>
+
+                            <div className="mb-3">
+                                <Link to={`/family-tree/${person._id}`} className="btn btn-outline-primary btn-sm">
+                                    View Family Tree
+                                </Link>
+                            </div>
+
+
+
                             <ListGroup variant="flush">
                                 <ListGroup.Item><strong>Note:</strong> {person.note || "N/A"}</ListGroup.Item>
                                 <ListGroup.Item><strong>Gender:</strong> {person.gender || "N/A"}</ListGroup.Item>
@@ -281,7 +292,7 @@ const PersonDetail = () => {
                         </Card>
                     )}
 
-                    
+
                     {/* Source Evidences */}
                     <Card className="mb-4">
                         <Card.Body>

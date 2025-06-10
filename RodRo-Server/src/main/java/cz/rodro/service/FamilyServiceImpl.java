@@ -191,4 +191,26 @@ public class FamilyServiceImpl implements FamilyService {
             throw new IllegalArgumentException(role + " must have gender " + expectedGender + ".");
         }
     }
+
+    @Override
+    public List<FamilyDTO> getAllFamilies() {
+        return familyRepository.findAll().stream()
+                .map(familyMapper::toFamilyDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<FamilyDTO> findFamiliesByChild(Long childId) {
+        // Assuming FamilyRepository can find families by child
+        List<FamilyEntity> families = familyRepository.findByChildrenId(childId);
+        return families.stream()
+                .map(familyMapper::toFamilyDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<FamilyDTO> getSpouses(Long personId) {
+        List<FamilyEntity> families = familyRepository.findBySpouseMaleIdOrSpouseFemaleId(personId, personId);
+        return families.stream()
+                .map(familyMapper::toFamilyDTO)
+                .collect(Collectors.toList());
+    }
 }

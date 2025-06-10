@@ -6,16 +6,13 @@ import cz.rodro.dto.mapper.PersonMapper;
 import cz.rodro.dto.mapper.PersonSourceEvidenceMapper;
 import cz.rodro.entity.*;
 import cz.rodro.entity.repository.*;
+import cz.rodro.exception.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import cz.rodro.exception.NotFoundException;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -77,7 +74,6 @@ public class PersonServiceImpl implements PersonService {
             personEntity.setFather(father);
         }
 
-        // Add occupations without duplicates
         List<PersonOccupationEntity> newOccupations = safeFetchOccupations(personDTO.getOccupations(), personEntity);
         Set<Long> occupationIds = new HashSet<>();
         List<PersonOccupationEntity> uniqueOccupations = new ArrayList<>();
@@ -89,7 +85,6 @@ public class PersonServiceImpl implements PersonService {
         }
         personEntity.setOccupations(uniqueOccupations);
 
-        // Add source evidences without duplicates
         List<PersonSourceEvidenceEntity> newEvidences = safeFetchSourceEvidences(personDTO.getSourceEvidences(), personEntity);
         Set<Long> evidenceSourceIds = new HashSet<>();
         List<PersonSourceEvidenceEntity> uniqueEvidences = new ArrayList<>();
@@ -157,18 +152,15 @@ public class PersonServiceImpl implements PersonService {
             existingPerson.setFather(null);
         }
 
-        // --- Update Occupations ---
         List<PersonOccupationEntity> newOccupations = safeFetchOccupations(personDTO.getOccupations(), existingPerson);
         Set<Long> newOccupationIds = newOccupations.stream()
                 .map(o -> o.getOccupation().getId())
                 .collect(Collectors.toSet());
 
-        // Remove occupations not in the new list
         existingPerson.getOccupations().removeIf(
                 po -> !newOccupationIds.contains(po.getOccupation().getId())
         );
 
-        // Add new occupations not already present
         Set<Long> existingOccupationIds = existingPerson.getOccupations().stream()
                 .map(po -> po.getOccupation().getId())
                 .collect(Collectors.toSet());
@@ -178,7 +170,6 @@ public class PersonServiceImpl implements PersonService {
             }
         }
 
-        // --- Update Source Evidences ---
         List<PersonSourceEvidenceEntity> newEvidences = safeFetchSourceEvidences(personDTO.getSourceEvidences(), existingPerson);
         Set<Long> newEvidenceSourceIds = newEvidences.stream()
                 .map(e -> e.getSource().getId())
@@ -222,9 +213,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     private List<PersonOccupationEntity> safeFetchOccupations(List<PersonOccupationDTO> occupationDTOs, PersonEntity person) {
-        if (occupationDTOs == null) {
-            return new ArrayList<>();
-        }
+        if (occupationDTOs == null) return new ArrayList<>();
         List<PersonOccupationEntity> occupationEntities = new ArrayList<>();
         for (PersonOccupationDTO dto : occupationDTOs) {
             if (dto.getOccupationId() == null) continue;
@@ -241,9 +230,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     private List<PersonSourceEvidenceEntity> safeFetchSourceEvidences(List<PersonSourceEvidenceDTO> evidenceDTOs, PersonEntity person) {
-        if (evidenceDTOs == null) {
-            return new ArrayList<>();
-        }
+        if (evidenceDTOs == null) return new ArrayList<>();
         List<PersonSourceEvidenceEntity> evidenceEntities = new ArrayList<>();
         for (PersonSourceEvidenceDTO dto : evidenceDTOs) {
             if (dto.getSourceId() == null) continue;
@@ -257,11 +244,6 @@ public class PersonServiceImpl implements PersonService {
             evidenceEntities.add(entity);
         }
         return evidenceEntities;
-    }
-
-    private SourceEntity fetchSourceById(Long sourceId) {
-        return sourceRepository.findById(sourceId)
-                .orElseThrow(() -> new NotFoundException("Source with id " + sourceId + " not found."));
     }
 
     @Override
@@ -295,6 +277,29 @@ public class PersonServiceImpl implements PersonService {
                     }
                     return dto;
                 })
+                .collect(Collectors.toList());
+    }
+
+    public List<PersonDTO> getSiblings(Long personId) {
+        PersonDTO person = getPerson(personId);
+        if (person == null) {
+            throw new NotFoundException("Person not found");
+        }
+
+        Long fatherId = person.getFather() != null ? person.getFather().getId() : null;
+        Long motherId = person.getMother() != null ? person.getMother().getId() : null;
+
+        if (fatherId == null || motherId == null) {
+            return Collections.emptyList();
+        }
+
+        // Assuming your repository can query by parents
+        List<PersonEntity> siblingEntities = personRepository.findByFatherIdAndMotherId(fatherId, motherId);
+
+        // Filter out the person itself
+        return siblingEntities.stream()
+                .filter(sibling -> !sibling.getId().equals(personId))
+                .map(personMapper::toDTO)
                 .collect(Collectors.toList());
     }
 }
