@@ -1,16 +1,20 @@
 import React, { useState, useMemo } from "react";
+import { useSession } from "../contexts/session";
 import { Link } from "react-router-dom";
 
-const PersonTable = ({ label, items, deletePerson }) => {
+const PersonTable = ({ label, items, link, deletePerson }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [searchTerm, setSearchTerm] = useState("");
     const [sortAsc, setSortAsc] = useState(true);
 
+    const { session } = useSession();
+    const isAdmin = session.data?.isAdmin === true;
+
     // Filtered and sorted list
     const filteredItems = useMemo(() => {
         const filtered = items.filter(item =>
-            (`${item.givenName} ${item.givenSurname}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (`${item.givenName} ${item.givenSurname}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (item.identificationNumber?.toString().toLowerCase().includes(searchTerm.toLowerCase())))
         );
         return filtered.sort((a, b) => {
@@ -56,8 +60,13 @@ const PersonTable = ({ label, items, deletePerson }) => {
         <div className="container my-4">
             <div className="mb-3 d-flex justify-content-between align-items-center">
                 <h4>{label} {items.length}</h4>
-                <Link to="/persons/create" className="btn btn-success">Create Person</Link>
+                {isAdmin && (
+                    <Link to="/persons/create" className="btn btn-success">Create Person</Link>
+                )}
             </div>
+
+
+                        
 
             {/* Centered search bar */}
             <div className="mb-3 d-flex justify-content-center">
@@ -114,10 +123,22 @@ const PersonTable = ({ label, items, deletePerson }) => {
                                     <td>
                                         <div className="btn-group">
                                             <Link to={`/persons/show/${item._id}`} className="btn btn-sm btn-info mx-1">View</Link>
-                                            <Link to={`/persons/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Update</Link>
-                                            <button onClick={() => deletePerson(item._id)} className="btn btn-sm btn-danger mx-1">
-                                                Delete
-                                            </button>
+                                            {isAdmin ? (
+                                                <Link
+                                                    to={"/persons/edit/" + item._id}
+                                                    className="btn btn-sm btn-warning"
+                                                >
+                                                    Edit
+                                                </Link>
+                                            ) : null}
+                                            {isAdmin ? (
+                                                <button
+                                                    onClick={() => deletePerson(item._id)}
+                                                    className="btn btn-sm btn-danger"
+                                                >
+                                                    Delete
+                                                </button>
+                                            ) : null}
                                         </div>
                                     </td>
                                 </tr>

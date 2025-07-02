@@ -12,13 +12,15 @@ import java.util.List;
 @NoArgsConstructor
 public class PersonMilitaryServiceDTO {
 
-    @JsonProperty("_id")
-    private Long id;
+
 
     private Long personId;
 
     private MilitaryStructureDTO militaryStructure; // Reference to structure DTO
     private MilitaryRankDTO militaryRank;           // Reference to rank DTO
+
+    private String givenName;
+    private String givenSurname;
 
     private String militaryStructureName; // Optional: for frontend display
     private String armyBranch;            // Optional: for frontend display

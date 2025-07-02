@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { normalizeString } from "../utils/stringUtils";
+import { useSession } from "../contexts/session";
 
 const CountryTable = ({ label, items = [], deleteCountry }) => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -8,7 +9,10 @@ const CountryTable = ({ label, items = [], deleteCountry }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [sortAsc, setSortAsc] = useState(true);
 
-    // Filtered and sorted countries
+    const { session } = useSession();
+    const isAdmin = session.data?.isAdmin === true;
+
+    // Filter and sort items
     const filteredItems = useMemo(() => {
         const filtered = items.filter(item =>
             normalizeString(item.countryNameInPolish).includes(normalizeString(searchTerm)) ||
@@ -58,11 +62,13 @@ const CountryTable = ({ label, items = [], deleteCountry }) => {
     return (
         <div className="container my-4">
             <div className="mb-3 d-flex justify-content-between align-items-center">
-                <h4>{label} {filteredItems.length}</h4>
-                <Link to="/countries/create" className="btn btn-success">Create Country</Link>
+                <h4>{label} ({filteredItems.length})</h4>
+                {isAdmin && (
+                    <Link to="/countries/create" className="btn btn-success">Create Country</Link>
+                )}
             </div>
 
-            {/* Centered search bar */}
+            {/* Search input */}
             <div className="mb-3 d-flex justify-content-center">
                 <input
                     type="text"
@@ -73,14 +79,14 @@ const CountryTable = ({ label, items = [], deleteCountry }) => {
                 />
             </div>
 
-            {/* Sort and pagination controls */}
+            {/* Sort and records-per-page selector */}
             <div className="mb-3 d-flex justify-content-between align-items-center">
                 <button className="btn btn-outline-primary" onClick={handleSortToggle}>
                     Sort by Name {sortAsc ? "↓ A–Z" : "↑ Z–A"}
                 </button>
 
                 <div className="d-flex align-items-center">
-                    <label className="me-2 mb-0">Records per page:</label>
+                    <label className="me-2 mb-0">Items per page:</label>
                     <select
                         className="form-select w-auto"
                         value={itemsPerPage}
@@ -95,16 +101,16 @@ const CountryTable = ({ label, items = [], deleteCountry }) => {
                 </div>
             </div>
 
-            {/* Table */}
+            {/* Table display */}
             <div className="table-responsive">
                 <table className="table table-bordered table-striped">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Nazwa państwa</th>
-                            <th>Country Name</th>
-                            <th>Est. Year</th>
-                            <th>End Year</th>
+                            <th>Country Name (Polish)</th>
+                            <th>Country Name (English)</th>
+                            <th>Established</th>
+                            <th>Cancelled</th>
                             <th colSpan={3}>Actions</th>
                         </tr>
                     </thead>
@@ -119,27 +125,31 @@ const CountryTable = ({ label, items = [], deleteCountry }) => {
                                 <td>
                                     <div className="btn-group">
                                         <Link to={`/countries/show/${item._id}`} className="btn btn-sm btn-info mx-1">View</Link>
-                                        <Link to={`/countries/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Update</Link>
-                                        <button
-                                            onClick={() => deleteCountry(item._id)}
-                                            className="btn btn-sm btn-danger mx-1"
-                                        >
-                                            Delete
-                                        </button>
+                                        {isAdmin && (
+                                            <>
+                                                <Link to={`/countries/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Edit</Link>
+                                                <button
+                                                    onClick={() => deleteCountry(item._id)}
+                                                    className="btn btn-sm btn-danger mx-1"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
                         ))}
                         {currentItems.length === 0 && (
                             <tr>
-                                <td colSpan="8" className="text-center">No results found.</td>
+                                <td colSpan="6" className="text-center">No results found.</td>
                             </tr>
                         )}
                     </tbody>
                 </table>
             </div>
 
-            {/* Pagination */}
+            {/* Pagination controls */}
             <nav>
                 <ul className="pagination justify-content-center">
                     <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>

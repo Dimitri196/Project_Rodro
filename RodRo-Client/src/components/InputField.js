@@ -1,10 +1,7 @@
 import React from "react";
 
 export function InputField(props) {
-  // podporované typy pro element input
-  const INPUTS = ["text", "number", "date"];
-
-  // validace elementu a typu
+  const INPUTS = ["text", "number", "date", "email", "password"];
   const type = props.type.toLowerCase();
   const isTextarea = type === "textarea";
   const required = props.required || false;
@@ -13,16 +10,14 @@ export function InputField(props) {
     return null;
   }
 
-  // přiřazení hodnoty minima do atributu příslušného typu
   const minProp = props.min || null;
   const min = ["number", "date"].includes(type) ? minProp : null;
-  const minlength = ["text", "textarea"].includes(type) ? minProp : null;
+  const minlength = ["text", "textarea", "email", "password"].includes(type) ? minProp : null;
 
   return (
     <div className="form-group">
       <label>{props.label}:</label>
 
-      {/* vykreslení aktuálního elementu */}
       {isTextarea ? (
         <textarea
           required={required}
@@ -50,5 +45,6 @@ export function InputField(props) {
     </div>
   );
 }
+
 
 export default InputField;

@@ -9,14 +9,16 @@ public interface MilitaryRankService {
 
     List<MilitaryRankDTO> getAll();
 
-    MilitaryRankDTO getMilitaryRank(long rankId);
+    MilitaryRankDTO getMilitaryRank(Long rankId);
 
     MilitaryRankDTO addMilitaryRank(MilitaryRankDTO militaryRankDTO);
 
-    MilitaryRankDTO removeMilitaryRank(long rankId);
+    MilitaryRankDTO removeMilitaryRank(Long rankId);
 
     MilitaryRankDTO updateMilitaryRank(Long rankId, MilitaryRankDTO militaryRankDTO);
 
     MilitaryRankEntity fetchMilitaryRankById(Long id, String type);
+
+    MilitaryRankDTO getMilitaryRankWithPersons(Long id);
 
 }

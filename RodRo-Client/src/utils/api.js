@@ -1,66 +1,65 @@
+// const API_URL = "http://194.182.86.112:8080";
+
+
 const API_URL = "http://localhost:8080";
 
+// Custom error for better debugging
+export class HttpRequestError extends Error {
+  constructor(response) {
+    super(`Network response was not ok: ${response.status} ${response.statusText}`);
+    this.name = "HttpRequestError";
+    this.response = response;
+  }
+}
+
 const fetchData = (url, requestOptions) => {
-    const apiUrl = `${API_URL}${url}`;
+  const apiUrl = `${API_URL}${url}`;
 
-    return fetch(apiUrl, requestOptions)
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
-            }
+  // Always include credentials for cookie/session handling
+  const options = {
+    ...requestOptions,
+    credentials: 'include',
+  };
 
-            if (requestOptions.method !== 'DELETE')
-                return response.json();
-        })
-        .catch((error) => {
-            throw error;
-        });
+  return fetch(apiUrl, options)
+    .then((response) => {
+      if (!response.ok) {
+        throw new HttpRequestError(response);
+      }
+
+      if (options.method !== 'DELETE') {
+        return response.json();
+      }
+    });
 };
 
 export const apiGet = (url, params) => {
-    // Filter out null or undefined values
-    const filteredParams = Object.fromEntries(
-        Object.entries(params || {}).filter(([_, value]) => value != null)
-    );
+  const filteredParams = Object.fromEntries(
+    Object.entries(params || {}).filter(([_, value]) => value != null)
+  );
 
-    // Construct query string only if there are valid parameters
-    const queryString = new URLSearchParams(filteredParams).toString();
-    const apiUrl = queryString ? `${url}?${queryString}` : url;
+  const queryString = new URLSearchParams(filteredParams).toString();
+  const apiUrl = queryString ? `${url}?${queryString}` : url;
 
-    // Log the full URL to debug
-    console.log("Constructed API URL:", `${API_URL}${apiUrl}`);
-
-    const requestOptions = {
-        method: "GET",
-    };
-
-    return fetchData(apiUrl, requestOptions);
+  return fetchData(apiUrl, { method: "GET" });
 };
 
 export const apiPost = (url, data) => {
-    const requestOptions = {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data),
-    };
-
-    return fetchData(url, requestOptions);
+  return fetchData(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 };
 
 export const apiPut = (url, data) => {
-    const requestOptions = {
-        method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data),
-    };
-
-    return fetchData(url, requestOptions);
+  return fetchData(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 };
 
 export const apiDelete = (url) => {
-    const requestOptions = {
-        method: "DELETE",
-    };
-
-    return fetchData(url, requestOptions);
+  return fetchData(url, { method: "DELETE" });
 };

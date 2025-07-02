@@ -12,6 +12,7 @@ import cz.rodro.service.PersonService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import cz.rodro.exception.NotFoundException;
 
@@ -50,6 +51,7 @@ public class PersonController {
     private DTreeService dTreeService; // <-- added DTreeService injection
 
     // Add a new person
+    @Secured("ROLE_ADMIN")
     @PostMapping("/persons")
     @ResponseStatus(HttpStatus.CREATED)
     public PersonDTO addPerson(@Valid @RequestBody PersonDTO personDTO) {
@@ -69,6 +71,7 @@ public class PersonController {
     }
 
     // Delete person by ID
+    @Secured("ROLE_ADMIN")
     @DeleteMapping("/persons/{personId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePerson(@PathVariable Long personId) {
@@ -76,6 +79,7 @@ public class PersonController {
     }
 
     // Update existing person
+    @Secured("ROLE_ADMIN")
     @PutMapping("/persons/{personId}")
     public PersonDTO updatePerson(
             @PathVariable Long personId,
@@ -91,6 +95,7 @@ public class PersonController {
                 .collect(Collectors.toList());
     }
 
+    @Secured("ROLE_ADMIN")
     @PostMapping("/persons/{personId}/occupations")
     @ResponseStatus(HttpStatus.CREATED)
     public PersonOccupationDTO addOccupationToPerson(
@@ -107,6 +112,7 @@ public class PersonController {
     }
 
     // 🔹 Remove person-occupation link
+    @Secured("ROLE_ADMIN")
     @DeleteMapping("/persons/occupations/{linkId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePersonOccupation(@PathVariable Long linkId) {
@@ -119,6 +125,7 @@ public class PersonController {
         return personService.getSourceEvidences(personId);
     }
 
+    @Secured("ROLE_ADMIN")
     @DeleteMapping("/persons/sourceEvidences/{evidenceId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePersonSourceEvidence(@PathVariable Long evidenceId) {

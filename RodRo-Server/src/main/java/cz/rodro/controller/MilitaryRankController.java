@@ -23,7 +23,7 @@ public class MilitaryRankController {
 
     @GetMapping("/militaryRanks/{id}")
     public MilitaryRankDTO getById(@PathVariable Long id) {
-        return militaryRankService.getMilitaryRank(id);
+        return militaryRankService.getMilitaryRankWithPersons(id);
     }
 
     @PostMapping("/militaryRanks")

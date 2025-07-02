@@ -2,12 +2,16 @@ import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import settlementTypeLabels from "../constants/settlementTypeLabels";
 import { normalizeString } from "../utils/stringUtils";
+import { useSession } from "../contexts/session";  // <-- Import useSession
 
 const LocationTable = ({ label, items, deleteLocation }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [searchTerm, setSearchTerm] = useState("");
     const [sortAsc, setSortAsc] = useState(true);
+
+    const { session } = useSession();  // <-- Get session
+    const isAdmin = session.data?.isAdmin === true;  // <-- Determine admin status
 
     // Filtered and sorted list
     const filteredItems = useMemo(() => {
@@ -60,7 +64,9 @@ const LocationTable = ({ label, items, deleteLocation }) => {
         <div className="container my-4">
             <div className="mb-3 d-flex justify-content-between align-items-center">
                 <h4>{label} {items.length}</h4>
-                <Link to="/locations/create" className="btn btn-success">Create Location</Link>
+                {isAdmin && (
+                    <Link to="/locations/create" className="btn btn-success">Create Location</Link>
+                )}
             </div>
 
             {/* Centered search bar */}
@@ -122,10 +128,14 @@ const LocationTable = ({ label, items, deleteLocation }) => {
                                 <td>
                                     <div className="btn-group">
                                         <Link to={`/locations/show/${item._id}`} className="btn btn-sm btn-info mx-1">View</Link>
-                                        <Link to={`/locations/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Update</Link>
-                                        <button onClick={() => deleteLocation(item._id)} className="btn btn-sm btn-danger mx-1">
-                                            Delete
-                                        </button>
+                                        {isAdmin && (
+                                            <>
+                                                <Link to={`/locations/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Update</Link>
+                                                <button onClick={() => deleteLocation(item._id)} className="btn btn-sm btn-danger mx-1">
+                                                    Delete
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </td>
                             </tr>

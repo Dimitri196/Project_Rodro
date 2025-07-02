@@ -1,9 +1,26 @@
-import React from "react";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter as Router, Link, Route, Routes, Navigate } from "react-router-dom";
+import React, { useState } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import {
+  BrowserRouter as Router,
+  Link,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import {
+  Navbar,
+  Nav,
+  Container,
+  Spinner,
+  NavDropdown,
+  Image,
+} from "react-bootstrap";
 
 // Import pages
 import HomePage from "./HomePage";
+import About from "./About";
+import PrivacyPolicy from "./PrivacyPolicy";
+import TermsOfService from "./TermsOfService"; 
 
 // Persons
 import PersonIndex from "./persons/PersonIndex";
@@ -33,9 +50,9 @@ import ParishDetail from "./parishes/ParishDetail";
 import ParishForm from "./parishes/ParishForm";
 
 // Cemeteries
-import CemeteryIndex from "./cemetries/CemeteryIndex";
-import CemeteryDetail from "./cemetries/CemeteryDetail";
-import CemeteryForm from "./cemetries/CemeteryForm";
+import CemeteryIndex from "./cemeteries/CemeteryIndex";
+import CemeteryDetail from "./cemeteries/CemeteryDetail";
+import CemeteryForm from "./cemeteries/CemeteryForm";
 
 // Subdivision
 import SubdivisionDetail from "./countries/SubdivisionDetail";
@@ -52,160 +69,244 @@ import OccupationDetail from "./occupations/OccupationDetail";
 import SourceIndex from "./sources/SourceIndex";
 import SourceDetail from "./sources/SourceDetail";
 
-// Military Organizations
+// Military
 import MilitaryOrganizationIndex from "./military_service/MilitaryOrganizationIndex";
 import MilitaryOrganizationDetail from "./military_service/MilitaryOrganizationDetail";
-
-// Military Structures
 import MilitaryStructureIndex from "./military_service/MilitaryStructureIndex";
 import MilitaryStructureDetail from "./military_service/MilitaryStructureDetail";
-
-// Military Ranks
 import MilitaryRankIndex from "./military_service/MilitaryRankIndex";
 import MilitaryRankDetail from "./military_service/MilitaryRankDetail";
 
-// Family Tree Component
-import FamilyTreeComponent from "./components/FamilyTreeComponent"; // adjust path if needed
+// Family Tree
+import FamilyTreeComponent from "./components/FamilyTreeComponent";
+
+// Auth
+import RegistrationPage from "./registration/RegistrationPage";
+import LoginPage from "./login/LoginPage";
+
+import { useSession } from "./contexts/session";
+import { apiDelete } from "./utils/api";
 
 export function App() {
+  const { session, setSession } = useSession();
+  const [expanded, setExpanded] = useState(false); // 👈 Add collapse control
+
+  const handleLogoutClick = () => {
+    apiDelete("/api/auth").finally(() =>
+      setSession({ data: null, status: "unauthenticated" })
+    );
+    setExpanded(false); // 👈 Collapse menu after logout
+  };
+
   return (
     <Router>
       <div className="d-flex flex-column min-vh-100">
-        {/* Navigation Panel */}
-        <nav className="navbar navbar-expand-lg navbar-light bg-light">
-          <div className="container">
-            <Link to="/" className="navbar-brand">Project RodRo</Link>
-            <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-              <span className="navbar-toggler-icon"></span>
-            </button>
-            <div className="collapse navbar-collapse" id="navbarNav">
-              <ul className="navbar-nav ml-auto">
-                <li className="nav-item"><Link to="/home" className="nav-link">Home</Link></li>
-                <li className="nav-item"><Link to="/persons" className="nav-link">Persons</Link></li>
-                <li className="nav-item"><Link to="/locations" className="nav-link">Locations</Link></li>
-                <li className="nav-item"><Link to="/countries" className="nav-link">Countries</Link></li>
-                <li className="nav-item"><Link to="/parishes" className="nav-link">Parishes</Link></li>
-                <li className="nav-item"><Link to="/families" className="nav-link">Families</Link></li>
-                <li className="nav-item"><Link to="/cemeteries" className="nav-link">Cemeteries</Link></li>
-                <li className="nav-item"><Link to="/institutions" className="nav-link">Institutions</Link></li>
-                <li className="nav-item"><Link to="/occupations" className="nav-link">Occupations</Link></li>
-                <li className="nav-item"><Link to="/sources" className="nav-link">Sources</Link></li>
-                <li className="nav-item"><Link to="/militaryOrganizations" className="nav-link">Military Organizations</Link></li>
-                <li className="nav-item"><Link to="/militaryStructures" className="nav-link">Military Structures</Link></li>
-                <li className="nav-item"><Link to="/militaryRanks" className="nav-link">Military Ranks</Link></li>
-                {/* 🔥 REMOVED: <li className="nav-item"><Link to="/family-tree/1" className="nav-link">Family Tree</Link></li> */}
-              </ul>
-            </div>
-          </div>
-        </nav>
+        {/* Navbar */}
+        <Navbar bg="light" expand="lg" className="border-bottom">
+          <Container>
+            <Navbar.Brand as={Link} to="/">Project RodRo</Navbar.Brand>
+            <Navbar.Toggle />
+            <Navbar.Collapse>
+              <Nav className="me-auto">
+                <Nav.Link as={Link} to="/home">Home</Nav.Link>
+                <Nav.Link as={Link} to="/about">About</Nav.Link>
 
-        {/* Main Content */}
-        <div className="container flex-grow-1 d-flex justify-content-center align-items-center py-4">
+
+                {/* Data Management */}
+                <NavDropdown title="Manage" id="manage-dropdown">
+                  <NavDropdown.Item as={Link} to="/persons">Persons</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/families">Families</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/sources">Sources</NavDropdown.Item>
+                </NavDropdown>
+
+                {/* Institutions */}
+                <NavDropdown title="Institutions" id="institutions-dropdown">
+                  <NavDropdown.Item as={Link} to="/institutions">Institutions</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/occupations">Occupations</NavDropdown.Item>
+                </NavDropdown>
+
+                {/* Geography */}
+                <NavDropdown title="Regions" id="regions-dropdown">
+                  <NavDropdown.Item as={Link} to="/countries">Countries</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/locations">Locations</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/parishes">Parishes</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/cemeteries">Cemeteries</NavDropdown.Item>
+                </NavDropdown>
+
+                {/* Military */}
+                <NavDropdown title="Military" id="military-dropdown">
+                  <NavDropdown.Item as={Link} to="/militaryOrganizations">Organizations</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/militaryStructures">Structures</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/militaryRanks">Ranks</NavDropdown.Item>
+                </NavDropdown>
+
+                <Nav.Link as={Link} to="/contact">Contact</Nav.Link>
+              </Nav>
+
+              {/* Auth Links */}
+              <Nav className="gap-2 align-items-center">
+                {session.status === "loading" ? (
+                  <Spinner animation="border" size="sm" />
+                ) : session.data ? (
+                  <NavDropdown
+                    title={
+                      <>
+                        <Image
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            session.data.email
+                          )}&background=0D8ABC&color=fff&rounded=true`}
+                          roundedCircle
+                          width={30}
+                          height={30}
+                          className="me-2"
+                          alt="User Avatar"
+                        />
+                        {session.data.email}
+                      </>
+                    }
+                    id="user-nav-dropdown"
+                    align="end"
+                  >
+                    <NavDropdown.Item as={Link} to="/profile">Profile</NavDropdown.Item>
+                    <NavDropdown.Divider />
+                    <NavDropdown.Item onClick={handleLogoutClick}>Logout</NavDropdown.Item>
+                  </NavDropdown>
+                ) : (
+                  <>
+                    <Nav.Link as={Link} to="/register">Register</Nav.Link>
+                    <Nav.Link as={Link} to="/login">Login</Nav.Link>
+                  </>
+                )}
+              </Nav>
+            </Navbar.Collapse>
+          </Container>
+        </Navbar>
+
+        {/* Routes */}
+        <div className="container flex-grow-1 py-4">
           <Routes>
             <Route path="/" element={<Navigate to="/home" />} />
             <Route path="/home" element={<HomePage />} />
 
+            <Route path="/about" element={<About />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+
             {/* Persons */}
-            <Route path="/persons">
-              <Route index element={<PersonIndex />} />
-              <Route path="show/:id" element={<PersonDetail />} />
-              <Route path="create" element={<PersonForm />} />
-              <Route path="edit/:id" element={<PersonForm />} />
-            </Route>
+            <Route path="/persons" element={<PersonIndex />} />
+            <Route path="/persons/show/:id" element={<PersonDetail />} />
+            <Route path="/persons/create" element={<PersonForm />} />
+            <Route path="/persons/edit/:id" element={<PersonForm />} />
 
             {/* Families */}
-            <Route path="/families">
-              <Route index element={<FamilyIndex />} />
-              <Route path="show/:id" element={<FamilyDetail />} />
-              <Route path="create" element={<FamilyForm />} />
-              <Route path="edit/:id" element={<FamilyForm />} />
-            </Route>
+            <Route path="/families" element={<FamilyIndex />} />
+            <Route path="/families/show/:id" element={<FamilyDetail />} />
+            <Route path="/families/create" element={<FamilyForm />} />
+            <Route path="/families/edit/:id" element={<FamilyForm />} />
 
             {/* Locations */}
-            <Route path="/locations">
-              <Route index element={<LocationIndex />} />
-              <Route path="show/:id" element={<LocationDetail />} />
-              <Route path="create" element={<LocationForm />} />
-              <Route path="edit/:id" element={<LocationForm />} />
-            </Route>
+            <Route path="/locations" element={<LocationIndex />} />
+            <Route path="/locations/show/:id" element={<LocationDetail />} />
+            <Route path="/locations/create" element={<LocationForm />} />
+            <Route path="/locations/edit/:id" element={<LocationForm />} />
 
             {/* Countries */}
-            <Route path="/countries">
-              <Route index element={<CountryIndex />} />
-              <Route path="show/:id" element={<CountryDetail />} />
-              <Route path="create" element={<CountryForm />} />
-              <Route path="edit/:id" element={<CountryForm />} />
-              <Route path=":countryId/provinces/:provinceId" element={<ProvinceDetail />} />
-              <Route path=":countryId/provinces/:provinceId/districts/:districtId" element={<DistrictDetail />} />
-            </Route>
+            <Route path="/countries" element={<CountryIndex />} />
+            <Route path="/countries/show/:id" element={<CountryDetail />} />
+            <Route path="/countries/create" element={<CountryForm />} />
+            <Route path="/countries/edit/:id" element={<CountryForm />} />
+            <Route
+              path="/countries/:countryId/provinces/:provinceId"
+              element={<ProvinceDetail />}
+            />
+            <Route
+              path="/countries/:countryId/provinces/:provinceId/districts/:districtId"
+              element={<DistrictDetail />}
+            />
 
             {/* Parishes */}
-            <Route path="/parishes">
-              <Route index element={<ParishIndex />} />
-              <Route path="show/:id" element={<ParishDetail />} />
-              <Route path="create" element={<ParishForm />} />
-              <Route path="edit/:id" element={<ParishForm />} />
-            </Route>
+            <Route path="/parishes" element={<ParishIndex />} />
+            <Route path="/parishes/show/:id" element={<ParishDetail />} />
+            <Route path="/parishes/create" element={<ParishForm />} />
+            <Route path="/parishes/edit/:id" element={<ParishForm />} />
 
             {/* Cemeteries */}
-            <Route path="/cemeteries">
-              <Route index element={<CemeteryIndex />} />
-              <Route path="show/:id" element={<CemeteryDetail />} />
-              <Route path="create" element={<CemeteryForm />} />
-              <Route path="edit/:id" element={<CemeteryForm />} />
-            </Route>
+            <Route path="/cemeteries" element={<CemeteryIndex />} />
+            <Route path="/cemeteries/show/:id" element={<CemeteryDetail />} />
+            <Route path="/cemeteries/create" element={<CemeteryForm />} />
+            <Route path="/cemeteries/edit/:id" element={<CemeteryForm />} />
 
-            {/* Subdivision */}
-            <Route path="/subdivisions/show/:id" element={<SubdivisionDetail />} />
+            {/* Subdivisions */}
+            <Route
+              path="/subdivisions/show/:id"
+              element={<SubdivisionDetail />}
+            />
 
             {/* Institutions */}
-            <Route path="/institutions">
-              <Route index element={<InstitutionIndex />} />
-              <Route path="show/:id" element={<InstitutionDetail />} />
-            </Route>
+            <Route path="/institutions" element={<InstitutionIndex />} />
+            <Route
+              path="/institutions/show/:id"
+              element={<InstitutionDetail />}
+            />
 
             {/* Occupations */}
-            <Route path="/occupations">
-              <Route index element={<OccupationIndex />} />
-              <Route path="show/:id" element={<OccupationDetail />} />
-            </Route>
+            <Route path="/occupations" element={<OccupationIndex />} />
+            <Route
+              path="/occupations/show/:id"
+              element={<OccupationDetail />}
+            />
 
             {/* Sources */}
-            <Route path="/sources">
-              <Route index element={<SourceIndex />} />
-              <Route path="show/:id" element={<SourceDetail />} />
-            </Route>
+            <Route path="/sources" element={<SourceIndex />} />
+            <Route path="/sources/show/:id" element={<SourceDetail />} />
 
-            {/* Military Organizations */}
-            <Route path="/militaryOrganizations">
-              <Route index element={<MilitaryOrganizationIndex />} />
-              <Route path="show/:id" element={<MilitaryOrganizationDetail />} />
-            </Route>
+            {/* Military */}
+            <Route
+              path="/militaryOrganizations"
+              element={<MilitaryOrganizationIndex />}
+            />
+            <Route
+              path="/militaryOrganizations/show/:id"
+              element={<MilitaryOrganizationDetail />}
+            />
+            <Route
+              path="/militaryStructures"
+              element={<MilitaryStructureIndex />}
+            />
+            <Route
+              path="/militaryStructures/show/:id"
+              element={<MilitaryStructureDetail />}
+            />
+            <Route path="/militaryRanks" element={<MilitaryRankIndex />} />
+            <Route
+              path="/militaryRanks/show/:id"
+              element={<MilitaryRankDetail />}
+            />
 
-            {/* Military Structures */}
-            <Route path="/militaryStructures">
-              <Route index element={<MilitaryStructureIndex />} />
-              <Route path="show/:id" element={<MilitaryStructureDetail />} />
-            </Route>
-
-            {/* Military Ranks */}
-            <Route path="/militaryRanks">
-              <Route index element={<MilitaryRankIndex />} />
-              <Route path="show/:id" element={<MilitaryRankDetail />} />
-            </Route>
-
-            {/* ✅ Family Tree Route */}
+            {/* Family Tree */}
             <Route path="/family-tree/:id" element={<FamilyTreeComponent />} />
+
+            {/* Auth */}
+            <Route path="/register" element={<RegistrationPage />} />
+            <Route path="/login" element={<LoginPage />} />
+
+            {/* Fallback */}
+            <Route path="*" element={<div>Page not found</div>} />
           </Routes>
         </div>
 
         {/* Footer */}
-        <footer className="bg-dark text-white text-center py-3 mt-auto">
+        <footer className="bg-dark text-white text-center py-4 mt-auto">
           <div className="container">
-            <p>&copy; 2025 Project RodRo. All Rights Reserved.</p>
+            <p className="mb-2">&copy; 2025 Project RodRo. All Rights Reserved.</p>
             <p>
-              <Link to="/privacy-policy" className="text-white">Privacy Policy</Link> |{' '}
-              <Link to="/terms-of-service" className="text-white">Terms of Service</Link>
+              <Link to="/privacy-policy" className="underline hover:text-gray-300">
+                Privacy Policy
+              </Link>
+              {" | "}
+              <Link to="/terms-of-service" className="underline hover:text-gray-300">
+                Terms of Service
+              </Link>
             </p>
           </div>
         </footer>

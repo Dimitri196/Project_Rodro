@@ -37,3 +37,11 @@
 .gender-female {
   color: #d63384;
 }
+
+.sticky-top.shadow-scroll {
+  transition: box-shadow 0.3s ease;
+}
+
+.sticky-top.shadow-scroll.scrolled {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}

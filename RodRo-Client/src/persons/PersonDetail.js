@@ -91,13 +91,29 @@ const PersonDetail = () => {
 
                             <Card.Title>{getFullName(person)}</Card.Title>
 
-                            <div className="mb-3">
-                                <Link to={`/family-tree/${person._id}`} className="btn btn-outline-primary btn-sm">
-                                    View Family Tree
-                                </Link>
-                            </div>
+                            {person.identificationNumber ? (
+                                <div className="mb-3 d-flex gap-2 flex-wrap">
+                                    <a
+                                        href={`http://mali-wielcy.pl:2317/Polesie?lang=en;templ=templd;m=D;i=${person.identificationNumber};oc=1;siblings=on;notes=on;t=T;image=on;v=5`}
+                                        className="btn btn-outline-primary btn-sm"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Tree (Descendants)
+                                    </a>
 
-
+                                    <a
+                                        href={`http://mali-wielcy.pl:2317/Polesie?lang=en;templ=templd;m=A;i=${person.identificationNumber};oc=1;siblings=on;notes=on;t=T;image=on;v=5`}
+                                        className="btn btn-outline-secondary btn-sm"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Tree (Ancestors)
+                                    </a>
+                                </div>
+                            ) : (
+                                <p className="text-muted">No GenWeb link available</p>
+                            )}
 
                             <ListGroup variant="flush">
                                 <ListGroup.Item><strong>Note:</strong> {person.note || "N/A"}</ListGroup.Item>

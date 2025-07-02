@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { normalizeString } from "../utils/stringUtils";
+import { useSession } from "../contexts/session"; // ✅ Added
 
 const ParishTable = ({ label, items, deleteParish }) => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -8,7 +9,9 @@ const ParishTable = ({ label, items, deleteParish }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [sortAsc, setSortAsc] = useState(true);
 
-    // Filtered and sorted list
+    const { session } = useSession(); // ✅ Added
+    const isAdmin = session.data?.isAdmin === true; // ✅ Added
+
     const filteredItems = useMemo(() => {
         const filtered = items.filter(item =>
             normalizeString(item.name).includes(normalizeString(searchTerm)) ||
@@ -24,7 +27,6 @@ const ParishTable = ({ label, items, deleteParish }) => {
         });
     }, [items, searchTerm, sortAsc]);
 
-    // Pagination logic
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
@@ -62,10 +64,12 @@ const ParishTable = ({ label, items, deleteParish }) => {
         <div className="container my-4">
             <div className="mb-3 d-flex justify-content-between align-items-center">
                 <h4>{label} {items.length}</h4>
-                <Link to="/parishes/create" className="btn btn-success">Create Parish</Link>
+                {isAdmin && (
+                    <Link to="/parishes/create" className="btn btn-success">Create Parish</Link>
+                )}
             </div>
 
-            {/* Centered search bar */}
+            {/* Search Bar */}
             <div className="mb-3 d-flex justify-content-center">
                 <input
                     type="text"
@@ -76,12 +80,11 @@ const ParishTable = ({ label, items, deleteParish }) => {
                 />
             </div>
 
-            {/* Sort and pagination controls */}
+            {/* Sort and Pagination */}
             <div className="mb-3 d-flex justify-content-between align-items-center">
                 <button className="btn btn-outline-primary" onClick={handleSortToggle}>
                     Sort by Name {sortAsc ? "↓ A–Z" : "↑ Z–A"}
                 </button>
-
                 <div className="d-flex align-items-center">
                     <label className="me-2 mb-0">Records per page:</label>
                     <select
@@ -107,7 +110,7 @@ const ParishTable = ({ label, items, deleteParish }) => {
                             <th>Parish Name</th>
                             <th>Church Name</th>
                             <th>Location Name</th>
-                            <th colSpan={3}>Actions</th>
+                            {isAdmin && <th colSpan={3}>Actions</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -115,7 +118,7 @@ const ParishTable = ({ label, items, deleteParish }) => {
                             <tr key={item._id}>
                                 <td>{startIndex + index + 1}</td>
                                 <td>{item.parishName}</td>
-                                <td>{item.parishMainChurchName|| "-"}</td>
+                                <td>{item.parishMainChurchName || "-"}</td>
                                 <td>
                                     {item.parishLocation ? (
                                         <Link to={`/locations/show/${item.parishLocation._id}`}>
@@ -123,20 +126,22 @@ const ParishTable = ({ label, items, deleteParish }) => {
                                         </Link>
                                     ) : "-"}
                                 </td>
-                                <td>
-                                    <div className="btn-group">
-                                        <Link to={`/parishes/show/${item._id}`} className="btn btn-sm btn-info mx-1">View</Link>
-                                        <Link to={`/parishes/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Update</Link>
-                                        <button onClick={() => deleteParish(item._id)} className="btn btn-sm btn-danger mx-1">
-                                            Delete
-                                        </button>
-                                    </div>
-                                </td>
+                                {isAdmin && (
+                                    <td>
+                                        <div className="btn-group">
+                                            <Link to={`/parishes/show/${item._id}`} className="btn btn-sm btn-info mx-1">View</Link>
+                                            <Link to={`/parishes/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Update</Link>
+                                            <button onClick={() => deleteParish(item._id)} className="btn btn-sm btn-danger mx-1">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                )}
                             </tr>
                         ))}
                         {currentItems.length === 0 && (
                             <tr>
-                                <td colSpan="8" className="text-center">No results found.</td>
+                                <td colSpan={isAdmin ? "7" : "4"} className="text-center">No results found.</td>
                             </tr>
                         )}
                     </tbody>

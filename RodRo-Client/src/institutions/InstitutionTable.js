@@ -1,12 +1,16 @@
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { normalizeString } from "../utils/stringUtils";
+import { useSession } from "../contexts/session"; // ⬅️ added
 
 const InstitutionTable = ({ label, items, deleteInstitution }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [searchTerm, setSearchTerm] = useState("");
     const [sortAsc, setSortAsc] = useState(true);
+
+    const { session } = useSession(); // ⬅️ added
+    const isAdmin = session.data?.isAdmin === true; // ⬅️ added
 
     const filteredItems = useMemo(() => {
         const filtered = items.filter(item =>
@@ -58,10 +62,12 @@ const InstitutionTable = ({ label, items, deleteInstitution }) => {
         <div className="container my-4">
             <div className="mb-3 d-flex justify-content-between align-items-center">
                 <h4>{label} {items.length}</h4>
-                <Link to="/institutions/create" className="btn btn-success">Create Institution</Link>
+                {isAdmin && ( // ⬅️ only show if admin
+                    <Link to="/institutions/create" className="btn btn-success">Create Institution</Link>
+                )}
             </div>
 
-            {/* Centered search bar */}
+            {/* Search */}
             <div className="mb-3 d-flex justify-content-center">
                 <input
                     type="text"
@@ -72,7 +78,7 @@ const InstitutionTable = ({ label, items, deleteInstitution }) => {
                 />
             </div>
 
-            {/* Sort and pagination controls */}
+            {/* Sort & pagination controls */}
             <div className="mb-3 d-flex justify-content-between align-items-center">
                 <button className="btn btn-outline-primary" onClick={handleSortToggle}>
                     Sort by Name {sortAsc ? "↓ A–Z" : "↑ Z–A"}
@@ -120,13 +126,17 @@ const InstitutionTable = ({ label, items, deleteInstitution }) => {
                                 <td>
                                     <div className="btn-group">
                                         <Link to={`/institutions/show/${item._id}`} className="btn btn-sm btn-info mx-1">View</Link>
-                                        <Link to={`/institutions/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Update</Link>
-                                        <button
-                                            onClick={() => deleteInstitution(item._id)}
-                                            className="btn btn-sm btn-danger mx-1"
-                                        >
-                                            Delete
-                                        </button>
+                                        {isAdmin && ( // ⬅️ only admins can edit or delete
+                                            <>
+                                                <Link to={`/institutions/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Update</Link>
+                                                <button
+                                                    onClick={() => deleteInstitution(item._id)}
+                                                    className="btn btn-sm btn-danger mx-1"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </td>
                             </tr>

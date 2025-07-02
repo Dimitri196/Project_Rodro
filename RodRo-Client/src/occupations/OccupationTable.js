@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useSession } from "../contexts/session";
 import { normalizeString } from "../utils/stringUtils";
 
 const OccupationTable = ({ label, items, deleteOccupation }) => {
@@ -7,6 +8,9 @@ const OccupationTable = ({ label, items, deleteOccupation }) => {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [searchTerm, setSearchTerm] = useState("");
     const [sortAsc, setSortAsc] = useState(true);
+
+    const { session } = useSession();
+    const isAdmin = session.data?.isAdmin === true;
 
     const filteredItems = useMemo(() => {
         const filtered = items.filter(item =>
@@ -24,6 +28,12 @@ const OccupationTable = ({ label, items, deleteOccupation }) => {
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages || 1);
+        }
+    }, [totalPages, currentPage]);
 
     const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
     const handleItemsPerPageChange = (e) => {
@@ -57,14 +67,16 @@ const OccupationTable = ({ label, items, deleteOccupation }) => {
         <div className="container my-4">
             <div className="mb-3 d-flex justify-content-between align-items-center">
                 <h4>{label} {items.length}</h4>
-                <Link to="/occupations/create" className="btn btn-success">Create Occupation</Link>
+                {isAdmin && (
+                    <Link to="/occupations/create" className="btn btn-success">Create Occupation</Link>
+                )}
             </div>
 
             <div className="mb-3 d-flex justify-content-center">
                 <input
                     type="text"
                     className="form-control w-50"
-                    placeholder="Search occupations or institutions..."
+                    placeholder="Search occupation or institution..."
                     value={searchTerm}
                     onChange={handleSearchChange}
                 />
@@ -74,7 +86,6 @@ const OccupationTable = ({ label, items, deleteOccupation }) => {
                 <button className="btn btn-outline-primary" onClick={handleSortToggle}>
                     Sort by Name {sortAsc ? "↓ A–Z" : "↑ Z–A"}
                 </button>
-
                 <div className="d-flex align-items-center">
                     <label className="me-2 mb-0">Records per page:</label>
                     <select
@@ -98,11 +109,11 @@ const OccupationTable = ({ label, items, deleteOccupation }) => {
                             <th>#</th>
                             <th>Occupation Name</th>
                             <th>Institution</th>
-                            <th colSpan={3}>Actions</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {currentItems.map((item, index) => (
+                        {currentItems.length > 0 ? currentItems.map((item, index) => (
                             <tr key={item._id}>
                                 <td>{startIndex + index + 1}</td>
                                 <td>{item.occupationName}</td>
@@ -116,20 +127,23 @@ const OccupationTable = ({ label, items, deleteOccupation }) => {
                                 <td>
                                     <div className="btn-group">
                                         <Link to={`/occupations/show/${item._id}`} className="btn btn-sm btn-info mx-1">View</Link>
-                                        <Link to={`/occupations/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Update</Link>
-                                        <button
-                                            onClick={() => deleteOccupation(item._id)}
-                                            className="btn btn-sm btn-danger mx-1"
-                                        >
-                                            Delete
-                                        </button>
+                                        {isAdmin && (
+                                            <>
+                                                <Link to={`/occupations/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Update</Link>
+                                                <button
+                                                    onClick={() => deleteOccupation(item._id)}
+                                                    className="btn btn-sm btn-danger mx-1"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
-                        ))}
-                        {currentItems.length === 0 && (
+                        )) : (
                             <tr>
-                                <td colSpan="6" className="text-center">No results found.</td>
+                                <td colSpan="4" className="text-center">No results found.</td>
                             </tr>
                         )}
                     </tbody>

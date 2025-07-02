@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,4 +23,7 @@ public class MilitaryRankDTO {
     private String notes; // Additional remarks
 
     private String armyBranchName;
+
+    private List<PersonMilitaryServiceDTO> persons; // List of persons holding this rank
 }
+

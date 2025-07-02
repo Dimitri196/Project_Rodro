@@ -10,6 +10,7 @@ import org.mapstruct.MappingTarget;
 public interface MilitaryRankMapper {
 
     @Mapping(source = "armyBranch.armyBranchName", target = "armyBranchName")
+    @Mapping(target = "persons", ignore = true) // avoid the cycle here
     MilitaryRankDTO toMilitaryRankDTO(MilitaryRankEntity entity);
 
     MilitaryRankEntity toMilitaryRankEntity(MilitaryRankDTO dto);
