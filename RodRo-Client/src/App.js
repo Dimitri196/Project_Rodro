@@ -20,7 +20,13 @@ import {
 import HomePage from "./HomePage";
 import About from "./About";
 import PrivacyPolicy from "./PrivacyPolicy";
-import TermsOfService from "./TermsOfService"; 
+import TermsOfService from "./TermsOfService";
+
+// Articles
+import ArticleIndex from "./articles/ArticleIndex";
+import ArticleDetail from "./articles/ArticleDetail";
+import ArticleForm from "./articles/ArticleForm";
+
 
 // Persons
 import PersonIndex from "./persons/PersonIndex";
@@ -83,6 +89,7 @@ import FamilyTreeComponent from "./components/FamilyTreeComponent";
 // Auth
 import RegistrationPage from "./registration/RegistrationPage";
 import LoginPage from "./login/LoginPage";
+import ContactMessage from "./contact_messages/ContactMessage";
 
 import { useSession } from "./contexts/session";
 import { apiDelete } from "./utils/api";
@@ -110,6 +117,7 @@ export function App() {
               <Nav className="me-auto">
                 <Nav.Link as={Link} to="/home">Home</Nav.Link>
                 <Nav.Link as={Link} to="/about">About</Nav.Link>
+                <Nav.Link as={Link} to="/articles">Blog</Nav.Link>
 
 
                 {/* Data Management */}
@@ -187,6 +195,13 @@ export function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/home" />} />
             <Route path="/home" element={<HomePage />} />
+            <Route path="/contact" element={<ContactMessage />} />
+
+
+            <Route path="/articles" element={<ArticleIndex />} />
+            <Route path="/articles/show/:id" element={<ArticleDetail />} />
+            <Route path="/articles/create" element={<ArticleForm />} />
+            <Route path="/articles/edit/:id" element={<ArticleForm />} />
 
             <Route path="/about" element={<About />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
