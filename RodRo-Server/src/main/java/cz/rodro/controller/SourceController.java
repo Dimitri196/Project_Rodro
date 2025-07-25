@@ -50,4 +50,3 @@ public class SourceController {
         sourceService.deleteSource(sourceId);
     }
 }
-

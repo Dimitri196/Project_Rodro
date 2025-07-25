@@ -1,60 +1,78 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiGet, apiPost, apiPut } from "../utils/api";
-import { Form, Button, Container, Row, Col, Alert, Spinner } from "react-bootstrap";
+import { Form, Button, Container, Row, Col, Alert, Spinner, Card } from "react-bootstrap";
 import InputSelect from "../components/InputSelect";
 import InputField from "../components/InputField";
 import InputCheck from "../components/InputCheck";
 import FlashMessage from "../components/FlashMessage";
-import Gender from "./Gender";
+import Gender from "./Gender"; // Assuming Gender is an enum or object with values
 import socialStatusLabels from "../constants/socialStatusLabels";
 import causeOfDeathLabels from "../constants/causeOfDeathLabels";
 
 const PersonForm = () => {
     const navigate = useNavigate();
     const { id } = useParams();
+
+    // Initial state for a new person, now including year, month, day for dates
     const [person, setPerson] = useState({
-        birthPlace: { _id: "" },
-        deathPlace: { _id: "" },
-        burialPlace: { _id: "" },
-        baptizationPlace: { _id: "" },
-        birthDate: "",
-        baptizationDate: "",
-        deathDate: "",
-        burialDate: "",
         givenName: "",
         givenSurname: "",
         gender: Gender.UNKNOWN,
         identificationNumber: "",
         note: "",
-        mother: null,
-        father: null,
         socialStatus: "",
         causeOfDeath: "",
+
+        // Date fields - now split into year, month, day
+        birthYear: null,
+        birthMonth: null,
+        birthDay: null,
+        baptizationYear: null,
+        baptizationMonth: null,
+        baptizationDay: null,
+        deathYear: null,
+        deathMonth: null,
+        deathDay: null,
+        burialYear: null,
+        burialMonth: null,
+        burialDay: null,
+
+        // Place and relation IDs (initially empty objects with _id for InputSelect)
+        birthPlace: { _id: "" },
+        baptizationPlace: { _id: "" },
+        deathPlace: { _id: "" },
+        burialPlace: { _id: "" },
+        mother: null, // Should be null or { _id: "" }
+        father: null, // Should be null or { _id: "" }
+
         occupations: [],
         sourceEvidences: []
     });
 
+    // State for dropdown options and form status
     const [locations, setLocations] = useState([]);
     const [occupations, setOccupations] = useState([]);
     const [sources, setSources] = useState([]);
+    const [persons, setPersons] = useState([]); // For mother/father selection
     const [sentState, setSent] = useState(false);
     const [successState, setSuccess] = useState(false);
-    const [persons, setPersons] = useState([]);
     const [errorState, setError] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    // Fetch initial data (locations, persons, occupations, sources) and existing person data if editing
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [locs, pers, occs, srcs] = await Promise.all([
+                const [locs, persResponse, occs, srcs] = await Promise.all([
                     apiGet("/api/locations"),
-                    apiGet("/api/persons"),
+                    apiGet("/api/persons"), // This returns a paginated object
                     apiGet("/api/occupations"),
                     apiGet("/api/sources")
                 ]);
                 setLocations(locs);
-                setPersons(pers);
+                // Extract the 'content' array from the paginated response for persons
+                setPersons(persResponse.content || []); // Ensure persons is always an array to prevent .filter() error
                 setOccupations(occs);
                 setSources(srcs);
 
@@ -62,13 +80,21 @@ const PersonForm = () => {
                     const data = await apiGet("/api/persons/" + id);
                     setPerson({
                         ...data,
+                        // When fetching, map backend '_id' to frontend '_id' for nested objects
+                        birthPlace: data.birthPlace ? { _id: data.birthPlace._id } : { _id: "" },
+                        baptizationPlace: data.baptizationPlace ? { _id: data.baptizationPlace._id } : { _id: "" },
+                        deathPlace: data.deathPlace ? { _id: data.deathPlace._id } : { _id: "" },
+                        burialPlace: data.burialPlace ? { _id: data.burialPlace._id } : { _id: "" },
+                        mother: data.mother ? { _id: data.mother._id } : null,
+                        father: data.father ? { _id: data.father._id } : null,
+                        // Map occupations and sourceEvidences to include _id from backend's _id or occupationId/sourceId
                         occupations: (data.occupations || []).map(occ => ({
                             ...occ,
-                            _id: occ.occupationId || occ._id || ""
+                            _id: occ._id || occ.occupationId || "" // Prioritize occ._id, then occ.occupationId
                         })),
                         sourceEvidences: (data.sourceEvidences || []).map(ev => ({
                             ...ev,
-                            _id: ev.sourceId || ev._id || ""
+                            _id: ev._id || ev.sourceId || "" // Prioritize ev._id, then ev.sourceId
                         }))
                     });
                 }
@@ -81,45 +107,65 @@ const PersonForm = () => {
         };
 
         fetchData();
-    }, [id]);
+    }, [id]); // Effect runs on component mount and when ID changes (for edit mode)
 
+    // Handler for changes in nested array objects (e.g., occupations, sourceEvidences)
     const handleArrayObjectChange = (arrayName, index, field, value) => {
-    setPerson((prevPerson) => {
-        const updatedArray = [...prevPerson[arrayName]];
-        updatedArray[index] = {
-            ...updatedArray[index],
-            [field]: field === "_id" ? Number(value) : value
-        };
-        return {
-            ...prevPerson,
-            [arrayName]: updatedArray
-        };
-    });
-};
+        setPerson((prevPerson) => {
+            const updatedArray = [...prevPerson[arrayName]];
+            // Update the specific field for the item at the given index
+            updatedArray[index] = {
+                ...updatedArray[index],
+                [field]: field === "_id" ? (value === "" ? null : Number(value)) : value // Convert _id to number or null
+            };
+            return {
+                ...prevPerson,
+                [arrayName]: updatedArray
+            };
+        });
+    };
 
+    // Handler for changes in date parts (year, month, day)
+    const handleDatePartChange = (dateType, part, value) => {
+        setPerson(prevPerson => ({
+            ...prevPerson,
+            [`${dateType}${part}`]: value === "" ? null : parseInt(value, 10) // Convert to number or null
+        }));
+    };
+
+    // Form submission handler
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Transform person data for API submission
         const transformedPerson = {
             ...person,
-            birthDate: person.birthDate || null,
-            baptizationDate: person.baptizationDate || null,
-            deathDate: person.deathDate || null,
-            burialDate: person.burialDate || null,
+            // Ensure location and parent IDs are sent as numbers or null, using _id as per backend GET response
+            birthPlace: person.birthPlace?._id ? { _id: Number(person.birthPlace._id) } : null,
+            baptizationPlace: person.baptizationPlace?._id ? { _id: Number(person.baptizationPlace._id) } : null,
+            deathPlace: person.deathPlace?._id ? { _id: Number(person.deathPlace._id) } : null,
+            burialPlace: person.burialPlace?._id ? { _id: Number(person.burialPlace._id) } : null,
+            mother: person.mother?._id ? { _id: Number(person.mother._id) } : null,
+            father: person.father?._id ? { _id: Number(person.father._id) } : null,
+
+            // Map occupations to match backend DTO structure (using occupationId)
             occupations: person.occupations.map((occ) => ({
-                occupationId: occ._id || null,
+                occupationId: occ._id ? Number(occ._id) : null, // Send frontend _id as occupationId
                 startDate: occ.startDate || null,
                 endDate: occ.endDate || null
             })),
+            // Map source evidences to match backend DTO structure (using sourceId)
             sourceEvidences: person.sourceEvidences.map(ev => ({
-                sourceId: ev._id || null
+                sourceId: ev._id ? Number(ev._id) : null // Send frontend _id as sourceId
             }))
         };
 
-        if (transformedPerson.birthDate && new Date(transformedPerson.birthDate) > new Date()) {
-            setError("Birth date cannot be in the future.");
+        // Basic validation for birth year not in the future
+        if (transformedPerson.birthYear && transformedPerson.birthYear > new Date().getFullYear()) {
+            setError("Birth year cannot be in the future.");
             return;
         }
+        // More comprehensive date validation can be added here (e.g., month/day validity)
 
         try {
             const request = id
@@ -129,37 +175,32 @@ const PersonForm = () => {
 
             setSent(true);
             setSuccess(true);
-            setTimeout(() => { navigate("/persons"); }, 1000);
+            setTimeout(() => { navigate("/persons"); }, 1000); // Redirect after successful save
         } catch (error) {
-            console.error(error);
-            setError("Failed to save person: " + error.message);
+            console.error("Failed to save person:", error);
+            setError("Failed to save person: " + (error.message || "An unknown error occurred."));
             setSent(true);
             setSuccess(false);
         }
     };
 
+    // Handler for location dropdown changes
     const handleLocationChange = (placeType, selectedLocationId) => {
         setPerson((prevPerson) => ({
             ...prevPerson,
-            [placeType]: { _id: Number(selectedLocationId) }
+            [placeType]: selectedLocationId ? { _id: Number(selectedLocationId) } : { _id: "" } // Store ID as number or empty object
         }));
     };
 
+    // Handler for parent dropdown changes
     const handleParentChange = (parentType, selectedPersonId) => {
         setPerson((prevPerson) => ({
             ...prevPerson,
-            [parentType]: selectedPersonId ? { _id: Number(selectedPersonId) } : null
+            [parentType]: selectedPersonId ? { _id: Number(selectedPersonId) } : null // Store ID as number or null
         }));
     };
 
-    const handleOccupationChange = (idx, field, value) => {
-        setPerson((prev) => {
-            const occs = [...prev.occupations];
-            occs[idx] = { ...occs[idx], [field]: value };
-            return { ...prev, occupations: occs };
-        });
-    };
-
+    // Add new occupation entry
     const addOccupation = () => {
         setPerson((prev) => ({
             ...prev,
@@ -167,6 +208,7 @@ const PersonForm = () => {
         }));
     };
 
+    // Remove occupation entry by index
     const removeOccupation = (idx) => {
         setPerson((prev) => ({
             ...prev,
@@ -174,6 +216,7 @@ const PersonForm = () => {
         }));
     };
 
+    // Add new source evidence entry
     const addSourceEvidence = () => {
         setPerson((prev) => ({
             ...prev,
@@ -181,13 +224,15 @@ const PersonForm = () => {
         }));
     };
 
+    // Remove source evidence entry by index
     const removeSourceEvidence = (idx) => {
         setPerson((prev) => ({
             ...prev,
             sourceEvidences: prev.sourceEvidences.filter((_, i) => i !== idx)
         }));
-    };  
+    };
 
+    // Display loading spinner while data is being fetched
     if (loading) {
         return (
             <Container className="mt-5 text-center">
@@ -197,7 +242,8 @@ const PersonForm = () => {
         );
     }
 
-    if (errorState) {
+    // Display error message if data fetching fails
+    if (errorState && !sentState) { // Only show initial fetch error, not submission error here
         return (
             <Container className="mt-5">
                 <Alert variant="danger">{errorState}</Alert>
@@ -206,331 +252,476 @@ const PersonForm = () => {
     }
 
     return (
-        <Container className="mt-5">
-            <h1 className="mb-4">{id ? "Update" : "Create"} person</h1>
+        <Container className="my-5">
+            <h1 className="mb-4 text-center">{id ? "Update" : "Create New"} Person Record</h1>
 
-            {errorState && <Alert variant="danger">{errorState}</Alert>}
-
+            {/* Flash messages for success/error after submission */}
             {sentState && (
                 <FlashMessage
                     theme={successState ? "success" : "danger"}
-                    text={successState ? "Person saved successfully." : "Error saving person."}
+                    text={successState ? "Person record saved successfully!" : `Error saving person record: ${errorState}`}
                 />
             )}
 
             <Form onSubmit={handleSubmit}>
-                {/* Parents */}
-<Row className="mb-3">
-    <Col md={6}>
-        <InputSelect
-            name="motherId"
-            label="Mother"
-            prompt="Choose mother"
-            value={person.mother ? person.mother._id : ""}
-            handleChange={(e) => handleParentChange("mother", e.target.value)}
-            items={persons.filter(p => p.gender === "FEMALE")}
-            getLabel={(p) => p ? `${p.givenName || ""} ${p.givenSurname || ""}`.trim() : ""}
-            getValue={(p) => p?._id}
-        />
-    </Col>
-    <Col md={6}>
-        <InputSelect
-            name="fatherId"
-            label="Father"
-            prompt="Choose father"
-            value={person.father ? person.father._id : ""}
-            handleChange={(e) => handleParentChange("father", e.target.value)}
-            items={persons.filter(p => p.gender === "MALE")}
-            getLabel={(p) => p ? `${p.givenName || ""} ${p.givenSurname || ""}`.trim() : ""}
-            getValue={(p) => p?._id}
-        />
-    </Col>
-</Row>
+                {/* Basic Information Card */}
+                <Card className="mb-4 shadow-sm">
+                    <Card.Header as="h5" className="bg-primary text-white">Basic Information</Card.Header>
+                    <Card.Body>
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <InputField
+                                    required={true}
+                                    type="text"
+                                    name="givenName"
+                                    label="Given Name"
+                                    prompt="Enter given name"
+                                    value={person.givenName}
+                                    handleChange={(e) => setPerson({ ...person, givenName: e.target.value })}
+                                />
+                            </Col>
+                            <Col md={6}>
+                                <InputField
+                                    required={true}
+                                    type="text"
+                                    name="givenSurname"
+                                    label="Given Surname"
+                                    prompt="Enter given surname"
+                                    value={person.givenSurname}
+                                    handleChange={(e) => setPerson({ ...person, givenSurname: e.target.value })}
+                                />
+                            </Col>
+                        </Row>
 
-                {/* Names */}
-                <Row className="mb-3">
-                    <Col md={6}>
-                        <InputField
-                            required={true}
-                            type="text"
-                            name="givenName"
-                            label="Given Name"
-                            prompt="Provide Given Name"
-                            value={person.givenName}
-                            handleChange={(e) => setPerson({ ...person, givenName: e.target.value })}
-                        />
-                    </Col>
-                    <Col md={6}>
-                        <InputField
-                            required={true}
-                            type="text"
-                            name="givenSurname"
-                            label="Given Surname"
-                            prompt="Provide Given Surname"
-                            value={person.givenSurname}
-                            handleChange={(e) => setPerson({ ...person, givenSurname: e.target.value })}
-                        />
-                    </Col>
-                </Row>
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <InputField
+                                    type="text"
+                                    name="identificationNumber"
+                                    label="GenWeb ID"
+                                    prompt="Enter GenWeb ID (optional)"
+                                    value={person.identificationNumber || ""}
+                                    handleChange={(e) => setPerson({ ...person, identificationNumber: e.target.value })}
+                                />
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Gender</Form.Label>
+                                    <div className="d-flex gap-3">
+                                        <InputCheck
+                                            type="radio"
+                                            name="gender"
+                                            label="Unknown"
+                                            value={Gender.UNKNOWN}
+                                            handleChange={(e) => setPerson({ ...person, gender: e.target.value })}
+                                            checked={Gender.UNKNOWN === person.gender}
+                                        />
+                                        <InputCheck
+                                            type="radio"
+                                            name="gender"
+                                            label="Female"
+                                            value={Gender.FEMALE}
+                                            handleChange={(e) => setPerson({ ...person, gender: e.target.value })}
+                                            checked={Gender.FEMALE === person.gender}
+                                        />
+                                        <InputCheck
+                                            type="radio"
+                                            name="gender"
+                                            label="Male"
+                                            value={Gender.MALE}
+                                            handleChange={(e) => setPerson({ ...person, gender: e.target.value })}
+                                            checked={Gender.MALE === person.gender}
+                                        />
+                                    </div>
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                {/* Locations */}
-                <Row className="mb-3">
-                    <Col md={6}>
-                        <InputSelect
-                            name="birthPlaceId"
-                            label="Birth Place"
-                            prompt="Select birth place"
-                            value={person.birthPlace?._id || ""}
-                            handleChange={(e) => handleLocationChange("birthPlace", e.target.value)}
-                            items={locations}
-                            getLabel={(item) => item.locationName}
-                            getValue={(item) => item._id}
-                        />
-                    </Col>
-                    <Col md={6}>
-                        <InputSelect
-                            name="deathPlaceId"
-                            label="Death Place"
-                            prompt="Select death place"
-                            value={person.deathPlace?._id || ""}
-                            handleChange={(e) => handleLocationChange("deathPlace", e.target.value)}
-                            items={locations}
-                            getLabel={(item) => item.locationName}
-                            getValue={(item) => item._id}
-                        />
-                    </Col>
-                </Row>
+                        <Row className="mb-3">
+                            <Col md={12}>
+                                <InputField
+                                    type="textarea" // Changed to textarea for multi-line notes
+                                    name="note"
+                                    label="Note"
+                                    prompt="Add any relevant notes about the person"
+                                    value={person.note || ""}
+                                    handleChange={(e) => setPerson({ ...person, note: e.target.value })}
+                                    rows={3} // Specify number of rows for textarea
+                                />
+                            </Col>
+                        </Row>
+                    </Card.Body>
+                </Card>
 
-                {/* Dates */}
-                <Row className="mb-3">
-                    <Col md={6}>
-                        <InputField
-                            type="date"
-                            name="birthDate"
-                            label="Birth Date"
-                            prompt="Enter birth date"
-                            value={person.birthDate || ""}
-                            handleChange={(e) => setPerson({ ...person, birthDate: e.target.value })}
-                        />
-                    </Col>
-                    <Col md={6}>
-                        <InputField
-                            type="date"
-                            name="deathDate"
-                            label="Death Date"
-                            prompt="Enter death date"
-                            value={person.deathDate || ""}
-                            handleChange={(e) => setPerson({ ...person, deathDate: e.target.value })}
-                        />
-                    </Col>
-                </Row>
-                <Row>
-    <Col md={6}>
-        <InputSelect
-            name="causeOfDeath"
-            label="Cause of Death"
-            prompt="Select cause of death"
-            value={person.causeOfDeath || ""}
-            handleChange={(e) => setPerson({ ...person, causeOfDeath: e.target.value })}
-            items={Object.keys(causeOfDeathLabels)}
-            getLabel={(key) => causeOfDeathLabels[key]}
-            getValue={(key) => key}
-        />
-    </Col>
-</Row>
+                {/* Dates and Places Card */}
+                <Card className="mb-4 shadow-sm">
+                    <Card.Header as="h5" className="bg-primary text-white">Dates and Places</Card.Header>
+                    <Card.Body>
+                        {/* Birth */}
+                        <Row className="mb-3 align-items-end">
+                            <Col md={4}>
+                                <InputSelect
+                                    name="birthPlaceId"
+                                    label="Birth Place"
+                                    prompt="Select birth place"
+                                    value={person.birthPlace?._id || ""}
+                                    handleChange={(e) => handleLocationChange("birthPlace", e.target.value)}
+                                    items={locations}
+                                    getLabel={(item) => item.locationName}
+                                    getValue={(item) => item._id}
+                                />
+                            </Col>
+                            <Col md={2}>
+                                <InputField
+                                    type="number"
+                                    name="birthYear"
+                                    label="Birth Year"
+                                    prompt="YYYY"
+                                    value={person.birthYear || ""}
+                                    handleChange={(e) => handleDatePartChange("birth", "Year", e.target.value)}
+                                    min="1000" // Example min year
+                                    max={new Date().getFullYear()} // Max current year
+                                />
+                            </Col>
+                            <Col md={3}>
+                                <InputField
+                                    type="number"
+                                    name="birthMonth"
+                                    label="Month"
+                                    prompt="MM"
+                                    value={person.birthMonth || ""}
+                                    handleChange={(e) => handleDatePartChange("birth", "Month", e.target.value)}
+                                    min="1"
+                                    max="12"
+                                />
+                            </Col>
+                            <Col md={3}>
+                                <InputField
+                                    type="number"
+                                    name="birthDay"
+                                    label="Day"
+                                    prompt="DD"
+                                    value={person.birthDay || ""}
+                                    handleChange={(e) => handleDatePartChange("birth", "Day", e.target.value)}
+                                    min="1"
+                                    max="31"
+                                />
+                            </Col>
+                        </Row>
 
-                <Row className="mb-3">
-                    <Col md={6}>
-                        <InputSelect
-                            name="burialPlaceId"
-                            label="Burial Place"
-                            prompt="Choose burial place"
-                            value={person.burialPlace?._id || ""}
-                            handleChange={(e) => handleLocationChange("burialPlace", e.target.value)}
-                            items={locations}
-                            getLabel={(item) => item.locationName}
-                            getValue={(item) => item._id}
-                        />
-                    </Col>
-                    <Col md={6}>
-                        <InputSelect
-                            name="baptizationPlaceId"
-                            label="Baptization Place"
-                            prompt="Choose baptization place"
-                            value={person.baptizationPlace?._id || ""}
-                            handleChange={(e) => handleLocationChange("baptizationPlace", e.target.value)}
-                            items={locations}
-                            getLabel={(item) => item.locationName}
-                            getValue={(item) => item._id}
-                        />
-                    </Col>
-                </Row>
+                        {/* Baptization */}
+                        <Row className="mb-3 align-items-end">
+                            <Col md={4}>
+                                <InputSelect
+                                    name="baptizationPlaceId"
+                                    label="Baptization Place"
+                                    prompt="Select baptization place"
+                                    value={person.baptizationPlace?._id || ""}
+                                    handleChange={(e) => handleLocationChange("baptizationPlace", e.target.value)}
+                                    items={locations}
+                                    getLabel={(item) => item.locationName}
+                                    getValue={(item) => item._id}
+                                />
+                            </Col>
+                            <Col md={2}>
+                                <InputField
+                                    type="number"
+                                    name="baptizationYear"
+                                    label="Bapt. Year"
+                                    prompt="YYYY"
+                                    value={person.baptizationYear || ""}
+                                    handleChange={(e) => handleDatePartChange("baptization", "Year", e.target.value)}
+                                    min="1000"
+                                    max={new Date().getFullYear()}
+                                />
+                            </Col>
+                            <Col md={3}>
+                                <InputField
+                                    type="number"
+                                    name="baptizationMonth"
+                                    label="Month"
+                                    prompt="MM"
+                                    value={person.baptizationMonth || ""}
+                                    handleChange={(e) => handleDatePartChange("baptization", "Month", e.target.value)}
+                                    min="1"
+                                    max="12"
+                                />
+                            </Col>
+                            <Col md={3}>
+                                <InputField
+                                    type="number"
+                                    name="baptizationDay"
+                                    label="Day"
+                                    prompt="DD"
+                                    value={person.baptizationDay || ""}
+                                    handleChange={(e) => handleDatePartChange("baptization", "Day", e.target.value)}
+                                    min="1"
+                                    max="31"
+                                />
+                            </Col>
+                        </Row>
 
-                <Row className="mb-3">
-                    <Col md={6}>
-                        <InputField
-                            type="date"
-                            name="burialDate"
-                            label="Burial Date"
-                            prompt="Enter burial date"
-                            value={person.burialDate || ""}
-                            handleChange={(e) => setPerson({ ...person, burialDate: e.target.value })}
-                        />
-                    </Col>
-                    <Col md={6}>
-                        <InputField
-                            type="date"
-                            name="baptizationDate"
-                            label="Baptization Date"
-                            prompt="Enter baptization date"
-                            value={person.baptizationDate || ""}
-                            handleChange={(e) => setPerson({ ...person, baptizationDate: e.target.value })}
-                        />
-                    </Col>
-                </Row>
+                        {/* Death */}
+                        <Row className="mb-3 align-items-end">
+                            <Col md={4}>
+                                <InputSelect
+                                    name="deathPlaceId"
+                                    label="Death Place"
+                                    prompt="Select death place"
+                                    value={person.deathPlace?._id || ""}
+                                    handleChange={(e) => handleLocationChange("deathPlace", e.target.value)}
+                                    items={locations}
+                                    getLabel={(item) => item.locationName}
+                                    getValue={(item) => item._id}
+                                />
+                            </Col>
+                            <Col md={2}>
+                                <InputField
+                                    type="number"
+                                    name="deathYear"
+                                    label="Death Year"
+                                    prompt="YYYY"
+                                    value={person.deathYear || ""}
+                                    handleChange={(e) => handleDatePartChange("death", "Year", e.target.value)}
+                                    min="1000"
+                                    max={new Date().getFullYear()}
+                                />
+                            </Col>
+                            <Col md={3}>
+                                <InputField
+                                    type="number"
+                                    name="deathMonth"
+                                    label="Month"
+                                    prompt="MM"
+                                    value={person.deathMonth || ""}
+                                    handleChange={(e) => handleDatePartChange("death", "Month", e.target.value)}
+                                    min="1"
+                                    max="12"
+                                />
+                            </Col>
+                            <Col md={3}>
+                                <InputField
+                                    type="number"
+                                    name="deathDay"
+                                    label="Day"
+                                    prompt="DD"
+                                    value={person.deathDay || ""}
+                                    handleChange={(e) => handleDatePartChange("death", "Day", e.target.value)}
+                                    min="1"
+                                    max="31"
+                                />
+                            </Col>
+                        </Row>
 
-                {/* Gender */}
-                <Row>
-                    <Col md={3}>
-                        <InputCheck
-                            type="radio"
-                            name="gender"
-                            label="Unknown"
-                            value={Gender.UNKNOWN}
-                            handleChange={(e) => setPerson({ ...person, gender: e.target.value })}
-                            checked={Gender.UNKNOWN === person.gender}
-                        />
-                    </Col>
-                    <Col md={3}>
-                        <InputCheck
-                            type="radio"
-                            name="gender"
-                            label="Female"
-                            value={Gender.FEMALE}
-                            handleChange={(e) => setPerson({ ...person, gender: e.target.value })}
-                            checked={Gender.FEMALE === person.gender}
-                        />
-                    </Col>
-                    <Col md={3}>
-                        <InputCheck
-                            type="radio"
-                            name="gender"
-                            label="Male"
-                            value={Gender.MALE}
-                            handleChange={(e) => setPerson({ ...person, gender: e.target.value })}
-                            checked={Gender.MALE === person.gender}
-                        />
-                    </Col>
-                </Row>
+                        {/* Burial */}
+                        <Row className="mb-3 align-items-end">
+                            <Col md={4}>
+                                <InputSelect
+                                    name="burialPlaceId"
+                                    label="Burial Place"
+                                    prompt="Select burial place"
+                                    value={person.burialPlace?._id || ""}
+                                    handleChange={(e) => handleLocationChange("burialPlace", e.target.value)}
+                                    items={locations}
+                                    getLabel={(item) => item.locationName}
+                                    getValue={(item) => item._id}
+                                />
+                            </Col>
+                            <Col md={2}>
+                                <InputField
+                                    type="number"
+                                    name="burialYear"
+                                    label="Burial Year"
+                                    prompt="YYYY"
+                                    value={person.burialYear || ""}
+                                    handleChange={(e) => handleDatePartChange("burial", "Year", e.target.value)}
+                                    min="1000"
+                                    max={new Date().getFullYear()}
+                                />
+                            </Col>
+                            <Col md={3}>
+                                <InputField
+                                    type="number"
+                                    name="burialMonth"
+                                    label="Month"
+                                    prompt="MM"
+                                    value={person.burialMonth || ""}
+                                    handleChange={(e) => handleDatePartChange("burial", "Month", e.target.value)}
+                                    min="1"
+                                    max="12"
+                                />
+                            </Col>
+                            <Col md={3}>
+                                <InputField
+                                    type="number"
+                                    name="burialDay"
+                                    label="Day"
+                                    prompt="DD"
+                                    value={person.burialDay || ""}
+                                    handleChange={(e) => handleDatePartChange("burial", "Day", e.target.value)}
+                                    min="1"
+                                    max="31"
+                                />
+                            </Col>
+                        </Row>
 
-                
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <InputSelect
+                                    name="causeOfDeath"
+                                    label="Cause of Death"
+                                    prompt="Select cause of death"
+                                    value={person.causeOfDeath || ""}
+                                    handleChange={(e) => setPerson({ ...person, causeOfDeath: e.target.value })}
+                                    items={Object.keys(causeOfDeathLabels)}
+                                    getLabel={(key) => causeOfDeathLabels[key]}
+                                    getValue={(key) => key}
+                                />
+                            </Col>
+                            <Col md={6}>
+                                <InputSelect
+                                    name="socialStatus"
+                                    label="Social Status"
+                                    prompt="Select social status"
+                                    value={person.socialStatus || ""}
+                                    handleChange={(e) => setPerson({ ...person, socialStatus: e.target.value })}
+                                    items={Object.keys(socialStatusLabels)}
+                                    getLabel={(key) => socialStatusLabels[key]}
+                                    getValue={(key) => key}
+                                />
+                            </Col>
+                        </Row>
+                    </Card.Body>
+                </Card>
 
-                {/* Social Status */}
-                <Row>
-                    <Col md={6}>
-                        <InputSelect
-                            name="socialStatus"
-                            label="Social Status"
-                            prompt="Select social status"
-                            value={person.socialStatus || ""}
-                            handleChange={(e) => setPerson({ ...person, socialStatus: e.target.value })}
-                            items={Object.keys(socialStatusLabels)}
-                            getLabel={(key) => socialStatusLabels[key]}
-                            getValue={(key) => key}
-                        />
-                    </Col>
-                </Row>
+                {/* Family Relations Card */}
+                <Card className="mb-4 shadow-sm">
+                    <Card.Header as="h5" className="bg-primary text-white">Family Relations</Card.Header>
+                    <Card.Body>
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <InputSelect
+                                    name="motherId"
+                                    label="Mother"
+                                    prompt="Choose mother"
+                                    value={person.mother ? person.mother._id : ""}
+                                    handleChange={(e) => handleParentChange("mother", e.target.value)}
+                                    items={persons.filter(p => p.gender === Gender.FEMALE)}
+                                    getLabel={(p) => p ? `${p.givenName || ""} ${p.givenSurname || ""}`.trim() : ""}
+                                    getValue={(p) => p._id}
+                                />
+                            </Col>
+                            <Col md={6}>
+                                <InputSelect
+                                    name="fatherId"
+                                    label="Father"
+                                    prompt="Choose father"
+                                    value={person.father ? person.father._id : ""}
+                                    handleChange={(e) => handleParentChange("father", e.target.value)}
+                                    items={persons.filter(p => p.gender === Gender.MALE)}
+                                    getLabel={(p) => p ? `${p.givenName || ""} ${p.givenSurname || ""}`.trim() : ""}
+                                    getValue={(p) => p._id}
+                                />
+                            </Col>
+                        </Row>
+                    </Card.Body>
+                </Card>
 
-                {/* Note */}
-                <Row>
-                    <Col md={6}>
-                        <InputField
-                            required={true}
-                            type="text"
-                            name="note"
-                            label="Note"
-                            value={person.note}
-                            handleChange={(e) => setPerson({ ...person, note: e.target.value })}
-                        />
-                    </Col>
-                </Row>
-
-                {/* Occupations */}
-                <Row className="mt-4">
-                    <Col>
-                        <h5>Occupations</h5>
+                {/* Occupations Card */}
+                <Card className="mb-4 shadow-sm">
+                    <Card.Header as="h5" className="bg-primary text-white">Occupations</Card.Header>
+                    <Card.Body>
+                        {person.occupations.length === 0 && <p className="text-muted">No occupations added yet.</p>}
                         {person.occupations.map((occ, idx) => (
-                            <Row key={idx} className="mb-2 align-items-end">
-                                <Col md={6}>
+                            <Row key={idx} className="mb-3 align-items-end border-bottom pb-3">
+                                <Col md={5}>
                                     <InputSelect
                                         name={`occupation-${idx}`}
-                                        label={`Occupation #${idx + 1}`}
+                                        label={`Occupation ${idx + 1}`}
                                         prompt="Select occupation"
-                                        value={person.occupations[idx]?._id || ""}
+                                        value={occ._id || ""}
                                         handleChange={(e) => handleArrayObjectChange("occupations", idx, "_id", e.target.value)}
                                         items={occupations}
                                         getLabel={(item) => item.occupationName}
                                         getValue={(item) => item._id}
                                     />
                                 </Col>
-                                <Col md={2}>
+                                <Col md={3}>
                                     <InputField
-                                        type="date"
-                                        name={`startDate_${idx}`}
-                                        label="Start"
+                                        type="text"
+                                        name={`occupationStartDate-${idx}`}
+                                        label="Start Date"
+                                        prompt="YYYY-MM-DD"
                                         value={occ.startDate || ""}
-                                        handleChange={e => handleOccupationChange(idx, "startDate", e.target.value)}
+                                        handleChange={(e) => handleArrayObjectChange("occupations", idx, "startDate", e.target.value)}
                                     />
                                 </Col>
-                                <Col md={2}>
+                                <Col md={3}>
                                     <InputField
-                                        type="date"
-                                        name={`endDate_${idx}`}
-                                        label="End"
+                                        type="text"
+                                        name={`occupationEndDate-${idx}`}
+                                        label="End Date"
+                                        prompt="YYYY-MM-DD"
                                         value={occ.endDate || ""}
-                                        handleChange={e => handleOccupationChange(idx, "endDate", e.target.value)}
+                                        handleChange={(e) => handleArrayObjectChange("occupations", idx, "endDate", e.target.value)}
                                     />
                                 </Col>
-                                <Col md={2}>
-                                    <Button variant="danger" onClick={() => removeOccupation(idx)}>-</Button>
+                                <Col md={1} className="d-flex align-items-end">
+                                    <Button variant="danger" onClick={() => removeOccupation(idx)} className="w-100">
+                                        <i className="fas fa-trash-alt"></i>
+                                    </Button>
                                 </Col>
                             </Row>
                         ))}
-                        <Button variant="secondary" onClick={addOccupation}>Add Occupation</Button>
-                    </Col>
-                </Row>
+                        <Button variant="outline-primary" onClick={addOccupation}>
+                            <i className="fas fa-plus me-2"></i>Add Occupation
+                        </Button>
+                    </Card.Body>
+                </Card>
 
-                {/* Sources */}
-                <Row className="mt-4">
-                    <Col>
-                        <h5>Sources</h5>
+                {/* Source Evidences Card */}
+                <Card className="mb-4 shadow-sm">
+                    <Card.Header as="h5" className="bg-primary text-white">Source Evidences</Card.Header>
+                    <Card.Body>
+                        {person.sourceEvidences.length === 0 && <p className="text-muted">No source evidences added yet.</p>}
                         {person.sourceEvidences.map((ev, idx) => (
-                            <Row key={idx} className="mb-2 align-items-end">
-                                <Col md={6}>
+                            <Row key={idx} className="mb-3 align-items-end border-bottom pb-3">
+                                <Col md={11}>
                                     <InputSelect
                                         name={`sourceEvidence-${idx}`}
-                                        label={`Source Evidence #${idx + 1}`}
+                                        label={`Source Evidence ${idx + 1}`}
                                         prompt="Select source"
-                                        value={person.sourceEvidences[idx]?._id|| ""}
+                                        value={ev._id || ""}
                                         handleChange={(e) => handleArrayObjectChange("sourceEvidences", idx, "_id", e.target.value)}
                                         items={sources}
                                         getLabel={(item) => item.sourceTitle}
                                         getValue={(item) => item._id}
                                     />
                                 </Col>
-
-                                <Col md={2}>
-                                    <Button variant="danger" onClick={() => removeSourceEvidence(idx)}>-</Button>
+                                <Col md={1} className="d-flex align-items-end">
+                                    <Button variant="danger" onClick={() => removeSourceEvidence(idx)} className="w-100">
+                                        <i className="fas fa-trash-alt"></i>
+                                    </Button>
                                 </Col>
                             </Row>
                         ))}
-                        <Button variant="secondary" onClick={addSourceEvidence}>Add Source</Button>
+                        <Button variant="outline-primary" onClick={addSourceEvidence}>
+                            <i className="fas fa-plus me-2"></i>Add Source Evidence
+                        </Button>
+                    </Card.Body>
+                </Card>
+
+                {/* Form Action Buttons */}
+                <Row className="mt-4">
+                    <Col className="text-center">
+                        <Button variant="primary" type="submit" className="me-2 shadow">
+                            <i className="fas fa-save me-2"></i>{id ? "Update" : "Create"} Person
+                        </Button>
+                        <Button variant="secondary" onClick={() => navigate("/persons")} className="shadow">
+                            <i className="fas fa-times-circle me-2"></i>Cancel
+                        </Button>
                     </Col>
                 </Row>
-
-                <Button type="submit" variant="primary" className="mt-3">
-                    Save
-                </Button>
             </Form>
         </Container>
     );

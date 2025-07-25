@@ -1,5 +1,6 @@
 package cz.rodro.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import cz.rodro.constant.SourceType;
 import jakarta.persistence.*;
@@ -45,5 +46,10 @@ public class SourceEntity {
     @OneToMany(mappedBy = "source", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("source-source-evidence")
     private List<PersonSourceEvidenceEntity> personSourceEvidences = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_location_id", nullable = false)
+    @JsonBackReference
+    private LocationEntity sourceLocation;
 
 }

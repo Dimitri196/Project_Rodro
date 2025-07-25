@@ -12,8 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 public class PersonMilitaryServiceDTO {
 
-
-
     private Long personId;
 
     private MilitaryStructureDTO militaryStructure; // Reference to structure DTO

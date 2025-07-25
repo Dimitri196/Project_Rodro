@@ -1,16 +1,13 @@
 package cz.rodro.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import cz.rodro.constant.CauseOfDeath;
 import cz.rodro.constant.Gender;
 import cz.rodro.constant.SocialStatus;
-import jakarta.validation.constraints.PastOrPresent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -43,21 +40,25 @@ public class PersonDTO {
     private List<PersonOccupationDTO> occupations;
     private String institutionLocationName;
 
-    @PastOrPresent
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate birthDate;
+    // Birth Date
+    private Integer birthYear;
+    private Integer birthMonth; // 1-12, or null if unknown
+    private Integer birthDay;   // 1-31, or null if unknown
 
-    @PastOrPresent
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate baptizationDate;
+    // Baptization Date
+    private Integer baptizationYear;
+    private Integer baptizationMonth;
+    private Integer baptizationDay;
 
-    @PastOrPresent
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate deathDate;
+    // Death Date
+    private Integer deathYear;
+    private Integer deathMonth;
+    private Integer deathDay;
 
-    @PastOrPresent
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate burialDate;
+    // Burial Date
+    private Integer burialYear;
+    private Integer burialMonth;
+    private Integer burialDay;
 
     private List<PersonSourceEvidenceDTO> sourceEvidences;
 

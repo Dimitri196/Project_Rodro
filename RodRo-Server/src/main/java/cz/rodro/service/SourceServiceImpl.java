@@ -1,8 +1,11 @@
 package cz.rodro.service;
 
 import cz.rodro.dto.SourceDTO;
+import cz.rodro.dto.mapper.LocationHistoryMapper;
 import cz.rodro.dto.mapper.SourceMapper;
+import cz.rodro.entity.LocationEntity;
 import cz.rodro.entity.SourceEntity;
+import cz.rodro.entity.repository.LocationRepository;
 import cz.rodro.entity.repository.SourceRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +16,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class SourceServiceImpl implements SourceService {
 
     @Autowired
@@ -22,11 +24,24 @@ public class SourceServiceImpl implements SourceService {
     @Autowired
     private SourceMapper sourceMapper;
 
+    @Autowired
+    private LocationService locationService;
+
+    @Autowired
+    private LocationRepository locationRepository;
+
+    @Autowired
+    private LocationHistoryMapper locationHistoryMapper;
+
     @Override
     public SourceDTO addSource(SourceDTO sourceDTO) {
+
+        LocationEntity sourceLocation = locationService.fetchLocationById(sourceDTO.getSourceLocation().getId(), "Source Location");
+
         SourceEntity sourceEntity = sourceMapper.toSourceEntity(sourceDTO);
+        sourceEntity.setSourceLocation(sourceLocation);
+
         SourceEntity saved = sourceRepository.save(sourceEntity);
-        log.info("Created new source with ID: {}", saved.getId());
         return sourceMapper.toSourceDTO(saved);
     }
 
@@ -49,7 +64,6 @@ public class SourceServiceImpl implements SourceService {
         SourceEntity existing = fetchSourceById(id);
         sourceMapper.updateSourceEntity(sourceDTO, existing);
         SourceEntity updated = sourceRepository.save(existing);
-        log.info("Updated source with ID: {}", updated.getId());
         return sourceMapper.toSourceDTO(updated);
     }
 
@@ -57,7 +71,6 @@ public class SourceServiceImpl implements SourceService {
     public void deleteSource(Long id) {
         SourceEntity entity = fetchSourceById(id);
         sourceRepository.delete(entity);
-        log.info("Deleted source with ID: {}", id);
     }
 
     // Private utility method to fetch with exception

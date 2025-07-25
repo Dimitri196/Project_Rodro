@@ -1,17 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Container, Row, Col, Card, ListGroup, Alert } from "react-bootstrap";
+import { Container, Row, Col, Card, ListGroup, Alert, Spinner } from "react-bootstrap"; // Added Spinner for consistency
 
 import { apiGet } from "../utils/api";
-import dateStringFormatter from "../utils/dateStringFormatter";
 import socialStatusLabels from "../constants/socialStatusLabels";
 import causeOfDeathLabels from "../constants/causeOfDeathLabels";
+
+// Helper function to format partial dates (copied from PersonTable for self-containment)
+const formatPartialDate = (year, month, day) => {
+    if (year === null || year === undefined) {
+        return "Unknown"; // Or an empty string, depending on desired display
+    }
+
+    let dateParts = [year];
+    if (month !== null && month !== undefined) {
+        dateParts.push(String(month).padStart(2, '0')); // Pad month with leading zero
+        if (day !== null && day !== undefined) {
+            dateParts.push(String(day).padStart(2, '0')); // Pad day with leading zero
+        }
+    }
+    return dateParts.join('-');
+};
 
 const PersonDetail = () => {
     const { id } = useParams();
 
     const [person, setPerson] = useState({});
-    const [parents, setParents] = useState([]);
+    const [parents, setParents] = useState([]); // This state is not directly used in rendering parents, but kept for consistency
     const [childs, setChilds] = useState([]);
     const [spouses, setSpouses] = useState([]);
     const [occupations, setOccupations] = useState([]);
@@ -21,6 +36,7 @@ const PersonDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Helper to get full name, handling potential nulls
     const getFullName = (p) =>
         p ? `${p.givenName || ""} ${p.givenSurname || ""}`.trim() : "N/A";
 
@@ -49,15 +65,17 @@ const PersonDetail = () => {
                 setSourceEvidences(evidences);
                 setMilitaryServices(militaryServiceData);
 
+                // Logic to determine spouses from family data
                 const fetchedSpouses = families
                     .map(family => {
                         if (family.spouseMale?.id === parseInt(id)) return family.spouseFemale;
                         if (family.spouseFemale?.id === parseInt(id)) return family.spouseMale;
                         return null;
                     })
-                    .filter(Boolean);
+                    .filter(Boolean); // Filter out nulls
                 setSpouses(fetchedSpouses);
 
+                // Logic to determine parents from family data
                 const parentFamilies = families.filter(f =>
                     f.childs?.some(child => child.id === parseInt(id))
                 );
@@ -65,7 +83,7 @@ const PersonDetail = () => {
                     father: f.father,
                     mother: f.mother
                 }));
-                setParents(fetchedParents);
+                setParents(fetchedParents); // Set parents state
 
                 setChilds(childrenData);
             } catch (err) {
@@ -76,45 +94,54 @@ const PersonDetail = () => {
         };
 
         fetchData();
-    }, [id]);
+    }, [id]); // Re-run effect when ID changes
 
-    if (loading) return <p>Loading...</p>;
+    if (loading) {
+        return (
+            <Container className="mt-5 text-center">
+                <Spinner animation="border" role="status" />
+                <p>Loading...</p>
+            </Container>
+        );
+    }
     if (error) return <Alert variant="danger">{error}</Alert>;
 
     return (
         <Container className="mt-5">
+            <h1 className="mb-4 text-center">Person Details: {getFullName(person)}</h1>
             <Row className="mb-4">
+                {/* Left Column - Basic Information */}
                 <Col md={4}>
-                    <Card>
+                    <Card className="mb-4 shadow-sm">
+                        <Card.Header as="h5" className="bg-primary text-white">Basic Information</Card.Header>
                         <Card.Body>
+                            <Card.Title className="text-center mb-3">{getFullName(person)}</Card.Title>
 
-
-                            <Card.Title>{getFullName(person)}</Card.Title>
-
+                            {/* GenWeb links based on identification number */}
                             {person.identificationNumber ? (
-                                <div className="mb-3 d-flex gap-2 flex-wrap">
+                                <div className="mb-3 d-flex flex-column gap-2">
                                     <a
                                         href={`http://mali-wielcy.pl:2317/Polesie?lang=en;templ=templd;m=D;i=${person.identificationNumber};oc=1;siblings=on;notes=on;t=T;image=on;v=5`}
                                         className="btn btn-outline-primary btn-sm"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >
-                                        Tree (Descendants)
+                                        View Descendants Tree
                                     </a>
-
                                     <a
                                         href={`http://mali-wielcy.pl:2317/Polesie?lang=en;templ=templd;m=A;i=${person.identificationNumber};oc=1;siblings=on;notes=on;t=T;image=on;v=5`}
                                         className="btn btn-outline-secondary btn-sm"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >
-                                        Tree (Ancestors)
+                                        View Ancestors Tree
                                     </a>
                                 </div>
                             ) : (
-                                <p className="text-muted">No GenWeb link available</p>
+                                <p className="text-muted text-center">No GenWeb link available</p>
                             )}
 
+                            {/* Person details list */}
                             <ListGroup variant="flush">
                                 <ListGroup.Item><strong>Note:</strong> {person.note || "N/A"}</ListGroup.Item>
                                 <ListGroup.Item><strong>Gender:</strong> {person.gender || "N/A"}</ListGroup.Item>
@@ -123,6 +150,15 @@ const PersonDetail = () => {
                                 <ListGroup.Item>
                                     <strong>Cause of Death:</strong> {causeOfDeathLabels[person.causeOfDeath] || "N/A"}
                                 </ListGroup.Item>
+                            </ListGroup>
+                        </Card.Body>
+                    </Card>
+
+                    {/* Dates and Places Card (consolidated) */}
+                    <Card className="mb-4 shadow-sm">
+                        <Card.Header as="h5" className="bg-warning text-white">Dates & Places</Card.Header>
+                        <Card.Body>
+                            <ListGroup variant="flush">
                                 {["birth", "baptization", "death", "burial"].map(type => (
                                     <React.Fragment key={type}>
                                         <ListGroup.Item>
@@ -133,9 +169,14 @@ const PersonDetail = () => {
                                                 </Link>
                                             ) : "N/A"}
                                         </ListGroup.Item>
-                                        <ListGroup.Item>
+                                        <ListGroup.Item className="pb-3 border-bottom">
                                             <strong>{`${type[0].toUpperCase() + type.slice(1)} Date:`}</strong>{" "}
-                                            {person[`${type}Date`] ? dateStringFormatter(person[`${type}Date`], true) : "N/A"}
+                                            {/* Use formatPartialDate for all date types */}
+                                            {formatPartialDate(
+                                                person[`${type}Year`],
+                                                person[`${type}Month`],
+                                                person[`${type}Day`]
+                                            )}
                                         </ListGroup.Item>
                                     </React.Fragment>
                                 ))}
@@ -144,11 +185,12 @@ const PersonDetail = () => {
                     </Card>
                 </Col>
 
+                {/* Right Column - Relations, Occupations, Military, Sources */}
                 <Col md={8}>
-                    {/* Parents */}
-                    <Card className="mb-4">
+                    {/* Parents Card */}
+                    <Card className="mb-4 shadow-sm">
+                        <Card.Header as="h5" className="bg-dark text-white">Parent(s)</Card.Header>
                         <Card.Body>
-                            <Card.Title>Parent(s)</Card.Title>
                             <ListGroup variant="flush">
                                 <ListGroup.Item>
                                     <strong>Father:</strong>{" "}
@@ -166,10 +208,10 @@ const PersonDetail = () => {
                         </Card.Body>
                     </Card>
 
-                    {/* Spouses */}
-                    <Card className="mb-4">
+                    {/* Spouses Card */}
+                    <Card className="mb-4 shadow-sm">
+                        <Card.Header as="h5" className="bg-dark text-white">Spouse(s)</Card.Header>
                         <Card.Body>
-                            <Card.Title>Spouse(s)</Card.Title>
                             {familyData.length > 0 ? (
                                 <ListGroup variant="flush">
                                     {familyData.map((family, index) => {
@@ -180,51 +222,53 @@ const PersonDetail = () => {
                                             spouse = family.spouseMale;
                                         }
                                         return (
-                                            <ListGroup.Item key={index}>
+                                            <ListGroup.Item key={index} className="pb-3 border-bottom">
                                                 <strong>Name:</strong>{" "}
                                                 {spouse
                                                     ? <Link to={`/persons/show/${spouse._id || spouse.id}`}>{getFullName(spouse)}</Link>
                                                     : "N/A"}<br />
                                                 <strong>Gender:</strong> {spouse?.gender || "N/A"}<br />
                                                 <strong>Marriage Date:</strong>{" "}
-                                                {family.marriageDate ? dateStringFormatter(family.marriageDate, true) : "N/A"}<br />
+                                                {/* Assuming marriageDate is still a full LocalDate string from backend */}
+                                                {family.marriageDate ? family.marriageDate : "N/A"}<br />
                                                 <strong>Marriage Location:</strong>{" "}
                                                 {family.marriageLocation?.locationName || "N/A"}
                                             </ListGroup.Item>
                                         );
                                     })}
                                 </ListGroup>
-                            ) : <p>No spouse data available.</p>}
+                            ) : <p className="text-muted">No spouse data available.</p>}
                         </Card.Body>
                     </Card>
 
-                    {/* Children */}
-                    <Card className="mb-4">
+                    {/* Children Card */}
+                    <Card className="mb-4 shadow-sm">
+                        <Card.Header as="h5" className="bg-dark text-white">Children</Card.Header>
                         <Card.Body>
-                            <Card.Title>Children</Card.Title>
                             {childs.length > 0 ? (
                                 <ListGroup variant="flush">
                                     {childs.map((child, index) => (
-                                        <ListGroup.Item key={index}>
+                                        <ListGroup.Item key={index} className="pb-3 border-bottom">
                                             <strong>Name:</strong>{" "}
                                             <Link to={`/persons/show/${child._id}`}>{getFullName(child)}</Link><br />
-                                            <strong>Gender:</strong> {child.gender}<br />
-                                            <strong>Birth Date:</strong> {child.birthDate && dateStringFormatter(child.birthDate, true)}
+                                            <strong>Gender:</strong> {child.gender || "N/A"}<br />
+                                            {/* Use formatPartialDate for child's birth date */}
+                                            <strong>Birth Date:</strong> {formatPartialDate(child.birthYear, child.birthMonth, child.birthDay)}
                                         </ListGroup.Item>
                                     ))}
                                 </ListGroup>
-                            ) : <p>No children available.</p>}
+                            ) : <p className="text-muted">No children available.</p>}
                         </Card.Body>
                     </Card>
 
-                    {/* Occupations */}
-                    <Card className="mb-4">
+                    {/* Occupations Card */}
+                    <Card className="mb-4 shadow-sm">
+                        <Card.Header as="h5" className="bg-dark text-white">Occupation(s)</Card.Header>
                         <Card.Body>
-                            <Card.Title>Occupation(s)</Card.Title>
                             {occupations.length > 0 ? (
                                 <ListGroup variant="flush">
                                     {occupations.map((occ, index) => (
-                                        <ListGroup.Item key={index}>
+                                        <ListGroup.Item key={index} className="pb-3 border-bottom">
                                             <strong>Occupation:</strong>{" "}
                                             {occ.occupationId ? (
                                                 <Link to={`/occupations/show/${occ.occupationId}`}>
@@ -243,24 +287,25 @@ const PersonDetail = () => {
                                                     {occ.institutionLocationName || "N/A"}
                                                 </Link>
                                             ) : "N/A"}<br />
-                                            <strong>Start Date:</strong> {occ.startDate && dateStringFormatter(occ.startDate, true)}<br />
-                                            <strong>End Date:</strong> {occ.endDate && dateStringFormatter(occ.endDate, true)}
+                                            {/* Assuming startDate and endDate for occupations are still full dates from backend */}
+                                            <strong>Start Date:</strong> {occ.startDate ? occ.startDate : "N/A"}<br />
+                                            <strong>End Date:</strong> {occ.endDate ? occ.endDate : "N/A"}
                                         </ListGroup.Item>
                                     ))}
                                 </ListGroup>
-                            ) : <p>No occupations available.</p>}
+                            ) : <p className="text-muted">No occupations available.</p>}
                         </Card.Body>
                     </Card>
 
-                    {/* Military Service */}
+                    {/* Military Service Card (only for males) */}
                     {person.gender === "MALE" && (
-                        <Card className="mb-4">
+                        <Card className="mb-4 shadow-sm">
+                            <Card.Header as="h5" className="bg-dark text-white">Military Service</Card.Header>
                             <Card.Body>
-                                <Card.Title>Military Service</Card.Title>
                                 {militaryServices.length > 0 ? (
                                     <ListGroup variant="flush">
                                         {militaryServices.map((service, index) => (
-                                            <ListGroup.Item key={index}>
+                                            <ListGroup.Item key={index} className="pb-3 border-bottom">
                                                 <strong>Unit:</strong>{" "}
                                                 {service.militaryStructure?._id ? (
                                                     <Link to={`/militaryStructures/show/${service.militaryStructure._id}`}>
@@ -303,20 +348,20 @@ const PersonDetail = () => {
                                             </ListGroup.Item>
                                         ))}
                                     </ListGroup>
-                                ) : <p>No military service records available.</p>}
+                                ) : <p className="text-muted">No military service records available.</p>}
                             </Card.Body>
                         </Card>
                     )}
 
 
-                    {/* Source Evidences */}
-                    <Card className="mb-4">
+                    {/* Source Evidences Card */}
+                    <Card className="mb-4 shadow-sm">
+                        <Card.Header as="h5" className="bg-dark text-white">Source Evidences</Card.Header>
                         <Card.Body>
-                            <Card.Title>Source(s)</Card.Title>
                             {sourceEvidences.length > 0 ? (
                                 <ListGroup variant="flush">
                                     {sourceEvidences.map((evidence, index) => (
-                                        <ListGroup.Item key={index}>
+                                        <ListGroup.Item key={index} className="pb-3 border-bottom">
                                             <strong>Evidence Type:</strong> {evidence.evidenceType || "N/A"}<br />
                                             <strong>Source:</strong>{" "}
                                             {evidence.sourceName && evidence.sourceId ? (
@@ -327,7 +372,7 @@ const PersonDetail = () => {
                                         </ListGroup.Item>
                                     ))}
                                 </ListGroup>
-                            ) : <p>No source evidence available.</p>}
+                            ) : <p className="text-muted">No source evidence available.</p>}
                         </Card.Body>
                     </Card>
                 </Col>

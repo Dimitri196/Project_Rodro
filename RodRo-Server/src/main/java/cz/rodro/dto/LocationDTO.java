@@ -23,4 +23,6 @@ public class LocationDTO {
 
     private List<LocationHistoryDTO> locationHistory;
 
+    private List<SourceDTO> sourceDTO;
+
 }

@@ -7,8 +7,9 @@ import cz.rodro.dto.mapper.PersonSourceEvidenceMapper;
 import cz.rodro.entity.*;
 import cz.rodro.entity.repository.*;
 import cz.rodro.exception.NotFoundException;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable; // Ensure this specific import is used
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,8 +17,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
-@Transactional
 public class PersonServiceImpl implements PersonService {
 
     private final PersonMapper personMapper;
@@ -51,6 +50,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional
     public PersonDTO addPerson(PersonDTO personDTO) {
         LocationEntity birthPlace = safeFetchLocation(personDTO.getBirthPlace(), "Birth Place");
         LocationEntity deathPlace = safeFetchLocation(personDTO.getDeathPlace(), "Death Place");
@@ -97,32 +97,39 @@ public class PersonServiceImpl implements PersonService {
         personEntity.setSourceEvidences(uniqueEvidences);
 
         PersonEntity savedPerson = personRepository.save(personEntity);
-        log.info("Created new person with ID: {}", savedPerson.getId());
 
         return personMapper.toDTO(savedPerson);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PersonDTO getPerson(long personId) {
         return personMapper.toDTO(fetchPersonById(personId));
     }
 
     @Override
+    @Transactional
     public void removePerson(long personId) {
         PersonEntity person = fetchPersonById(personId);
         personRepository.delete(person);
-        log.info("Person with ID {} has been deleted", personId);
+    }
+
+    /**
+     * Retrieves a paginated, filtered, and sorted list of persons.
+     * This method now uses the PersonListProjection for optimized data transfer.
+     *
+     * @param searchTerm An optional term to filter by given name, surname, or identification number.
+     * @param pageable   Pagination and sorting information.
+     * @return A Page of PersonListProjection.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PersonListProjection> getAllPersons(String searchTerm, Pageable pageable) {
+        return personRepository.findAllPersonsProjected(searchTerm, pageable);
     }
 
     @Override
-    public List<PersonDTO> getAll() {
-        return personRepository.findAll()
-                .stream()
-                .map(personMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
+    @Transactional
     public PersonDTO updatePerson(Long id, PersonDTO personDTO) {
         PersonEntity existingPerson = fetchPersonById(id);
 
@@ -189,7 +196,6 @@ public class PersonServiceImpl implements PersonService {
         }
 
         PersonEntity savedUpdatedPerson = personRepository.save(existingPerson);
-        log.info("Person with ID {} has been updated", savedUpdatedPerson.getId());
 
         return personMapper.toDTO(savedUpdatedPerson);
     }
@@ -247,16 +253,19 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FamilyEntity> getSpousesAsMale(Long personId) {
         return familyRepository.findBySpouseMaleId(personId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FamilyEntity> getSpousesAsFemale(Long personId) {
         return familyRepository.findBySpouseFemaleId(personId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FamilyEntity> getSpouses(Long personId) {
         List<FamilyEntity> spouses = new ArrayList<>(getSpousesAsMale(personId));
         spouses.addAll(getSpousesAsFemale(personId));
@@ -264,6 +273,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PersonSourceEvidenceDTO> getSourceEvidences(Long personId) {
         return personSourceEvidenceRepository.findByPersonId(personId)
                 .stream()
@@ -280,6 +290,8 @@ public class PersonServiceImpl implements PersonService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<PersonDTO> getSiblings(Long personId) {
         PersonDTO person = getPerson(personId);
         if (person == null) {

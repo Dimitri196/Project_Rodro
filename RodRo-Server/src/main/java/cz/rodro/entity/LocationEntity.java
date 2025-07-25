@@ -48,6 +48,11 @@ public class LocationEntity {
     @JsonManagedReference
     private List<LocationHistoryEntity> locationHistories;
 
+    // Historical records (subdivision, district, etc.)
+    @OneToMany(mappedBy = "sourceLocation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<SourceEntity> sources;
+
     // Person's birth location
     @OneToMany(mappedBy = "birthPlace")
     @JsonBackReference
@@ -77,5 +82,3 @@ public class LocationEntity {
     @JsonBackReference
     private List<ParishLocationEntity> parishLocations;
 }
-
-

@@ -28,8 +28,11 @@ public class PersonEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String givenName;
+    @Column(nullable = false)
     private String givenSurname;
+
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
@@ -67,17 +70,33 @@ public class PersonEntity {
     @JsonBackReference("father")
     private PersonEntity father;
 
-    @Column(name = "birth_date", nullable = true)
-    private LocalDate birthDate;
+    @Column(name = "birth_year")
+    private Integer birthYear;
+    @Column(name = "birth_month")
+    private Integer birthMonth;
+    @Column(name = "birth_day")
+    private Integer birthDay;
 
-    @Column(name = "baptization_date", nullable = true)
-    private LocalDate baptizationDate;
+    @Column(name = "baptization_year")
+    private Integer baptizationYear;
+    @Column(name = "baptization_month")
+    private Integer baptizationMonth;
+    @Column(name = "baptization_day")
+    private Integer baptizationDay;
 
-    @Column(name = "death_date", nullable = true)
-    private LocalDate deathDate;
+    @Column(name = "death_year")
+    private Integer deathYear;
+    @Column(name = "death_month")
+    private Integer deathMonth;
+    @Column(name = "death_day")
+    private Integer deathDay;
 
-    @Column(name = "burial_date", nullable = true)
-    private LocalDate burialDate;
+    @Column(name = "burial_year")
+    private Integer burialYear;
+    @Column(name = "burial_month")
+    private Integer burialMonth;
+    @Column(name = "burial_day")
+    private Integer burialDay;
 
     @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
