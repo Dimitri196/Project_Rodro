@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "leaflet/dist/leaflet.css";
 import {
   BrowserRouter as Router,
   Link,
@@ -14,6 +15,7 @@ import {
   Spinner,
   NavDropdown,
   Image,
+  Button, // Added Button import for logout
 } from "react-bootstrap";
 
 // Import pages
@@ -109,52 +111,24 @@ export function App() {
     <Router>
       <div className="d-flex flex-column min-vh-100">
         {/* Navbar */}
-        <Navbar bg="light" expand="lg" className="border-bottom">
+        <Navbar bg="dark" variant="dark" expand="lg" className="shadow-sm" expanded={expanded} onToggle={() => setExpanded(!expanded)}>
           <Container>
-            <Navbar.Brand as={Link} to="/">Project RodRo</Navbar.Brand>
-            <Navbar.Toggle />
-            <Navbar.Collapse>
+            <Navbar.Brand as={Link} to="/">
+              <i className="fas fa-sitemap me-2"></i>Familiarum.eu {/* Changed brand to match HomePage */}
+            </Navbar.Brand>
+            <Navbar.Toggle aria-controls="basic-navbar-nav" />
+            <Navbar.Collapse id="basic-navbar-nav">
               <Nav className="me-auto">
-                <Nav.Link as={Link} to="/home">Home</Nav.Link>
-                <Nav.Link as={Link} to="/about">About</Nav.Link>
-                <Nav.Link as={Link} to="/articles">Blog</Nav.Link>
-
-
-                {/* Data Management */}
-                <NavDropdown title="Manage" id="manage-dropdown">
-                  <NavDropdown.Item as={Link} to="/persons">Persons</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/families">Families</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/sources">Sources</NavDropdown.Item>
-                </NavDropdown>
-
-                {/* Institutions */}
-                <NavDropdown title="Institutions" id="institutions-dropdown">
-                  <NavDropdown.Item as={Link} to="/institutions">Institutions</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/occupations">Occupations</NavDropdown.Item>
-                </NavDropdown>
-
-                {/* Geography */}
-                <NavDropdown title="Regions" id="regions-dropdown">
-                  <NavDropdown.Item as={Link} to="/countries">Countries</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/locations">Locations</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/parishes">Parishes</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/cemeteries">Cemeteries</NavDropdown.Item>
-                </NavDropdown>
-
-                {/* Military */}
-                <NavDropdown title="Military" id="military-dropdown">
-                  <NavDropdown.Item as={Link} to="/militaryOrganizations">Organizations</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/militaryStructures">Structures</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/militaryRanks">Ranks</NavDropdown.Item>
-                </NavDropdown>
-
-                <Nav.Link as={Link} to="/contact">Contact</Nav.Link>
+                <Nav.Link as={Link} to="/home" onClick={() => setExpanded(false)}>Home</Nav.Link>
+                <Nav.Link as={Link} to="/about" onClick={() => setExpanded(false)}>About</Nav.Link>
+                <Nav.Link as={Link} to="/articles" onClick={() => setExpanded(false)}>Blog</Nav.Link>
+                <Nav.Link as={Link} to="/contact" onClick={() => setExpanded(false)}>Contact</Nav.Link>
               </Nav>
 
               {/* Auth Links */}
               <Nav className="gap-2 align-items-center">
                 {session.status === "loading" ? (
-                  <Spinner animation="border" size="sm" />
+                  <Spinner animation="border" size="sm" variant="light" />
                 ) : session.data ? (
                   <NavDropdown
                     title={
@@ -174,15 +148,20 @@ export function App() {
                     }
                     id="user-nav-dropdown"
                     align="end"
+                    menuVariant="dark"
                   >
-                    <NavDropdown.Item as={Link} to="/profile">Profile</NavDropdown.Item>
+                    <NavDropdown.Item as={Link} to="/profile" onClick={() => setExpanded(false)}>Profile</NavDropdown.Item>
                     <NavDropdown.Divider />
                     <NavDropdown.Item onClick={handleLogoutClick}>Logout</NavDropdown.Item>
                   </NavDropdown>
                 ) : (
                   <>
-                    <Nav.Link as={Link} to="/register">Register</Nav.Link>
-                    <Nav.Link as={Link} to="/login">Login</Nav.Link>
+                    <Button as={Link} to="/login" variant="outline-light" className="me-2" onClick={() => setExpanded(false)}>
+                      <i className="fas fa-sign-in-alt me-2"></i>Login
+                    </Button>
+                    <Button as={Link} to="/register" variant="primary" onClick={() => setExpanded(false)}>
+                      <i className="fas fa-user-plus me-2"></i>Register
+                    </Button>
                   </>
                 )}
               </Nav>
@@ -191,7 +170,7 @@ export function App() {
         </Navbar>
 
         {/* Routes */}
-        <div className="container flex-grow-1 py-4">
+        <div className="flex-grow-1">
           <Routes>
             <Route path="/" element={<Navigate to="/home" />} />
             <Route path="/home" element={<HomePage />} />
@@ -311,19 +290,20 @@ export function App() {
         </div>
 
         {/* Footer */}
-        <footer className="bg-dark text-white text-center py-4 mt-auto">
-          <div className="container">
-            <p className="mb-2">&copy; 2025 Project RodRo. All Rights Reserved.</p>
-            <p>
-              <Link to="/privacy-policy" className="underline hover:text-gray-300">
+        <footer className="bg-dark text-white py-4 mt-auto">
+          <Container className="text-center">
+            <p className="mb-0">&copy; {new Date().getFullYear()} Familiarum.eu. All rights reserved.</p>
+            <p className="mb-0 text-muted">A scientific, open-access genealogy project.</p>
+            <p className="mb-0">
+              <Link to="/privacy-policy" className="text-white text-decoration-underline me-2">
                 Privacy Policy
               </Link>
               {" | "}
-              <Link to="/terms-of-service" className="underline hover:text-gray-300">
+              <Link to="/terms-of-service" className="text-white text-decoration-underline ms-2">
                 Terms of Service
               </Link>
             </p>
-          </div>
+          </Container>
         </footer>
       </div>
     </Router>

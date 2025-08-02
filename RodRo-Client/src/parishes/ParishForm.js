@@ -179,7 +179,7 @@ const ParishForm = () => {
                             handleChange={(e) => handleLocationChange("parishLocation", e.target.value)}
                             items={locations}
                             getLabel={(item) => item.locationName}
-                            getValue={(item) => item._id}
+                            getValue={(item) => item.id}
                         />
                     </Col>
                 </Row>

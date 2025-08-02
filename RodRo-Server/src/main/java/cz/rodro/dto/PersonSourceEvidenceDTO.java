@@ -19,4 +19,6 @@ public class PersonSourceEvidenceDTO {
     private String personName;
     private String sourceName;
 
+    private String sourceTitle;
+
 }

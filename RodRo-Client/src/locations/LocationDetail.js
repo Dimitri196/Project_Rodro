@@ -2,223 +2,345 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Container, Row, Col, Card, ListGroup, Alert, Spinner } from "react-bootstrap";
 import { apiGet } from "../utils/api";
-import dateStringFormatter from "../utils/dateStringFormatter";
 import settlementTypeLabels from "../constants/settlementTypeLabels";
+import { useSession } from "../contexts/session";
+
+// 1. Import react-leaflet components
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+// 2. Import Leaflet CSS (make sure this is globally accessible, e.g., in App.js or index.js)
+import 'leaflet/dist/leaflet.css';
+
+// 3. IMPORTANT: Fix for default marker icons not showing up in Webpack/Create React App environments
+// This is a common issue with react-leaflet and needs to be included once per application
+import L from 'leaflet';
+delete L.Icon.Default.prototype._getIconUrl; // Prevents webpack from trying to find default icons
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+});
+
 
 const LocationDetail = () => {
     const { id } = useParams();
-    const [location, setLocation] = useState({});
-    const [history, setHistory] = useState([]);
+    const { session } = useSession();
+    const isAdmin = session.data?.isAdmin === true;
+
+    const [location, setLocation] = useState(null);
     const [cemeteries, setCemeteries] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [historyLoading, setHistoryLoading] = useState(true);
-    const [cemeteryLoading, setCemeteryLoading] = useState(true);
-    const [parishLocationLoading, setParishLocationLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [historyError, setHistoryError] = useState(null);
-    const [cemeteryError, setCemeteryError] = useState(null);
-    const [parishLocationError, setParishLocationError] = useState(null);
     const [parishLocations, setParishLocations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchLocation = async () => {
+        const fetchData = async () => {
+            setLoading(true);
+            setError(null);
             try {
                 const locationData = await apiGet(`/api/locations/${id}`);
                 setLocation(locationData);
-                if (locationData.history && locationData.history.length > 0) {
-                    setHistory(locationData.history);
-                    setHistoryLoading(false);
-                }
+
+                const [cemeteryData, parishLocationData] = await Promise.all([
+                    apiGet(`/api/locations/${id}/cemeteries`),
+                    apiGet(`/api/locations/${id}/parishes`),
+                ]);
+
+                setCemeteries(cemeteryData);
+                setParishLocations(parishLocationData);
+
             } catch (err) {
-                setError(`Error loading location: ${err.message || err}`);
+                console.error("Error fetching location details:", err);
+                setError(`Failed to load location details: ${err.message || err}`);
             } finally {
                 setLoading(false);
             }
         };
 
-        const fetchHistory = async () => {
-            try {
-                const historyData = await apiGet(`/api/locations/${id}/history`);
-                setHistory(historyData);
-            } catch (err) {
-                setHistoryError(`Error loading history: ${err.message || err}`);
-            } finally {
-                setHistoryLoading(false);
-            }
-        };
-
-        const fetchCemeteries = async () => {
-            try {
-                const cemeteryData = await apiGet(`/api/locations/${id}/cemeteries`);
-                setCemeteries(cemeteryData);
-            } catch (err) {
-                setCemeteryError(`Error loading cemeteries: ${err.message || err}`);
-            } finally {
-                setCemeteryLoading(false);
-            }
-        };
-
-         const fetchParishLocations = async () => {
-            try {
-                const parishLocationData = await apiGet(`/api/locations/${id}/parishes`);
-                setParishLocations(parishLocationData);
-            } catch (err) {
-                setParishLocationError(`Error loading parish locations: ${err.message || err}`);
-            } finally {
-                setParishLocationLoading(false);
-            }
-        };
-
-        fetchLocation();
-        fetchHistory();
-        fetchCemeteries();
-        fetchParishLocations();
+        fetchData();
     }, [id]);
 
-    if (loading) return <p>Loading location details...</p>;
-    if (error) return <Alert variant="danger">{error}</Alert>;
+    if (loading) {
+        return (
+            <Container className="my-5 text-center">
+                <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </Spinner>
+                <p className="mt-3 text-muted">Loading location details...</p>
+            </Container>
+        );
+    }
+
+    if (error) {
+        return (
+            <Container className="my-5">
+                <Alert variant="danger" className="text-center shadow-sm rounded-3">
+                    <i className="fas fa-exclamation-triangle me-2"></i>{error}
+                </Alert>
+            </Container>
+        );
+    }
+
+    if (!location) {
+        return (
+            <Container className="my-5">
+                <Alert variant="info" className="text-center shadow-sm rounded-3">
+                    <i className="fas fa-info-circle me-2"></i>Location not found.
+                </Alert>
+            </Container>
+        );
+    }
+
+    // Check if GPS coordinates are available to render the map
+    const hasGps = location.gpsLatitude && location.gpsLongitude;
+
+    // Define the initial map center and zoom for Leaflet
+    // Use the location's coordinates if available, otherwise a default for safety (though map won't render without GPS)
+    const position = hasGps ? [location.gpsLatitude, location.gpsLongitude] : [0, 0];
+    const initialZoom = 14; // A good starting zoom for a close-up view (e.g., 10-16 for city/street level)
+
 
     return (
-        <Container className="mt-5">
-            {/* Location Details */}
+        <Container className="my-5 py-4 bg-light rounded shadow-lg">
+            {/* Font Awesome for icons (ensure it's linked in index.html) */}
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40JuKmWswL3QbpgExX+Q6bLSYg5rXW4remp4o/Y6fFZj/gX2Q2K2V2F5R5/5Q5w5w5w5w5w==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
+
             <Row className="mb-4">
-                <Col md={6}>
-                    <Card>
-                        <Card.Body>
-                            <Card.Title>
-                                {location.locationName} ({settlementTypeLabels[location.settlementType] || location.settlementType})
-                            </Card.Title>
+                <Col md={12} className="text-center">
+                    <h1 className="display-4 fw-bold text-primary mb-3">
+                        <i className="fas fa-map-marker-alt me-3"></i>
+                        {location.locationName}
+                    </h1>
+                    <p className="lead text-muted fst-italic">
+                        {settlementTypeLabels[location.settlementType] || location.settlementType}
+                    </p>
+                    {isAdmin && (
+                        <Link to={`/locations/edit/${location._id}`} className="btn btn-warning btn-lg rounded-pill px-4 py-2 shadow-sm mt-3">
+                            <i className="fas fa-edit me-2"></i>Edit Location
+                        </Link>
+                    )}
+                </Col>
+            </Row>
+
+            <Row className="justify-content-center">
+                {/* Basic Information Card */}
+                <Col md={hasGps ? 6 : 12} className="mb-4">
+                    <Card className="shadow-lg border-0 rounded-4 h-100">
+                        <Card.Header as="h5" className="bg-primary text-white py-3 rounded-top-4">
+                            <i className="fas fa-info-circle me-2"></i>Basic Information
+                        </Card.Header>
+                        <Card.Body className="p-4">
                             <ListGroup variant="flush">
-                                <ListGroup.Item>
-                                    <strong>Establishment Date:</strong>{" "}
-                                    {location.establishmentDate
-                                        ? dateStringFormatter(location.establishmentDate)
-                                        : "Unknown"}
+                                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                                    <strong>Establishment Year:</strong>
+                                    <span>{location.establishmentYear || "Unknown"}</span>
                                 </ListGroup.Item>
-                                <ListGroup.Item>
-                                    <strong>GPS Latitude:</strong> {location.gpsLatitude}
+                                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                                    <strong>GPS Latitude:</strong>
+                                    <span>{location.gpsLatitude || "-"}</span>
                                 </ListGroup.Item>
-                                <ListGroup.Item>
-                                    <strong>GPS Longitude:</strong> {location.gpsLongitude}
+                                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                                    <strong>GPS Longitude:</strong>
+                                    <span>{location.gpsLongitude || "-"}</span>
                                 </ListGroup.Item>
                             </ListGroup>
                         </Card.Body>
                     </Card>
                 </Col>
+
+                {/* Interactive OpenStreetMap Card (conditionally rendered) */}
+                {hasGps && (
+                    <Col md={6} className="mb-4">
+                        <Card className="shadow-lg border-0 rounded-4 h-100">
+                            <Card.Header as="h5" className="bg-primary text-white py-3 rounded-top-4">
+                                <i className="fas fa-map-marked-alt me-2"></i>Interactive Map (OpenStreetMap)
+                            </Card.Header>
+                            <Card.Body className="p-2 d-flex justify-content-center align-items-center">
+                                {/* MapContainer needs a fixed height to display */}
+                                <MapContainer
+                                    center={position} // Initial center of the map
+                                    zoom={initialZoom} // Initial zoom level
+                                    scrollWheelZoom={true} // Enable zooming with mouse scroll wheel
+                                    // You can add other interactive options like dragging:
+                                    // dragging={true}
+                                    // doubleClickZoom={true}
+                                    style={{ height: '300px', width: '100%', borderRadius: '0.25rem' }}
+                                >
+                                    {/* TileLayer specifies the map data source (OpenStreetMap tiles) */}
+                                    <TileLayer
+                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    />
+                                    {/* Marker for the specific location */}
+                                    <Marker position={position}>
+                                        {/* Popup content when marker is clicked */}
+                                        <Popup>
+                                            {location.locationName}
+                                        </Popup>
+                                    </Marker>
+                                </MapContainer>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                )}
             </Row>
 
-            {/* Historical Details */}
-            <Row>
-                <Col md={8}>
-                    <h3>Historical Details</h3>
-                    {historyLoading ? (
-                        <Spinner animation="border" />
-                    ) : historyError ? (
-                        <Alert variant="danger">{historyError}</Alert>
-                    ) : history.length > 0 ? (
-                        <ListGroup>
-                            {history.map((record) => (
-                                <ListGroup.Item key={record.id}>
-                                    <strong>Period:</strong>{" "}
-                                    {dateStringFormatter(record.startDate)} -{" "}
-                                    {record.endDate
-                                        ? dateStringFormatter(record.endDate)
-                                        : "Present"}
-                                    <br />
-                                    <strong>Country:</strong>{" "}
-                                    {record.countryId ? (
-                                        <Link to={`/countries/show/${record.countryId}`}>{record.countryName}</Link>
-                                    ) : (
-                                        record.countryName
-                                    )}
-                                    <br />
-                                    <strong>Province:</strong>{" "}
-                                    {record.provinceId ? (
-                                        <Link to={`/countries/${record.countryId}/provinces/${record.provinceId}`}>{record.provinceName}</Link>
-                                    ) : (
-                                        record.provinceName
-                                    )}
-                                    <br />
-                                    <strong>District:</strong>{" "}
-                                    {record.districtId ? (
-                                        <Link to={`/countries/${record.countryId}/provinces/${record.provinceId}/districts/${record.districtId}`}>{record.districtName}</Link>
-                                    ) : (
-                                        record.districtName
-                                    )}
-                                    <br />
-                                    <strong>Subdivision:</strong>{" "}
-                                    {record.subdivisionId ? (
-                                        <Link to={`/subdivisions/show/${record.subdivisionId}`}>
-                                            {record.subdivisionName}
-                                        </Link>
-                                    ) : (
-                                        record.subdivisionName || "-"
-                                    )}
-                                    <br />
-                                    <strong>Notes:</strong> {record.notes || "N/A"}
-                                </ListGroup.Item>
-                            ))}
-                        </ListGroup>
-                    ) : (
-                        <Alert variant="info">No historical records available.</Alert>
-                    )}
+            <Row className="justify-content-center">
+                {/* Historical Details Card */}
+                <Col md={6} className="mb-4">
+                    <Card className="shadow-lg border-0 rounded-4 h-100">
+                        <Card.Header as="h5" className="bg-primary text-white py-3 rounded-top-4">
+                            <i className="fas fa-history me-2"></i>Historical Details
+                        </Card.Header>
+                        <Card.Body className="p-4">
+                            {location.locationHistories && location.locationHistories.length > 0 ? (
+                                <ListGroup variant="flush">
+                                    {location.locationHistories.map((record) => (
+                                        <ListGroup.Item key={record.id} className="pb-3 px-0 border-bottom">
+                                            <strong>Period:</strong>{" "}
+                                            {record.startDate || "-"} - {record.endDate || "Present"}
+                                            <br />
+                                            <strong>Country:</strong>{" "}
+                                            {record.countryId ? (
+                                                <Link to={`/countries/show/${record.countryId}`} className="text-decoration-none text-primary">
+                                                    {record.countryName}
+                                                </Link>
+                                            ) : (
+                                                record.countryName || "-"
+                                            )}
+                                            <br />
+                                            <strong>Province:</strong>{" "}
+                                            {record.provinceId ? (
+                                                <Link to={`/countries/${record.countryId}/provinces/${record.provinceId}`} className="text-decoration-none text-primary">
+                                                    {record.provinceName}
+                                                </Link>
+                                            ) : (
+                                                record.provinceName || "-"
+                                            )}
+                                            <br />
+                                            <strong>District:</strong>{" "}
+                                            {record.districtId ? (
+                                                <Link to={`/countries/${record.countryId}/provinces/${record.provinceId}/districts/${record.districtId}`} className="text-decoration-none text-primary">
+                                                    {record.districtName}
+                                                </Link>
+                                            ) : (
+                                                record.districtName || "-"
+                                            )}
+                                            <br />
+                                            <strong>Subdivision:</strong>{" "}
+                                            {record.subdivisionId ? (
+                                                <Link to={`/subdivisions/show/${record.subdivisionId}`} className="text-decoration-none text-primary">
+                                                    {record.subdivisionName}
+                                                </Link>
+                                            ) : (
+                                                record.subdivisionName || "-"
+                                            )}
+                                            <br />
+                                            <strong>Notes:</strong> {record.notes || "N/A"}
+                                        </ListGroup.Item>
+                                    ))}
+                                </ListGroup>
+                            ) : (
+                                <Alert variant="info" className="text-center mt-3">No historical records available.</Alert>
+                            )}
+                        </Card.Body>
+                    </Card>
+                </Col>
+
+                {/* Cemeteries Card */}
+                <Col md={6} className="mb-4">
+                    <Card className="shadow-lg border-0 rounded-4 h-100">
+                        <Card.Header as="h5" className="bg-primary text-white py-3 rounded-top-4">
+                            <i className="fas fa-cross me-2"></i>Cemeteries
+                        </Card.Header>
+                        <Card.Body className="p-4">
+                            {cemeteries.length > 0 ? (
+                                <ListGroup variant="flush">
+                                    {cemeteries.map((cemetery) => (
+                                        <ListGroup.Item key={cemetery.id} className="pb-3 px-0 border-bottom">
+                                            <strong>Name:</strong>{" "}
+                                            <Link to={`/cemeteries/show/${cemetery._id}`} className="text-decoration-none text-primary">
+                                                {cemetery.cemeteryName}
+                                            </Link>
+                                            <br />
+                                            {cemetery.webLink && (
+                                                <>
+                                                    <strong>Website:</strong>{" "}
+                                                    <a href={cemetery.webLink} target="_blank" rel="noreferrer" className="text-decoration-none text-info">
+                                                        {cemetery.webLink}
+                                                    </a>
+                                                </>
+                                            )}
+                                        </ListGroup.Item>
+                                    ))}
+                                </ListGroup>
+                            ) : (
+                                <Alert variant="info" className="text-center mt-3">
+    <i className="fas fa-cross me-2"></i>No cemeteries found for this location.
+</Alert>
+                            )}
+                        </Card.Body>
+                    </Card>
                 </Col>
             </Row>
 
-            {/* Cemetery Section */}
-            <Row className="mt-4">
-                <Col md={8}>
-                    <h3>Cemeteries</h3>
-                    {cemeteryLoading ? (
-                        <Spinner animation="border" />
-                    ) : cemeteryError ? (
-                        <Alert variant="danger">{cemeteryError}</Alert>
-                    ) : cemeteries.length > 0 ? (
-                        <ListGroup>
-                            {cemeteries.map((cemetery) => (
-                                <ListGroup.Item key={cemetery.id}>
-                                    <strong>Name:</strong> {cemetery.cemeteryName}
-                                    <br />
-                                    {cemetery.webLink && (
-                                        <>
-                                            <strong>Website:</strong>{" "}
-                                            <a href={cemetery.webLink} target="_blank" rel="noreferrer">
-                                                {cemetery.webLink}
-                                            </a>
-                                        </>
-                                    )}
-                                </ListGroup.Item>
-                            ))}
-                        </ListGroup>
-                    ) : (
-                        <Alert variant="info">No cemeteries found for this location.</Alert>
-                    )}
+            <Row className="justify-content-center">
+                {/* Parishes Card */}
+                <Col md={6} className="mb-4">
+                    <Card className="shadow-lg border-0 rounded-4 h-100">
+                        <Card.Header as="h5" className="bg-primary text-white py-3 rounded-top-4">
+                            <i className="fas fa-church me-2"></i>Parishes
+                        </Card.Header>
+                        <Card.Body className="p-4">
+                            {parishLocations.length > 0 ? (
+                                <ListGroup variant="flush">
+                                    {parishLocations.map((parishLocation) => (
+                                        <ListGroup.Item key={parishLocation.id} className="pb-3 px-0 border-bottom">
+                                            <strong>Name:</strong>{" "}
+                                            <Link to={`/parishes/show/${parishLocation.parishId}`} className="text-decoration-none text-primary">
+                                                {parishLocation.parishName}
+                                            </Link>
+                                            <br />
+                                            {/* Add more parishLocation details here if available in DTO */}
+                                        </ListGroup.Item>
+                                    ))}
+                                </ListGroup>
+                            ) : (
+                                <Alert variant="info" className="text-center mt-3">No parishes found for this location.</Alert>
+                            )}
+                        </Card.Body>
+                    </Card>
                 </Col>
+                {/* Sources Card (if you have sources for the location itself) */}
+                {location.sources && location.sources.length > 0 && (
+                    <Col md={6} className="mb-4">
+                        <Card className="shadow-lg border-0 rounded-4 h-100">
+                            <Card.Header as="h5" className="bg-primary text-white py-3 rounded-top-4">
+                                <i className="fas fa-book me-2"></i>Sources
+                            </Card.Header>
+                            <Card.Body className="p-4">
+                                <ListGroup variant="flush">
+                                    {location.sources.map((source) => (
+                                        <ListGroup.Item key={source._id} className="pb-3 px-0 border-bottom">
+                                            <strong>Source Title:</strong> {source.sourceTitle || "N/A"}
+                                            <br />
+                                            <strong>Source Reference:</strong> {source.sourceReference || "N/A"}
+                                            <br />
+                                            {source.webLink && (
+                                                <>
+                                                    <strong>Web Link:</strong>{" "}
+                                                    <a href={source.webLink} target="_blank" rel="noreferrer" className="text-decoration-none text-info">
+                                                        {source.webLink}
+                                                    </a>
+                                                </>
+                                            )}
+                                        </ListGroup.Item>
+                                    ))}
+                                </ListGroup>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                )}
             </Row>
-
-            {/* Parish Section */}
-            <Row className="mt-4">
-                <Col md={8}>
-                    <h3>Parishes</h3>
-                    {parishLocationLoading ? (
-                        <Spinner animation="border" />
-                    ) : parishLocationError ? (
-                        <Alert variant="danger">{parishLocationError}</Alert>
-                    ) : parishLocations.length > 0 ? (
-                        <ListGroup>
-                            {parishLocations.map((parishLocation) => (
-                                <ListGroup.Item key={parishLocation.id}>
-                                    <strong>Name:</strong> {parishLocation.parishName}
-
-                                </ListGroup.Item>
-                            ))}
-                        </ListGroup>
-                    ) : (
-                        <Alert variant="info">No parishes found for this location.</Alert>
-                    )}
-                </Col>
-            </Row>
-
         </Container>
     );
 };

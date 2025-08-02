@@ -1,75 +1,90 @@
 package cz.rodro.service;
 
 import cz.rodro.dto.SourceDTO;
-import cz.rodro.dto.mapper.LocationHistoryMapper;
+import cz.rodro.dto.SourceListProjection;
 import cz.rodro.dto.mapper.SourceMapper;
 import cz.rodro.entity.LocationEntity;
 import cz.rodro.entity.SourceEntity;
-import cz.rodro.entity.repository.LocationRepository;
 import cz.rodro.entity.repository.SourceRepository;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import cz.rodro.exception.NotFoundException;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+/**
+ * Service implementation for managing {@link SourceEntity} and {@link SourceDTO} operations.
+ * Handles business logic, data mapping, and transaction management for sources.
+ */
 @Service
 public class SourceServiceImpl implements SourceService {
 
-    @Autowired
-    private SourceRepository sourceRepository;
+    private final SourceRepository sourceRepository;
+    private final SourceMapper sourceMapper;
+    private final LocationService locationService; // Inject LocationService to fetch LocationEntity
 
     @Autowired
-    private SourceMapper sourceMapper;
-
-    @Autowired
-    private LocationService locationService;
-
-    @Autowired
-    private LocationRepository locationRepository;
-
-    @Autowired
-    private LocationHistoryMapper locationHistoryMapper;
+    public SourceServiceImpl(SourceRepository sourceRepository, SourceMapper sourceMapper, LocationService locationService) {
+        this.sourceRepository = sourceRepository;
+        this.sourceMapper = sourceMapper;
+        this.locationService = locationService;
+    }
 
     @Override
+    @Transactional
     public SourceDTO addSource(SourceDTO sourceDTO) {
-
-        LocationEntity sourceLocation = locationService.fetchLocationById(sourceDTO.getSourceLocation().getId(), "Source Location");
+        // Fetch the LocationEntity if sourceLocationId is provided in the DTO
+        LocationEntity sourceLocation = null;
+        if (sourceDTO.getSourceLocationId() != null) {
+            sourceLocation = locationService.fetchLocationById(sourceDTO.getSourceLocationId(), "Source Location");
+        }
 
         SourceEntity sourceEntity = sourceMapper.toSourceEntity(sourceDTO);
-        sourceEntity.setSourceLocation(sourceLocation);
+        sourceEntity.setSourceLocation(sourceLocation); // Set the resolved LocationEntity
 
         SourceEntity saved = sourceRepository.save(sourceEntity);
         return sourceMapper.toSourceDTO(saved);
     }
 
     @Override
-    public SourceDTO getSource(Long id) {
-        SourceEntity entity = fetchSourceById(id);
+    @Transactional(readOnly = true)
+    public SourceDTO getSource(long sourceId) { // Changed parameter type to long
+        SourceEntity entity = fetchSourceById(sourceId);
         return sourceMapper.toSourceDTO(entity);
     }
 
     @Override
-    public List<SourceDTO> getAllSources() {
-        return sourceRepository.findAll()
-                .stream()
-                .map(sourceMapper::toSourceDTO)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<SourceListProjection> getAllSources(String searchTerm, Pageable pageable) {
+        // Uses the optimized projection method from the repository
+        return sourceRepository.findAllSourcesProjected(searchTerm, pageable);
     }
 
     @Override
-    public SourceDTO updateSource(Long id, SourceDTO sourceDTO) {
-        SourceEntity existing = fetchSourceById(id);
+    @Transactional
+    public SourceDTO updateSource(Long sourceId, SourceDTO sourceDTO) { // Changed parameter name to sourceId
+        SourceEntity existing = fetchSourceById(sourceId);
+
+        // Update primitive fields using MapStruct
         sourceMapper.updateSourceEntity(sourceDTO, existing);
+
+        // Update the associated LocationEntity if the ID changes
+        LocationEntity newSourceLocation = null;
+        if (sourceDTO.getSourceLocationId() != null) {
+            newSourceLocation = locationService.fetchLocationById(sourceDTO.getSourceLocationId(), "Source Location");
+        }
+        existing.setSourceLocation(newSourceLocation);
+
         SourceEntity updated = sourceRepository.save(existing);
         return sourceMapper.toSourceDTO(updated);
     }
 
     @Override
-    public void deleteSource(Long id) {
-        SourceEntity entity = fetchSourceById(id);
+    @Transactional
+    public void removeSource(long sourceId) { // Changed method name to removeSource and parameter type to long
+        SourceEntity entity = fetchSourceById(sourceId);
         sourceRepository.delete(entity);
     }
 

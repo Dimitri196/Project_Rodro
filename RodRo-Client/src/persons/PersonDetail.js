@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Container, Row, Col, Card, ListGroup, Alert, Spinner } from "react-bootstrap"; // Added Spinner for consistency
+import { Container, Row, Col, Card, ListGroup, Alert, Spinner, Accordion } from "react-bootstrap";
 
 import { apiGet } from "../utils/api";
 import socialStatusLabels from "../constants/socialStatusLabels";
 import causeOfDeathLabels from "../constants/causeOfDeathLabels";
 
-// Helper function to format partial dates (copied from PersonTable for self-containment)
+// Helper function to format partial dates
 const formatPartialDate = (year, month, day) => {
     if (year === null || year === undefined) {
         return "Unknown"; // Or an empty string, depending on desired display
@@ -26,7 +26,7 @@ const PersonDetail = () => {
     const { id } = useParams();
 
     const [person, setPerson] = useState({});
-    const [parents, setParents] = useState([]); // This state is not directly used in rendering parents, but kept for consistency
+    const [parents, setParents] = useState([]);
     const [childs, setChilds] = useState([]);
     const [spouses, setSpouses] = useState([]);
     const [occupations, setOccupations] = useState([]);
@@ -185,196 +185,199 @@ const PersonDetail = () => {
                     </Card>
                 </Col>
 
-                {/* Right Column - Relations, Occupations, Military, Sources */}
+                {/* Right Column - Relations, Occupations, Military, Sources (now in Accordion) */}
                 <Col md={8}>
-                    {/* Parents Card */}
-                    <Card className="mb-4 shadow-sm">
-                        <Card.Header as="h5" className="bg-dark text-white">Parent(s)</Card.Header>
-                        <Card.Body>
-                            <ListGroup variant="flush">
-                                <ListGroup.Item>
-                                    <strong>Father:</strong>{" "}
-                                    {person.father
-                                        ? <Link to={`/persons/show/${person.father._id || person.father.id}`}>{getFullName(person.father)}</Link>
-                                        : "N/A"}
-                                </ListGroup.Item>
-                                <ListGroup.Item>
-                                    <strong>Mother:</strong>{" "}
-                                    {person.mother
-                                        ? <Link to={`/persons/show/${person.mother._id || person.mother.id}`}>{getFullName(person.mother)}</Link>
-                                        : "N/A"}
-                                </ListGroup.Item>
-                            </ListGroup>
-                        </Card.Body>
-                    </Card>
-
-                    {/* Spouses Card */}
-                    <Card className="mb-4 shadow-sm">
-                        <Card.Header as="h5" className="bg-dark text-white">Spouse(s)</Card.Header>
-                        <Card.Body>
-                            {familyData.length > 0 ? (
+                    <h4 className="mb-3 text-center">Relevant Information</h4> {/* Added header here */}
+                    {/* defaultActiveKey can be set to the eventKey of the item you want open by default */}
+                    <Accordion defaultActiveKey={["0", "1", "2"]}>
+                        {/* Parents Card */}
+                        <Accordion.Item eventKey="0">
+                            <Accordion.Header>Parent(s)</Accordion.Header>
+                            <Accordion.Body>
                                 <ListGroup variant="flush">
-                                    {familyData.map((family, index) => {
-                                        let spouse = null;
-                                        if (person.gender === "MALE") {
-                                            spouse = family.spouseFemale;
-                                        } else if (person.gender === "FEMALE") {
-                                            spouse = family.spouseMale;
-                                        }
-                                        return (
+                                    <ListGroup.Item>
+                                        <strong>Father:</strong>{" "}
+                                        {person.father
+                                            ? <Link to={`/persons/show/${person.father._id || person.father.id}`}>{getFullName(person.father)}</Link>
+                                            : "N/A"}
+                                    </ListGroup.Item>
+                                    <ListGroup.Item>
+                                        <strong>Mother:</strong>{" "}
+                                        {person.mother
+                                            ? <Link to={`/persons/show/${person.mother._id || person.mother.id}`}>{getFullName(person.mother)}</Link>
+                                            : "N/A"}
+                                    </ListGroup.Item>
+                                </ListGroup>
+                            </Accordion.Body>
+                        </Accordion.Item>
+
+                        {/* Spouses Card */}
+                        <Accordion.Item eventKey="1">
+                            <Accordion.Header>Spouse(s)</Accordion.Header>
+                            <Accordion.Body>
+                                {familyData.length > 0 ? (
+                                    <ListGroup variant="flush">
+                                        {familyData.map((family, index) => {
+                                            let spouse = null;
+                                            if (person.gender === "MALE") {
+                                                spouse = family.spouseFemale;
+                                            } else if (person.gender === "FEMALE") {
+                                                spouse = family.spouseMale;
+                                            }
+                                            return (
+                                                <ListGroup.Item key={index} className="pb-3 border-bottom">
+                                                    <strong>Name:</strong>{" "}
+                                                    {spouse
+                                                        ? <Link to={`/persons/show/${spouse._id || spouse.id}`}>{getFullName(spouse)}</Link>
+                                                        : "N/A"}<br />
+                                                    <strong>Gender:</strong> {spouse?.gender || "N/A"}<br />
+                                                    <strong>Marriage Date:</strong>{" "}
+                                                    {/* Assuming marriageDate is still a full LocalDate string from backend */}
+                                                    {family.marriageDate ? family.marriageDate : "N/A"}<br />
+                                                    <strong>Marriage Location:</strong>{" "}
+                                                    {family.marriageLocation?.locationName || "N/A"}
+                                                </ListGroup.Item>
+                                            );
+                                        })}
+                                    </ListGroup>
+                                ) : <p className="text-muted">No spouse data available.</p>}
+                            </Accordion.Body>
+                        </Accordion.Item>
+
+                        {/* Children Card */}
+                        <Accordion.Item eventKey="2">
+                            <Accordion.Header>Children</Accordion.Header>
+                            <Accordion.Body>
+                                {childs.length > 0 ? (
+                                    <ListGroup variant="flush">
+                                        {childs.map((child, index) => (
                                             <ListGroup.Item key={index} className="pb-3 border-bottom">
                                                 <strong>Name:</strong>{" "}
-                                                {spouse
-                                                    ? <Link to={`/persons/show/${spouse._id || spouse.id}`}>{getFullName(spouse)}</Link>
-                                                    : "N/A"}<br />
-                                                <strong>Gender:</strong> {spouse?.gender || "N/A"}<br />
-                                                <strong>Marriage Date:</strong>{" "}
-                                                {/* Assuming marriageDate is still a full LocalDate string from backend */}
-                                                {family.marriageDate ? family.marriageDate : "N/A"}<br />
-                                                <strong>Marriage Location:</strong>{" "}
-                                                {family.marriageLocation?.locationName || "N/A"}
-                                            </ListGroup.Item>
-                                        );
-                                    })}
-                                </ListGroup>
-                            ) : <p className="text-muted">No spouse data available.</p>}
-                        </Card.Body>
-                    </Card>
-
-                    {/* Children Card */}
-                    <Card className="mb-4 shadow-sm">
-                        <Card.Header as="h5" className="bg-dark text-white">Children</Card.Header>
-                        <Card.Body>
-                            {childs.length > 0 ? (
-                                <ListGroup variant="flush">
-                                    {childs.map((child, index) => (
-                                        <ListGroup.Item key={index} className="pb-3 border-bottom">
-                                            <strong>Name:</strong>{" "}
-                                            <Link to={`/persons/show/${child._id}`}>{getFullName(child)}</Link><br />
-                                            <strong>Gender:</strong> {child.gender || "N/A"}<br />
-                                            {/* Use formatPartialDate for child's birth date */}
-                                            <strong>Birth Date:</strong> {formatPartialDate(child.birthYear, child.birthMonth, child.birthDay)}
-                                        </ListGroup.Item>
-                                    ))}
-                                </ListGroup>
-                            ) : <p className="text-muted">No children available.</p>}
-                        </Card.Body>
-                    </Card>
-
-                    {/* Occupations Card */}
-                    <Card className="mb-4 shadow-sm">
-                        <Card.Header as="h5" className="bg-dark text-white">Occupation(s)</Card.Header>
-                        <Card.Body>
-                            {occupations.length > 0 ? (
-                                <ListGroup variant="flush">
-                                    {occupations.map((occ, index) => (
-                                        <ListGroup.Item key={index} className="pb-3 border-bottom">
-                                            <strong>Occupation:</strong>{" "}
-                                            {occ.occupationId ? (
-                                                <Link to={`/occupations/show/${occ.occupationId}`}>
-                                                    {occ.occupationName || "Occupation"}
-                                                </Link>
-                                            ) : "N/A"}<br />
-                                            <strong>Institution:</strong>{" "}
-                                            {occ.institutionId ? (
-                                                <Link to={`/institutions/show/${occ.institutionId}`}>
-                                                    {occ.institutionName || "Institution"}
-                                                </Link>
-                                            ) : "N/A"}<br />
-                                            <strong>Institution Location:</strong>{" "}
-                                            {occ.institutionLocationId ? (
-                                                <Link to={`/locations/show/${occ.institutionLocationId}`}>
-                                                    {occ.institutionLocationName || "N/A"}
-                                                </Link>
-                                            ) : "N/A"}<br />
-                                            {/* Assuming startDate and endDate for occupations are still full dates from backend */}
-                                            <strong>Start Date:</strong> {occ.startDate ? occ.startDate : "N/A"}<br />
-                                            <strong>End Date:</strong> {occ.endDate ? occ.endDate : "N/A"}
-                                        </ListGroup.Item>
-                                    ))}
-                                </ListGroup>
-                            ) : <p className="text-muted">No occupations available.</p>}
-                        </Card.Body>
-                    </Card>
-
-                    {/* Military Service Card (only for males) */}
-                    {person.gender === "MALE" && (
-                        <Card className="mb-4 shadow-sm">
-                            <Card.Header as="h5" className="bg-dark text-white">Military Service</Card.Header>
-                            <Card.Body>
-                                {militaryServices.length > 0 ? (
-                                    <ListGroup variant="flush">
-                                        {militaryServices.map((service, index) => (
-                                            <ListGroup.Item key={index} className="pb-3 border-bottom">
-                                                <strong>Unit:</strong>{" "}
-                                                {service.militaryStructure?._id ? (
-                                                    <Link to={`/militaryStructures/show/${service.militaryStructure._id}`}>
-                                                        {service.militaryStructure.unitName || "N/A"}
-                                                    </Link>
-                                                ) : "N/A"}
-                                                <br />
-
-                                                <strong>Rank:</strong>{" "}
-                                                {service.militaryRank?._id ? (
-                                                    <Link to={`/militaryRanks/show/${service.militaryRank._id}`}>
-                                                        {service.militaryRank.rankName || "N/A"}
-                                                    </Link>
-                                                ) : "N/A"}
-                                                <br />
-
-                                                <strong>Army:</strong>{" "}
-                                                {service.militaryStructure?.organization?._id ? (
-                                                    <Link to={`/militaryOrganizations/show/${service.militaryStructure.organization._id}`}>
-                                                        {service.militaryStructure.organization.armyName || "N/A"}
-                                                    </Link>
-                                                ) : "N/A"}
-                                                <br />
-
-                                                <strong>Branch:</strong>{" "}
-                                                {service.militaryStructure?.organization?.armyBranch?.armyBranchName || "N/A"}
-                                                <br />
-
-                                                <strong>Country:</strong>{" "}
-                                                {service.militaryStructure?.organization?.country?._id ? (
-                                                    <Link to={`/countries/show/${service.militaryStructure.organization.country._id}`}>
-                                                        {service.militaryStructure.organization.country.countryNameInPolish || "N/A"}
-                                                    </Link>
-                                                ) : "N/A"}
-                                                <br />
-
-                                                <strong>Enlistment Year:</strong> {service.enlistmentYear || "N/A"}<br />
-                                                <strong>Discharge Year:</strong> {service.dischargeYear || "N/A"}<br />
-                                                <strong>Notes:</strong> {service.notes || "N/A"}
+                                                <Link to={`/persons/show/${child._id}`}>{getFullName(child)}</Link><br />
+                                                <strong>Gender:</strong> {child.gender || "N/A"}<br />
+                                                {/* Use formatPartialDate for child's birth date */}
+                                                <strong>Birth Date:</strong> {formatPartialDate(child.birthYear, child.birthMonth, child.birthDay)}
                                             </ListGroup.Item>
                                         ))}
                                     </ListGroup>
-                                ) : <p className="text-muted">No military service records available.</p>}
-                            </Card.Body>
-                        </Card>
-                    )}
+                                ) : <p className="text-muted">No children available.</p>}
+                            </Accordion.Body>
+                        </Accordion.Item>
 
+                        {/* Occupations Card */}
+                        <Accordion.Item eventKey="3">
+                            <Accordion.Header>Occupation(s)</Accordion.Header>
+                            <Accordion.Body>
+                                {occupations.length > 0 ? (
+                                    <ListGroup variant="flush">
+                                        {occupations.map((occ, index) => (
+                                            <ListGroup.Item key={index} className="pb-3 border-bottom">
+                                                <strong>Occupation:</strong>{" "}
+                                                {occ.occupationId ? (
+                                                    <Link to={`/occupations/show/${occ.occupationId}`}>
+                                                        {occ.occupationName || "Occupation"}
+                                                    </Link>
+                                                ) : "N/A"}<br />
+                                                <strong>Institution:</strong>{" "}
+                                                {occ.institutionId ? (
+                                                    <Link to={`/institutions/show/${occ.institutionId}`}>
+                                                        {occ.institutionName || "Institution"}
+                                                    </Link>
+                                                ) : "N/A"}<br />
+                                                <strong>Institution Location:</strong>{" "}
+                                                {occ.institutionLocationId ? (
+                                                    <Link to={`/locations/show/${occ.institutionLocationId}`}>
+                                                        {occ.institutionLocationName || "N/A"}
+                                                    </Link>
+                                                ) : "N/A"}<br />
+                                                {/* Assuming startDate and endDate for occupations are still full dates from backend */}
+                                                <strong>Start Date:</strong> {occ.startDate ? occ.startDate : "N/A"}<br />
+                                                <strong>End Date:</strong> {occ.endDate ? occ.endDate : "N/A"}
+                                            </ListGroup.Item>
+                                        ))}
+                                    </ListGroup>
+                                ) : <p className="text-muted">No occupations available.</p>}
+                            </Accordion.Body>
+                        </Accordion.Item>
 
-                    {/* Source Evidences Card */}
-                    <Card className="mb-4 shadow-sm">
-                        <Card.Header as="h5" className="bg-dark text-white">Source Evidences</Card.Header>
-                        <Card.Body>
-                            {sourceEvidences.length > 0 ? (
-                                <ListGroup variant="flush">
-                                    {sourceEvidences.map((evidence, index) => (
-                                        <ListGroup.Item key={index} className="pb-3 border-bottom">
-                                            <strong>Evidence Type:</strong> {evidence.evidenceType || "N/A"}<br />
-                                            <strong>Source:</strong>{" "}
-                                            {evidence.sourceName && evidence.sourceId ? (
-                                                <Link to={`/sources/show/${evidence.sourceId}`}>
-                                                    {evidence.sourceName}
-                                                </Link>
-                                            ) : "N/A"}
-                                        </ListGroup.Item>
-                                    ))}
-                                </ListGroup>
-                            ) : <p className="text-muted">No source evidence available.</p>}
-                        </Card.Body>
-                    </Card>
+                        {/* Military Service Card (only for males) */}
+                        {person.gender === "MALE" && (
+                            <Accordion.Item eventKey="4">
+                                <Accordion.Header>Military Service</Accordion.Header>
+                                <Accordion.Body>
+                                    {militaryServices.length > 0 ? (
+                                        <ListGroup variant="flush">
+                                            {militaryServices.map((service, index) => (
+                                                <ListGroup.Item key={index} className="pb-3 border-bottom">
+                                                    <strong>Unit:</strong>{" "}
+                                                    {service.militaryStructure?._id ? (
+                                                        <Link to={`/militaryStructures/show/${service.militaryStructure._id}`}>
+                                                            {service.militaryStructure.unitName || "N/A"}
+                                                        </Link>
+                                                    ) : "N/A"}
+                                                    <br />
+
+                                                    <strong>Rank:</strong>{" "}
+                                                    {service.militaryRank?._id ? (
+                                                        <Link to={`/militaryRanks/show/${service.militaryRank._id}`}>
+                                                            {service.militaryRank.rankName || "N/A"}
+                                                        </Link>
+                                                    ) : "N/A"}
+                                                    <br />
+
+                                                    <strong>Army:</strong>{" "}
+                                                    {service.militaryStructure?.organization?._id ? (
+                                                        <Link to={`/militaryOrganizations/show/${service.militaryStructure.organization._id}`}>
+                                                            {service.militaryStructure.organization.armyName || "N/A"}
+                                                        </Link>
+                                                    ) : "N/A"}
+                                                    <br />
+
+                                                    <strong>Branch:</strong>{" "}
+                                                    {service.militaryStructure?.organization?.armyBranch?.armyBranchName || "N/A"}
+                                                    <br />
+
+                                                    <strong>Country:</strong>{" "}
+                                                    {service.militaryStructure?.organization?.country?._id ? (
+                                                        <Link to={`/countries/show/${service.militaryStructure.organization.country._id}`}>
+                                                            {service.militaryStructure.organization.country.countryNameInPolish || "N/A"}
+                                                        </Link>
+                                                    ) : "N/A"}
+                                                    <br />
+
+                                                    <strong>Enlistment Year:</strong> {service.enlistmentYear || "N/A"}<br />
+                                                    <strong>Discharge Year:</strong> {service.dischargeYear || "N/A"}<br />
+                                                    <strong>Notes:</strong> {service.notes || "N/A"}
+                                                </ListGroup.Item>
+                                            ))}
+                                        </ListGroup>
+                                    ) : <p className="text-muted">No military service records available.</p>}
+                                </Accordion.Body>
+                            </Accordion.Item>
+                        )}
+
+                        {/* Source Evidences Card */}
+                        <Accordion.Item eventKey="5">
+                            <Accordion.Header>Source Evidences</Accordion.Header>
+                            <Accordion.Body>
+                                {sourceEvidences.length > 0 ? (
+                                    <ListGroup variant="flush">
+                                        {sourceEvidences.map((evidence, index) => (
+                                            <ListGroup.Item key={index} className="pb-3 border-bottom">
+                                                <strong>Evidence Type:</strong> {evidence.evidenceType || "N/A"}<br />
+                                                <strong>Source:</strong>{" "}
+                                                {evidence.sourceName && evidence.sourceId ? (
+                                                    <Link to={`/sources/show/${evidence.sourceId}`}>
+                                                        {evidence.sourceName}
+                                                    </Link>
+                                                ) : "N/A"}
+                                            </ListGroup.Item>
+                                        ))}
+                                    </ListGroup>
+                                ) : <p className="text-muted">No source evidence available.</p>}
+                            </Accordion.Body>
+                        </Accordion.Item>
+                    </Accordion>
                 </Col>
             </Row>
         </Container>

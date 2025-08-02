@@ -47,8 +47,6 @@ public class LocationHistoryEntity {
     @JoinColumn(name = "subdivision_id")
     private SubdivisionEntity subdivision;
 
-
-
     // Denormalized fields
     @Column(nullable = false)
     private String countryName;

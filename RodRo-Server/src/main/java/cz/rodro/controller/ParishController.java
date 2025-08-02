@@ -1,6 +1,7 @@
 package cz.rodro.controller;
 
 import cz.rodro.dto.ParishDTO;
+import cz.rodro.dto.ParishLocationDTO;
 import cz.rodro.service.ParishService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -44,4 +45,10 @@ public class ParishController {
     public List<ParishDTO> getAllParishes() {
         return parishService.getAllParishes();
     }
+
+    @GetMapping("/parishes/{parishId}/locations")
+    public List<ParishLocationDTO> getParishLocations(@PathVariable long parishId) {
+        return parishService.getParishLocations(parishId);
+    }
+
 }

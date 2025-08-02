@@ -38,7 +38,6 @@ public class PersonServiceImpl implements PersonService {
             LocationService locationService,
             PersonSourceEvidenceMapper personSourceEvidenceMapper,
             OccupationRepository occupationRepository) {
-
         this.personMapper = personMapper;
         this.familyRepository = familyRepository;
         this.personRepository = personRepository;
@@ -52,10 +51,23 @@ public class PersonServiceImpl implements PersonService {
     @Override
     @Transactional
     public PersonDTO addPerson(PersonDTO personDTO) {
-        LocationEntity birthPlace = safeFetchLocation(personDTO.getBirthPlace(), "Birth Place");
-        LocationEntity deathPlace = safeFetchLocation(personDTO.getDeathPlace(), "Death Place");
-        LocationEntity burialPlace = safeFetchLocation(personDTO.getBurialPlace(), "Burial Place");
-        LocationEntity baptizationPlace = safeFetchLocation(personDTO.getBaptizationPlace(), "Baptization Place");
+// Updated Location fetching
+        LocationEntity birthPlace = safeFetchLocation(
+                personDTO.getBirthPlace() != null ? personDTO.getBirthPlace().getId() : null,
+                "Birth Place"
+        );
+        LocationEntity deathPlace = safeFetchLocation(
+                personDTO.getDeathPlace() != null ? personDTO.getDeathPlace().getId() : null,
+                "Death Place"
+        );
+        LocationEntity burialPlace = safeFetchLocation(
+                personDTO.getBurialPlace() != null ? personDTO.getBurialPlace().getId() : null,
+                "Burial Place"
+        );
+        LocationEntity baptizationPlace = safeFetchLocation(
+                personDTO.getBaptizationPlace() != null ? personDTO.getBaptizationPlace().getId() : null,
+                "Baptization Place"
+        );
 
         PersonEntity personEntity = personMapper.toEntity(personDTO);
         personEntity.setBirthPlace(birthPlace);
@@ -63,42 +75,23 @@ public class PersonServiceImpl implements PersonService {
         personEntity.setBurialPlace(burialPlace);
         personEntity.setBaptizationPlace(baptizationPlace);
 
-        if (personDTO.getMother() != null && personDTO.getMother().getId() != null) {
-            PersonEntity mother = fetchPersonById(personDTO.getMother().getId());
+        if (personDTO.getMotherId() != null) {
+            PersonEntity mother = fetchPersonById(personDTO.getMotherId());
             validateParentGender(mother, Gender.FEMALE, "Mother");
             personEntity.setMother(mother);
         }
-        if (personDTO.getFather() != null && personDTO.getFather().getId() != null) {
-            PersonEntity father = fetchPersonById(personDTO.getFather().getId());
+
+        if (personDTO.getFatherId() != null) {
+            PersonEntity father = fetchPersonById(personDTO.getFatherId());
             validateParentGender(father, Gender.MALE, "Father");
             personEntity.setFather(father);
         }
 
-        List<PersonOccupationEntity> newOccupations = safeFetchOccupations(personDTO.getOccupations(), personEntity);
-        Set<Long> occupationIds = new HashSet<>();
-        List<PersonOccupationEntity> uniqueOccupations = new ArrayList<>();
-        for (PersonOccupationEntity occ : newOccupations) {
-            Long occId = occ.getOccupation().getId();
-            if (occId != null && occupationIds.add(occId)) {
-                uniqueOccupations.add(occ);
-            }
-        }
-        personEntity.setOccupations(uniqueOccupations);
+        personEntity.setOccupations(buildOccupationEntities(personDTO.getOccupations(), personEntity));
+        personEntity.setSourceEvidences(buildSourceEvidenceEntities(personDTO.getSourceEvidences(), personEntity));
 
-        List<PersonSourceEvidenceEntity> newEvidences = safeFetchSourceEvidences(personDTO.getSourceEvidences(), personEntity);
-        Set<Long> evidenceSourceIds = new HashSet<>();
-        List<PersonSourceEvidenceEntity> uniqueEvidences = new ArrayList<>();
-        for (PersonSourceEvidenceEntity ev : newEvidences) {
-            Long srcId = ev.getSource().getId();
-            if (srcId != null && evidenceSourceIds.add(srcId)) {
-                uniqueEvidences.add(ev);
-            }
-        }
-        personEntity.setSourceEvidences(uniqueEvidences);
-
-        PersonEntity savedPerson = personRepository.save(personEntity);
-
-        return personMapper.toDTO(savedPerson);
+        PersonEntity saved = personRepository.save(personEntity);
+        return personMapper.toDTO(saved);
     }
 
     @Override
@@ -110,18 +103,9 @@ public class PersonServiceImpl implements PersonService {
     @Override
     @Transactional
     public void removePerson(long personId) {
-        PersonEntity person = fetchPersonById(personId);
-        personRepository.delete(person);
+        personRepository.delete(fetchPersonById(personId));
     }
 
-    /**
-     * Retrieves a paginated, filtered, and sorted list of persons.
-     * This method now uses the PersonListProjection for optimized data transfer.
-     *
-     * @param searchTerm An optional term to filter by given name, surname, or identification number.
-     * @param pageable   Pagination and sorting information.
-     * @return A Page of PersonListProjection.
-     */
     @Override
     @Transactional(readOnly = true)
     public Page<PersonListProjection> getAllPersons(String searchTerm, Pageable pageable) {
@@ -131,125 +115,126 @@ public class PersonServiceImpl implements PersonService {
     @Override
     @Transactional
     public PersonDTO updatePerson(Long id, PersonDTO personDTO) {
-        PersonEntity existingPerson = fetchPersonById(id);
+        PersonEntity existing = fetchPersonById(id);
 
-        LocationEntity birthPlace = safeFetchLocation(personDTO.getBirthPlace(), "Birth Place");
-        LocationEntity deathPlace = safeFetchLocation(personDTO.getDeathPlace(), "Death Place");
-        LocationEntity burialPlace = safeFetchLocation(personDTO.getBurialPlace(), "Burial Place");
-        LocationEntity baptizationPlace = safeFetchLocation(personDTO.getBaptizationPlace(), "Baptization Place");
+// Updated Location fetching
+        LocationEntity birthPlace = safeFetchLocation(
+                personDTO.getBirthPlace() != null ? personDTO.getBirthPlace().getId() : null,
+                "Birth Place"
+        );
+        LocationEntity deathPlace = safeFetchLocation(
+                personDTO.getDeathPlace() != null ? personDTO.getDeathPlace().getId() : null,
+                "Death Place"
+        );
+        LocationEntity burialPlace = safeFetchLocation(
+                personDTO.getBurialPlace() != null ? personDTO.getBurialPlace().getId() : null,
+                "Burial Place"
+        );
+        LocationEntity baptizationPlace = safeFetchLocation(
+                personDTO.getBaptizationPlace() != null ? personDTO.getBaptizationPlace().getId() : null,
+                "Baptization Place"
+        );
 
-        personMapper.updatePersonEntity(personDTO, existingPerson);
-        existingPerson.setBirthPlace(birthPlace);
-        existingPerson.setDeathPlace(deathPlace);
-        existingPerson.setBurialPlace(burialPlace);
-        existingPerson.setBaptizationPlace(baptizationPlace);
+        personMapper.updatePersonEntity(personDTO, existing);
+        existing.setBirthPlace(birthPlace);
+        existing.setDeathPlace(deathPlace);
+        existing.setBurialPlace(burialPlace);
+        existing.setBaptizationPlace(baptizationPlace);
 
-        if (personDTO.getMother() != null && personDTO.getMother().getId() != null) {
-            PersonEntity mother = fetchPersonById(personDTO.getMother().getId());
+        if (personDTO.getMotherId() != null) {
+            PersonEntity mother = fetchPersonById(personDTO.getMotherId());
             validateParentGender(mother, Gender.FEMALE, "Mother");
-            existingPerson.setMother(mother);
+            existing.setMother(mother);
         } else {
-            existingPerson.setMother(null);
-        }
-        if (personDTO.getFather() != null && personDTO.getFather().getId() != null) {
-            PersonEntity father = fetchPersonById(personDTO.getFather().getId());
-            validateParentGender(father, Gender.MALE, "Father");
-            existingPerson.setFather(father);
-        } else {
-            existingPerson.setFather(null);
+            existing.setMother(null);
         }
 
-        List<PersonOccupationEntity> newOccupations = safeFetchOccupations(personDTO.getOccupations(), existingPerson);
-        Set<Long> newOccupationIds = newOccupations.stream()
+        if (personDTO.getFatherId() != null) {
+            PersonEntity father = fetchPersonById(personDTO.getFatherId());
+            validateParentGender(father, Gender.MALE, "Father");
+            existing.setFather(father);
+        } else {
+            existing.setFather(null);
+        }
+
+        // Update occupations
+        List<PersonOccupationEntity> newOccupations = buildOccupationEntities(personDTO.getOccupations(), existing);
+        Set<Long> newOccIds = newOccupations.stream().map(o -> o.getOccupation().getId()).collect(Collectors.toSet());
+        existing.getOccupations().removeIf(o -> !newOccIds.contains(o.getOccupation().getId()));
+
+        Set<Long> existingOccIds = existing.getOccupations().stream()
                 .map(o -> o.getOccupation().getId())
                 .collect(Collectors.toSet());
-
-        existingPerson.getOccupations().removeIf(
-                po -> !newOccupationIds.contains(po.getOccupation().getId())
-        );
-
-        Set<Long> existingOccupationIds = existingPerson.getOccupations().stream()
-                .map(po -> po.getOccupation().getId())
-                .collect(Collectors.toSet());
-        for (PersonOccupationEntity newOcc : newOccupations) {
-            if (!existingOccupationIds.contains(newOcc.getOccupation().getId())) {
-                existingPerson.getOccupations().add(newOcc);
+        for (PersonOccupationEntity occ : newOccupations) {
+            if (!existingOccIds.contains(occ.getOccupation().getId())) {
+                existing.getOccupations().add(occ);
             }
         }
 
-        List<PersonSourceEvidenceEntity> newEvidences = safeFetchSourceEvidences(personDTO.getSourceEvidences(), existingPerson);
-        Set<Long> newEvidenceSourceIds = newEvidences.stream()
-                .map(e -> e.getSource().getId())
-                .collect(Collectors.toSet());
+        // Update evidences
+        List<PersonSourceEvidenceEntity> newEvidences = buildSourceEvidenceEntities(personDTO.getSourceEvidences(), existing);
+        Set<Long> newSrcIds = newEvidences.stream().map(e -> e.getSource().getId()).collect(Collectors.toSet());
+        existing.getSourceEvidences().removeIf(se -> !newSrcIds.contains(se.getSource().getId()));
 
-        existingPerson.getSourceEvidences().removeIf(
-                se -> !newEvidenceSourceIds.contains(se.getSource().getId())
-        );
-
-        Set<Long> existingEvidenceSourceIds = existingPerson.getSourceEvidences().stream()
+        Set<Long> existingSrcIds = existing.getSourceEvidences().stream()
                 .map(se -> se.getSource().getId())
                 .collect(Collectors.toSet());
-        for (PersonSourceEvidenceEntity newEv : newEvidences) {
-            if (!existingEvidenceSourceIds.contains(newEv.getSource().getId())) {
-                existingPerson.getSourceEvidences().add(newEv);
+        for (PersonSourceEvidenceEntity ev : newEvidences) {
+            if (!existingSrcIds.contains(ev.getSource().getId())) {
+                existing.getSourceEvidences().add(ev);
             }
         }
 
-        PersonEntity savedUpdatedPerson = personRepository.save(existingPerson);
-
-        return personMapper.toDTO(savedUpdatedPerson);
+        return personMapper.toDTO(personRepository.save(existing));
     }
 
-    private void validateParentGender(PersonEntity parent, Gender expectedGender, String parentType) {
-        if (parent != null && parent.getGender() != null && !parent.getGender().equals(expectedGender)) {
-            throw new IllegalArgumentException(parentType + " must be " + expectedGender + ", but was " + parent.getGender());
-        }
+    private LocationEntity safeFetchLocation(Long locationId, String fieldName) {
+        return locationId != null ? locationService.fetchLocationById(locationId, fieldName) : null;
     }
 
-    private PersonEntity fetchPersonById(long id) {
+    private PersonEntity fetchPersonById(Long id) {
         return personRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Person with id " + id + " wasn't found in the database."));
+                .orElseThrow(() -> new NotFoundException("Person with ID " + id + " not found"));
     }
 
-    private LocationEntity safeFetchLocation(LocationDTO locationDTO, String fieldName) {
-        if (locationDTO == null || locationDTO.getId() == null) {
-            return null;
+    private void validateParentGender(PersonEntity parent, Gender expected, String label) {
+        if (parent != null && parent.getGender() != expected) {
+            throw new IllegalArgumentException(label + " must be " + expected);
         }
-        return locationService.fetchLocationById(locationDTO.getId(), fieldName);
     }
 
-    private List<PersonOccupationEntity> safeFetchOccupations(List<PersonOccupationDTO> occupationDTOs, PersonEntity person) {
-        if (occupationDTOs == null) return new ArrayList<>();
-        List<PersonOccupationEntity> occupationEntities = new ArrayList<>();
-        for (PersonOccupationDTO dto : occupationDTOs) {
+    private List<PersonOccupationEntity> buildOccupationEntities(List<PersonOccupationDTO> dtos, PersonEntity person) {
+        if (dtos == null) return new ArrayList<>();
+        List<PersonOccupationEntity> list = new ArrayList<>();
+        for (PersonOccupationDTO dto : dtos) {
             if (dto.getOccupationId() == null) continue;
-            OccupationEntity occupation = occupationRepository.findById(dto.getOccupationId()).orElse(null);
-            if (occupation == null) continue;
-            PersonOccupationEntity entity = new PersonOccupationEntity();
-            entity.setPerson(person);
-            entity.setOccupation(occupation);
-            entity.setOccupationStartDate(dto.getStartDate());
-            entity.setOccupationEndDate(dto.getEndDate());
-            occupationEntities.add(entity);
+            occupationRepository.findById(dto.getOccupationId()).ifPresent(occupation -> {
+                PersonOccupationEntity entity = new PersonOccupationEntity();
+                entity.setPerson(person);
+                entity.setOccupation(occupation);
+                entity.setOccupationStartDate(dto.getStartDate());
+                entity.setOccupationEndDate(dto.getEndDate());
+                list.add(entity);
+            });
         }
-        return occupationEntities;
+        return list;
     }
 
-    private List<PersonSourceEvidenceEntity> safeFetchSourceEvidences(List<PersonSourceEvidenceDTO> evidenceDTOs, PersonEntity person) {
-        if (evidenceDTOs == null) return new ArrayList<>();
-        List<PersonSourceEvidenceEntity> evidenceEntities = new ArrayList<>();
-        for (PersonSourceEvidenceDTO dto : evidenceDTOs) {
+    private List<PersonSourceEvidenceEntity> buildSourceEvidenceEntities(List<PersonSourceEvidenceDTO> dtos, PersonEntity person) {
+        if (dtos == null) return new ArrayList<>();
+        List<PersonSourceEvidenceEntity> list = new ArrayList<>();
+        for (PersonSourceEvidenceDTO dto : dtos) {
             if (dto.getSourceId() == null) continue;
-            SourceEntity source = sourceRepository.findById(dto.getSourceId()).orElse(null);
-            if (source == null) continue;
-            PersonSourceEvidenceEntity entity = new PersonSourceEvidenceEntity();
-            entity.setPerson(person);
-            entity.setSource(source);
-            entity.setPersonName(person.getGivenName() + " " + person.getGivenSurname());
-            entity.setSourceName(source.getSourceTitle());
-            evidenceEntities.add(entity);
+            sourceRepository.findById(dto.getSourceId()).ifPresent(source -> {
+                PersonSourceEvidenceEntity entity = new PersonSourceEvidenceEntity();
+                entity.setPerson(person);
+                entity.setSource(source);
+                entity.setPersonName(person.getGivenName() + " " + person.getGivenSurname());
+                entity.setSourceName(source.getSourceTitle());
+                list.add(entity);
+            });
         }
-        return evidenceEntities;
+        return list;
     }
 
     @Override
@@ -267,9 +252,9 @@ public class PersonServiceImpl implements PersonService {
     @Override
     @Transactional(readOnly = true)
     public List<FamilyEntity> getSpouses(Long personId) {
-        List<FamilyEntity> spouses = new ArrayList<>(getSpousesAsMale(personId));
-        spouses.addAll(getSpousesAsFemale(personId));
-        return spouses;
+        List<FamilyEntity> list = new ArrayList<>(getSpousesAsMale(personId));
+        list.addAll(getSpousesAsFemale(personId));
+        return list;
     }
 
     @Override
@@ -277,13 +262,13 @@ public class PersonServiceImpl implements PersonService {
     public List<PersonSourceEvidenceDTO> getSourceEvidences(Long personId) {
         return personSourceEvidenceRepository.findByPersonId(personId)
                 .stream()
-                .map(evidence -> {
-                    PersonSourceEvidenceDTO dto = personSourceEvidenceMapper.toDTO(evidence);
-                    if (evidence.getPerson() != null) {
-                        dto.setPersonName(evidence.getPerson().getGivenName() + " " + evidence.getPerson().getGivenSurname());
+                .map(e -> {
+                    PersonSourceEvidenceDTO dto = personSourceEvidenceMapper.toDTO(e);
+                    if (e.getPerson() != null) {
+                        dto.setPersonName(e.getPerson().getGivenName() + " " + e.getPerson().getGivenSurname());
                     }
-                    if (evidence.getSource() != null) {
-                        dto.setSourceName(evidence.getSource().getSourceTitle());
+                    if (e.getSource() != null) {
+                        dto.setSourceName(e.getSource().getSourceTitle());
                     }
                     return dto;
                 })
@@ -298,19 +283,12 @@ public class PersonServiceImpl implements PersonService {
             throw new NotFoundException("Person not found");
         }
 
-        Long fatherId = person.getFather() != null ? person.getFather().getId() : null;
-        Long motherId = person.getMother() != null ? person.getMother().getId() : null;
+        Long fatherId = person.getFatherId();
+        Long motherId = person.getMotherId();
+        if (fatherId == null || motherId == null) return Collections.emptyList();
 
-        if (fatherId == null || motherId == null) {
-            return Collections.emptyList();
-        }
-
-        // Assuming your repository can query by parents
-        List<PersonEntity> siblingEntities = personRepository.findByFatherIdAndMotherId(fatherId, motherId);
-
-        // Filter out the person itself
-        return siblingEntities.stream()
-                .filter(sibling -> !sibling.getId().equals(personId))
+        return personRepository.findByFatherIdAndMotherId(fatherId, motherId).stream()
+                .filter(p -> !p.getId().equals(personId))
                 .map(personMapper::toDTO)
                 .collect(Collectors.toList());
     }

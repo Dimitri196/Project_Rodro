@@ -1,179 +1,199 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Card, Button, Form, InputGroup, Pagination } from "react-bootstrap";
+import { useSession } from "../contexts/session";
 import { normalizeString } from "../utils/stringUtils";
-import { useSession } from "../contexts/session"; // ⬅️ added
 
 const InstitutionTable = ({ label, items, deleteInstitution }) => {
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(5);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [sortAsc, setSortAsc] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortAsc, setSortAsc] = useState(true);
 
-    const { session } = useSession(); // ⬅️ added
-    const isAdmin = session.data?.isAdmin === true; // ⬅️ added
+  const { session } = useSession();
+  const isAdmin = session.data?.isAdmin === true;
 
-    const filteredItems = useMemo(() => {
-        const filtered = items.filter(item =>
-            normalizeString(item.institutionName).includes(normalizeString(searchTerm)) ||
-            normalizeString(item.institutionLocation?.locationName || "").includes(normalizeString(searchTerm))
-        );
-
-        return filtered.sort((a, b) => {
-            const nameA = a.institutionName?.toLowerCase() || "";
-            const nameB = b.institutionName?.toLowerCase() || "";
-            return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-        });
-    }, [items, searchTerm, sortAsc]);
-
-    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
-
-    const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
-    const handleItemsPerPageChange = (e) => {
-        setItemsPerPage(parseInt(e.target.value, 10) || 1);
-        setCurrentPage(1);
-    };
-
-    const handleSortToggle = () => setSortAsc(prev => !prev);
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1);
-    };
-
-    const getPageRange = () => {
-        const maxPagesToShow = 5;
-        const halfRange = Math.floor(maxPagesToShow / 2);
-        let startPage = Math.max(currentPage - halfRange, 1);
-        let endPage = Math.min(currentPage + halfRange, totalPages);
-
-        if (endPage - startPage + 1 < maxPagesToShow) {
-            if (currentPage <= halfRange) {
-                endPage = Math.min(startPage + maxPagesToShow - 1, totalPages);
-            } else {
-                startPage = Math.max(endPage - maxPagesToShow + 1, 1);
-            }
-        }
-
-        return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
-    };
-
-    return (
-        <div className="container my-4">
-            <div className="mb-3 d-flex justify-content-between align-items-center">
-                <h4>{label} {items.length}</h4>
-                {isAdmin && ( // ⬅️ only show if admin
-                    <Link to="/institutions/create" className="btn btn-success">Create Institution</Link>
-                )}
-            </div>
-
-            {/* Search */}
-            <div className="mb-3 d-flex justify-content-center">
-                <input
-                    type="text"
-                    className="form-control w-50"
-                    placeholder="Search institutions or locations..."
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                />
-            </div>
-
-            {/* Sort & pagination controls */}
-            <div className="mb-3 d-flex justify-content-between align-items-center">
-                <button className="btn btn-outline-primary" onClick={handleSortToggle}>
-                    Sort by Name {sortAsc ? "↓ A–Z" : "↑ Z–A"}
-                </button>
-
-                <div className="d-flex align-items-center">
-                    <label className="me-2 mb-0">Records per page:</label>
-                    <select
-                        className="form-select w-auto"
-                        value={itemsPerPage}
-                        onChange={handleItemsPerPageChange}
-                    >
-                        {[5, 10, 20, 50, items.length].map(val => (
-                            <option key={val} value={val}>
-                                {val === items.length ? "All" : val}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            </div>
-
-            {/* Table */}
-            <div className="table-responsive">
-                <table className="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Institution Name</th>
-                            <th>Location</th>
-                            <th colSpan={3}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {currentItems.map((item, index) => (
-                            <tr key={item._id}>
-                                <td>{startIndex + index + 1}</td>
-                                <td>{item.institutionName}</td>
-                                <td>
-                                    {item.institutionLocation ? (
-                                        <Link to={`/locations/show/${item.institutionLocation._id}`}>
-                                            {item.institutionLocation.locationName}
-                                        </Link>
-                                    ) : "N/A"}
-                                </td>
-                                <td>
-                                    <div className="btn-group">
-                                        <Link to={`/institutions/show/${item._id}`} className="btn btn-sm btn-info mx-1">View</Link>
-                                        {isAdmin && ( // ⬅️ only admins can edit or delete
-                                            <>
-                                                <Link to={`/institutions/edit/${item._id}`} className="btn btn-sm btn-warning mx-1">Update</Link>
-                                                <button
-                                                    onClick={() => deleteInstitution(item._id)}
-                                                    className="btn btn-sm btn-danger mx-1"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        {currentItems.length === 0 && (
-                            <tr>
-                                <td colSpan="6" className="text-center">No results found.</td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Pagination */}
-            <nav>
-                <ul className="pagination justify-content-center">
-                    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(1)}>First</button>
-                    </li>
-                    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>Previous</button>
-                    </li>
-                    {getPageRange().map(page => (
-                        <li key={page} className={`page-item ${page === currentPage ? "active" : ""}`}>
-                            <button className="page-link" onClick={() => handlePageChange(page)}>{page}</button>
-                        </li>
-                    ))}
-                    <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>Next</button>
-                    </li>
-                    <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
-                        <button className="page-link" onClick={() => handlePageChange(totalPages)}>Last</button>
-                    </li>
-                </ul>
-            </nav>
-        </div>
+  const filteredItems = useMemo(() => {
+    const filtered = items.filter(item =>
+      normalizeString(item.institutionName).includes(normalizeString(searchTerm)) ||
+      normalizeString(item.institutionLocation?.locationName || "").includes(normalizeString(searchTerm))
     );
+
+    return filtered.sort((a, b) => {
+      const nameA = a.institutionName?.toLowerCase() || "";
+      const nameB = b.institutionName?.toLowerCase() || "";
+      return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+    });
+  }, [items, searchTerm, sortAsc]);
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages || 1);
+    }
+  }, [totalPages, currentPage]);
+
+  const getPageRange = () => {
+    const maxPages = 5;
+    const half = Math.floor(maxPages / 2);
+    let start = Math.max(currentPage - half, 1);
+    let end = Math.min(start + maxPages - 1, totalPages);
+    if (end - start + 1 < maxPages) {
+      start = Math.max(end - maxPages + 1, 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  };
+
+  const perPageOptions = [10, 20, 50, items.length].filter(
+    (val, index, self) => self.indexOf(val) === index
+  );
+
+  return (
+    <div className="container my-5">
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0 text-primary">{label} ({filteredItems.length})</h2>
+        {isAdmin && (
+          <Link to="/institutions/create" className="btn btn-success shadow-sm">
+            <i className="fas fa-plus me-2"></i>Create Institution
+          </Link>
+        )}
+      </div>
+
+      {/* Search & Controls */}
+      <Card className="mb-4 shadow-sm">
+        <Card.Body>
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <InputGroup className="flex-grow-1">
+              <Form.Control
+                type="text"
+                placeholder="Search institution or location..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") setSearchTerm(searchTerm);
+                }}
+              />
+              <Button variant="primary" onClick={() => setSearchTerm(searchTerm)}>
+                <i className="fas fa-search me-2"></i>Search
+              </Button>
+              <Button
+                variant="outline-secondary"
+                onClick={() => {
+                  setSearchTerm("");
+                  setCurrentPage(1);
+                }}
+              >
+                <i className="fas fa-times me-2"></i>Clear
+              </Button>
+            </InputGroup>
+
+            <Form.Group className="d-flex align-items-center mb-0">
+              <Form.Label className="me-2 mb-0 text-nowrap">Records per page:</Form.Label>
+              <Form.Select
+                className="w-auto"
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(parseInt(e.target.value, 10));
+                  setCurrentPage(1);
+                }}
+              >
+                {perPageOptions.map(val => (
+                  <option key={val} value={val}>
+                    {val === items.length ? "All" : val}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </div>
+        </Card.Body>
+      </Card>
+
+      {/* Table */}
+      <Card className="shadow-sm">
+        <Card.Body className="p-0">
+          <div className="table-responsive">
+            <table className="table table-hover table-striped mb-0">
+              <thead className="bg-light">
+                <tr>
+                  <th className="py-3 px-4">#</th>
+                  <th className="py-3 px-4 clickable" onClick={() => setSortAsc(!sortAsc)}>
+                    Institution Name{" "}
+                    <i className={`fas ${sortAsc ? "fa-sort-alpha-down" : "fa-sort-alpha-up"} ms-1`}></i>
+                  </th>
+                  <th className="py-3 px-4">Location</th>
+                  {isAdmin && <th className="py-3 px-4 text-center">Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {currentItems.length > 0 ? (
+                  currentItems.map((item, index) => (
+                    <tr key={item._id}>
+                      <td className="py-2 px-4">{startIndex + index + 1}</td>
+                      <td className="py-2 px-4">{item.institutionName}</td>
+                      <td className="py-2 px-4">
+                        {item.institutionLocation?._id ? (
+                          <Link to={`/locations/show/${item.institutionLocation._id}`}>
+                            {item.institutionLocation.locationName}
+                          </Link>
+                        ) : "N/A"}
+                      </td>
+                      {isAdmin && (
+                        <td className="py-2 px-4 text-center">
+                          <div className="d-flex justify-content-center gap-2">
+                            <Link to={`/institutions/show/${item._id}`} className="btn btn-sm btn-info">
+                              <i className="fas fa-eye"></i> View
+                            </Link>
+                            <Link to={`/institutions/edit/${item._id}`} className="btn btn-sm btn-warning">
+                              <i className="fas fa-edit"></i> Edit
+                            </Link>
+                            <Button onClick={() => deleteInstitution(item._id)} className="btn btn-sm btn-danger">
+                              <i className="fas fa-trash-alt"></i> Delete
+                            </Button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={isAdmin ? 4 : 3} className="text-center py-4 text-muted">
+                      No institutions found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card.Body>
+      </Card>
+
+      {/* Pagination */}
+      <nav className="mt-4">
+        <Pagination className="justify-content-center shadow-sm">
+          <Pagination.First onClick={() => setCurrentPage(1)} disabled={currentPage === 1} />
+          <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
+          {getPageRange().map((page) => (
+            <Pagination.Item
+              key={page}
+              active={page === currentPage}
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </Pagination.Item>
+          ))}
+          <Pagination.Next onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} />
+          <Pagination.Last onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} />
+        </Pagination>
+      </nav>
+    </div>
+  );
 };
 
 export default InstitutionTable;

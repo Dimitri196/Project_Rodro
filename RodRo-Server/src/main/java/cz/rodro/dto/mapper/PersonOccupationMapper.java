@@ -4,6 +4,7 @@ import cz.rodro.dto.PersonOccupationDTO;
 import cz.rodro.entity.PersonOccupationEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface PersonOccupationMapper {
@@ -20,5 +21,14 @@ public interface PersonOccupationMapper {
     @Mapping(target = "institutionLocationId", source = "occupation.institution.institutionLocation.id")
     @Mapping(target = "institutionLocationName", source = "occupation.institution.institutionLocation.locationName")
     PersonOccupationDTO toDTO(PersonOccupationEntity entity);
+
+    @Mapping(target = "person", ignore = true) // Relationship handled in service
+    @Mapping(target = "occupation", ignore = true) // Relationship handled in service
+    PersonOccupationEntity toEntity(PersonOccupationDTO dto);
+
+    @Mapping(target = "id", ignore = true) // ID of relationship should not be updated
+    @Mapping(target = "person", ignore = true)
+    @Mapping(target = "occupation", ignore = true)
+    void updatePersonOccupationEntity(PersonOccupationDTO dto, @MappingTarget PersonOccupationEntity entity);
 
 }

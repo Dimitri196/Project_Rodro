@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.List;
 
-@Entity
+@Entity(name = "location") // Using 'name' attribute for entity name
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,42 +31,38 @@ public class LocationEntity {
     private String locationName;
 
     @Column
-    private String establishmentDate;
+    private Integer establishmentYear;
 
     @Column
-    private String gpsLatitude;
+    private Double gpsLatitude;
 
     @Column
-    private String gpsLongitude;
+    private Double gpsLongitude;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "settlementType", nullable = false)
     private SettlementType settlementType;
 
-    // Historical records (subdivision, district, etc.)
     @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<LocationHistoryEntity> locationHistories;
 
-    // Historical records (subdivision, district, etc.)
     @OneToMany(mappedBy = "sourceLocation", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<SourceEntity> sources;
 
-    // Person's birth location
     @OneToMany(mappedBy = "birthPlace")
     @JsonBackReference
     private List<PersonEntity> births;
 
-    // Person's death location
     @OneToMany(mappedBy = "deathPlace")
     @JsonBackReference
     private List<PersonEntity> deaths;
 
-    // Parishes in this location
-    @OneToMany(mappedBy = "parishLocation")
-    @JsonManagedReference
-    private List<ParishEntity> parishes;
+    // This is the CORRECT relationship: it links to the join table entity.
+    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
+    private List<ParishLocationEntity> parishLocations;
 
     // Cemeteries in this location
     @OneToMany(mappedBy = "cemeteryLocation")
@@ -77,8 +73,4 @@ public class LocationEntity {
     @OneToMany(mappedBy = "institutionLocation")
     @JsonBackReference
     private List<InstitutionEntity> institutions;
-
-    @OneToMany(mappedBy = "location")
-    @JsonBackReference
-    private List<ParishLocationEntity> parishLocations;
 }

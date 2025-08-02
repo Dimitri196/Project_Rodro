@@ -5,9 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-/**
- * DTO class for parish location.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,4 +18,5 @@ public class ParishLocationDTO {
 
     private String parishName;
     private String locationName;
+
 }

@@ -1,18 +1,18 @@
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { Card, Button, Form, InputGroup, Pagination } from "react-bootstrap";
 import { normalizeString } from "../utils/stringUtils";
 import { useSession } from "../contexts/session";
 
 const MilitaryOrganizationTable = ({ items, deleteOrganization }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortAsc, setSortAsc] = useState(true);
 
   const { session } = useSession();
   const isAdmin = session.data?.isAdmin === true;
 
-  // Filter + sort
   const filteredItems = useMemo(() => {
     const filtered = items.filter(item =>
       normalizeString(item.armyName || "").includes(normalizeString(searchTerm))
@@ -29,17 +29,6 @@ const MilitaryOrganizationTable = ({ items, deleteOrganization }) => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
 
-  const handlePageChange = (page) => setCurrentPage(page);
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(parseInt(e.target.value, 10));
-    setCurrentPage(1);
-  };
-  const handleSortToggle = () => setSortAsc(prev => !prev);
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
-
   const getPageRange = () => {
     const maxPages = 5;
     const half = Math.floor(maxPages / 2);
@@ -53,154 +42,146 @@ const MilitaryOrganizationTable = ({ items, deleteOrganization }) => {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   };
 
+  const perPageOptions = [10, 20, 50, items.length].filter(
+    (val, index, self) => self.indexOf(val) === index
+  );
+
   return (
-    <div className="container my-4">
-      <div className="mb-3 d-flex justify-content-between align-items-center">
-        <h4>Military Organizations ({items.length})</h4>
+    <div className="container my-5">
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0 text-primary">Military Organizations ({filteredItems.length})</h2>
         {isAdmin && (
-          <Link to="/militaryOrganizations/create" className="btn btn-success">
-            Create
+          <Link to="/militaryOrganizations/create" className="btn btn-success shadow-sm">
+            <i className="fas fa-plus me-2"></i>Create Organization
           </Link>
         )}
       </div>
 
-      {/* Search */}
-      <div className="mb-3 d-flex justify-content-center">
-        <input
-          type="text"
-          className="form-control w-50"
-          placeholder="Search by army name..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-        />
-      </div>
+      {/* Search and Controls */}
+      <Card className="mb-4 shadow-sm">
+        <Card.Body>
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <InputGroup className="flex-grow-1">
+              <Form.Control
+                type="text"
+                placeholder="Search by army name..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="rounded-start-lg"
+              />
+              <Button variant="primary" onClick={() => setSearchTerm(searchTerm)}>
+                <i className="fas fa-search me-2"></i>Search
+              </Button>
+              <Button variant="outline-secondary" onClick={() => {
+                setSearchTerm("");
+                setCurrentPage(1);
+              }} className="rounded-end-lg">
+                <i className="fas fa-times me-2"></i>Clear
+              </Button>
+            </InputGroup>
 
-      {/* Sort and per-page */}
-      <div className="mb-3 d-flex justify-content-between align-items-center">
-        <button className="btn btn-outline-primary" onClick={handleSortToggle}>
-          Sort by Army Name {sortAsc ? "↓ A–Z" : "↑ Z–A"}
-        </button>
-        <div className="d-flex align-items-center">
-          <label className="me-2 mb-0">Per page:</label>
-          <select
-            className="form-select w-auto"
-            value={itemsPerPage}
-            onChange={handleItemsPerPageChange}
-          >
-            {[5, 10, 20, 50, items.length]
-              .filter((val, index, self) => self.indexOf(val) === index)
-              .map(val => (
-                <option key={val} value={val}>
-                  {val === items.length ? "All" : val}
-                </option>
-              ))}
-          </select>
-        </div>
-      </div>
+            <Form.Group className="d-flex align-items-center mb-0">
+              <Form.Label className="me-2 mb-0 text-nowrap">Records per page:</Form.Label>
+              <Form.Select
+                className="w-auto"
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(parseInt(e.target.value, 10));
+                  setCurrentPage(1);
+                }}
+              >
+                {perPageOptions.map(val => (
+                  <option key={val} value={val}>
+                    {val === items.length ? "All" : val}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </div>
+        </Card.Body>
+      </Card>
 
       {/* Table */}
-      <div className="table-responsive">
-        <table className="table table-bordered table-striped">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Army Name</th>
-              <th>Branch</th>
-              <th>Country</th>
-              <th>Active From</th>
-              <th>Active To</th>
-              <th colSpan={3}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems.length > 0 ? (
-              currentItems.map((item, index) => (
-                <tr key={item.id || item._id}>
-                  <td>{startIndex + index + 1}</td>
-                  <td>{item.armyName}</td>
-                  <td>{item.armyBranch?.armyBranchName}</td>
-                  <td>{item.country?.countryNameInPolish || "-"}</td>
-                  <td>{item.activeFromYear || "-"}</td>
-                  <td>{item.activeToYear || "-"}</td>
-                  <td>
-                    <div className="btn-group">
-                      <Link
-                        to={`/militaryOrganizations/show/${item._id}`}
-                        className="btn btn-sm btn-info mx-1"
-                      >
-                        View
-                      </Link>
-                      {isAdmin && (
-                        <>
-                          <Link
-                            to={`/militaryOrganizations/edit/${item._id}`}
-                            className="btn btn-sm btn-warning mx-1"
-                          >
-                            Edit
-                          </Link>
-                          <button
-                            onClick={() => deleteOrganization(item._id)}
-                            className="btn btn-sm btn-danger mx-1"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
+      <Card className="shadow-sm">
+        <Card.Body className="p-0">
+          <div className="table-responsive">
+            <table className="table table-hover table-striped mb-0">
+              <thead className="bg-light">
+                <tr>
+                  <th className="py-3 px-4">#</th>
+                  <th className="py-3 px-4 clickable" onClick={() => setSortAsc(!sortAsc)}>
+                    Army Name <i className={`fas ${sortAsc ? "fa-sort-alpha-down" : "fa-sort-alpha-up"} ms-1`}></i>
+                  </th>
+                  <th className="py-3 px-4">Branch</th>
+                  <th className="py-3 px-4">Country</th>
+                  <th className="py-3 px-4">Active From</th>
+                  <th className="py-3 px-4">Active To</th>
+                  <th className="py-3 px-4">Notes</th>
+                  {isAdmin && <th className="py-3 px-4 text-center">Actions</th>}
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="9" className="text-center">
-                  No military organizations found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {currentItems.length > 0 ? (
+                  currentItems.map((item, index) => (
+                    <tr key={item.id || item._id}>
+                      <td className="py-2 px-4">{startIndex + index + 1}</td>
+                      <td className="py-2 px-4">{item.armyName}</td>
+                      <td className="py-2 px-4">{item.armyBranch?.armyBranchName || "-"}</td>
+                      <td className="py-2 px-4">{item.country?.countryNameInPolish || "-"}</td>
+                      <td className="py-2 px-4">{item.activeFromYear || "-"}</td>
+                      <td className="py-2 px-4">{item.activeToYear || "-"}</td>
+                      <td className="py-2 px-4">{item.notes || "-"}</td>
+                      {isAdmin && (
+                        <td className="py-2 px-4 text-center">
+                          <div className="d-flex justify-content-center gap-2">
+                            <Link to={`/militaryOrganizations/show/${item._id}`} className="btn btn-sm btn-info">
+                              <i className="fas fa-eye"></i> View
+                            </Link>
+                            <Link to={`/militaryOrganizations/edit/${item._id}`} className="btn btn-sm btn-warning">
+                              <i className="fas fa-edit"></i> Edit
+                            </Link>
+                            <Button onClick={() => deleteOrganization(item._id)} className="btn btn-sm btn-danger">
+                              <i className="fas fa-trash-alt"></i> Delete
+                            </Button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={isAdmin ? 8 : 7} className="text-center py-4 text-muted">
+                      No military organizations found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card.Body>
+      </Card>
 
       {/* Pagination */}
-      <nav>
-        <ul className="pagination justify-content-center">
-          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-            <button className="page-link" onClick={() => handlePageChange(1)}>
-              First
-            </button>
-          </li>
-          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-            <button
-              className="page-link"
-              onClick={() => handlePageChange(currentPage - 1)}
-            >
-              Previous
-            </button>
-          </li>
-          {getPageRange().map(page => (
-            <li
+      <nav className="mt-4">
+        <Pagination className="justify-content-center shadow-sm">
+          <Pagination.First onClick={() => setCurrentPage(1)} disabled={currentPage === 1} />
+          <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
+          {getPageRange().map((page) => (
+            <Pagination.Item
               key={page}
-              className={`page-item ${page === currentPage ? "active" : ""}`}
+              active={page === currentPage}
+              onClick={() => setCurrentPage(page)}
             >
-              <button className="page-link" onClick={() => handlePageChange(page)}>
-                {page}
-              </button>
-            </li>
+              {page}
+            </Pagination.Item>
           ))}
-          <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
-            <button
-              className="page-link"
-              onClick={() => handlePageChange(currentPage + 1)}
-            >
-              Next
-            </button>
-          </li>
-          <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
-            <button className="page-link" onClick={() => handlePageChange(totalPages)}>
-              Last
-            </button>
-          </li>
-        </ul>
+          <Pagination.Next onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} />
+          <Pagination.Last onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} />
+        </Pagination>
       </nav>
     </div>
   );

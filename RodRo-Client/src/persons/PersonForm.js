@@ -64,37 +64,48 @@ const PersonForm = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [locs, persResponse, occs, srcs] = await Promise.all([
-                    apiGet("/api/locations"),
-                    apiGet("/api/persons"), // This returns a paginated object
-                    apiGet("/api/occupations"),
-                    apiGet("/api/sources")
+                const [locsResponse, persResponse, occsResponse, srcsResponse] = await Promise.all([
+                    apiGet("/api/locations?size=1000"), // Request all locations (or a sufficiently large page size)
+                    apiGet("/api/persons?size=1000"), // Request all persons for parents
+                    apiGet("/api/occupations?size=1000"), // Request all occupations
+                    apiGet("/api/sources?size=1000") // Request all sources
                 ]);
-                setLocations(locs);
-                // Extract the 'content' array from the paginated response for persons
-                setPersons(persResponse.content || []); // Ensure persons is always an array to prevent .filter() error
-                setOccupations(occs);
-                setSources(srcs);
+
+                // --- KEY CHANGE HERE ---
+                // Extract the 'content' array from the paginated responses
+                setLocations(locsResponse.content || []);
+                setPersons(persResponse.content || []);
+                setOccupations(occsResponse.content || []);
+                setSources(srcsResponse.content || []);
 
                 if (id) {
                     const data = await apiGet("/api/persons/" + id);
+
+                    // The API response already contains the full nested objects, which is what your state is expecting.
+                    // So, we can set the data directly.
                     setPerson({
                         ...data,
-                        // When fetching, map backend '_id' to frontend '_id' for nested objects
-                        birthPlace: data.birthPlace ? { _id: data.birthPlace._id } : { _id: "" },
-                        baptizationPlace: data.baptizationPlace ? { _id: data.baptizationPlace._id } : { _id: "" },
-                        deathPlace: data.deathPlace ? { _id: data.deathPlace._id } : { _id: "" },
-                        burialPlace: data.burialPlace ? { _id: data.burialPlace._id } : { _id: "" },
-                        mother: data.mother ? { _id: data.mother._id } : null,
-                        father: data.father ? { _id: data.father._id } : null,
-                        // Map occupations and sourceEvidences to include _id from backend's _id or occupationId/sourceId
+                        // The backend's GET response now provides `birthPlace`, `mother`, etc., as full DTOs.
+                        // No mapping is needed for them. Just ensure that if the DTO is null, the state is set correctly.
+                        birthPlace: data.birthPlace || { _id: "" },
+                        baptizationPlace: data.baptizationPlace || { _id: "" },
+                        deathPlace: data.deathPlace || { _id: "" },
+                        burialPlace: data.burialPlace || { _id: "" },
+                        mother: data.mother || { _id: "" },
+                        father: data.father || { _id: "" },
+                        // Occupations and sourceEvidences from the backend GET response are now also nested DTOs.
+                        // We'll map them to a format that matches the component's state and dropdowns.
                         occupations: (data.occupations || []).map(occ => ({
                             ...occ,
-                            _id: occ._id || occ.occupationId || "" // Prioritize occ._id, then occ.occupationId
+                            // The backend GET response for `PersonOccupationDTO` likely contains a nested `OccupationDTO`.
+                            // We need to extract the `_id` from that nested object to match the dropdown value.
+                            _id: occ.occupation ? occ.occupation._id : ""
                         })),
                         sourceEvidences: (data.sourceEvidences || []).map(ev => ({
                             ...ev,
-                            _id: ev._id || ev.sourceId || "" // Prioritize ev._id, then ev.sourceId
+                            // The backend GET response for `PersonSourceEvidenceDTO` likely contains a nested `SourceDTO`.
+                            // We need to extract the `_id` from that nested object to match the dropdown value.
+                            _id: ev.source ? ev.source._id : ""
                         }))
                     });
                 }
@@ -141,12 +152,13 @@ const PersonForm = () => {
         const transformedPerson = {
             ...person,
             // Ensure location and parent IDs are sent as numbers or null, using _id as per backend GET response
-            birthPlace: person.birthPlace?._id ? { _id: Number(person.birthPlace._id) } : null,
-            baptizationPlace: person.baptizationPlace?._id ? { _id: Number(person.baptizationPlace._id) } : null,
-            deathPlace: person.deathPlace?._id ? { _id: Number(person.deathPlace._id) } : null,
-            burialPlace: person.burialPlace?._id ? { _id: Number(person.burialPlace._id) } : null,
-            mother: person.mother?._id ? { _id: Number(person.mother._id) } : null,
-            father: person.father?._id ? { _id: Number(person.father._id) } : null,
+            // When sending to backend, use 'id' as the property name for nested objects
+            birthPlace: person.birthPlace?._id ? { id: Number(person.birthPlace._id) } : null,
+            baptizationPlace: person.baptizationPlace?._id ? { id: Number(person.baptizationPlace._id) } : null,
+            deathPlace: person.deathPlace?._id ? { id: Number(person.deathPlace._id) } : null,
+            burialPlace: person.burialPlace?._id ? { id: Number(person.burialPlace._id) } : null,
+            mother: person.mother?._id ? { id: Number(person.mother._id) } : null,
+            father: person.father?._id ? { id: Number(person.father._id) } : null,
 
             // Map occupations to match backend DTO structure (using occupationId)
             occupations: person.occupations.map((occ) => ({
@@ -361,14 +373,15 @@ const PersonForm = () => {
                         <Row className="mb-3 align-items-end">
                             <Col md={4}>
                                 <InputSelect
-                                    name="birthPlaceId"
+                                    // ... other props ...
+                                    name="birthPlace"
                                     label="Birth Place"
                                     prompt="Select birth place"
                                     value={person.birthPlace?._id || ""}
                                     handleChange={(e) => handleLocationChange("birthPlace", e.target.value)}
                                     items={locations}
                                     getLabel={(item) => item.locationName}
-                                    getValue={(item) => item._id}
+                                    getValue={(item) => item.id}
                                 />
                             </Col>
                             <Col md={2}>
@@ -413,14 +426,14 @@ const PersonForm = () => {
                         <Row className="mb-3 align-items-end">
                             <Col md={4}>
                                 <InputSelect
-                                    name="baptizationPlaceId"
+                                    name="baptizationPlace"
                                     label="Baptization Place"
                                     prompt="Select baptization place"
                                     value={person.baptizationPlace?._id || ""}
                                     handleChange={(e) => handleLocationChange("baptizationPlace", e.target.value)}
                                     items={locations}
                                     getLabel={(item) => item.locationName}
-                                    getValue={(item) => item._id}
+                                    getValue={(item) => item.id}
                                 />
                             </Col>
                             <Col md={2}>
@@ -465,14 +478,14 @@ const PersonForm = () => {
                         <Row className="mb-3 align-items-end">
                             <Col md={4}>
                                 <InputSelect
-                                    name="deathPlaceId"
+                                    name="deathPlace"
                                     label="Death Place"
                                     prompt="Select death place"
                                     value={person.deathPlace?._id || ""}
                                     handleChange={(e) => handleLocationChange("deathPlace", e.target.value)}
                                     items={locations}
                                     getLabel={(item) => item.locationName}
-                                    getValue={(item) => item._id}
+                                    getValue={(item) => item.id}
                                 />
                             </Col>
                             <Col md={2}>
@@ -517,14 +530,14 @@ const PersonForm = () => {
                         <Row className="mb-3 align-items-end">
                             <Col md={4}>
                                 <InputSelect
-                                    name="burialPlaceId"
+                                    name="burialPlace"
                                     label="Burial Place"
                                     prompt="Select burial place"
                                     value={person.burialPlace?._id || ""}
                                     handleChange={(e) => handleLocationChange("burialPlace", e.target.value)}
                                     items={locations}
                                     getLabel={(item) => item.locationName}
-                                    getValue={(item) => item._id}
+                                    getValue={(item) => item.id}
                                 />
                             </Col>
                             <Col md={2}>
@@ -637,7 +650,7 @@ const PersonForm = () => {
                                 <Col md={5}>
                                     <InputSelect
                                         name={`occupation-${idx}`}
-                                        label={`Occupation ${idx + 1}`}
+                                        label="Occupation"
                                         prompt="Select occupation"
                                         value={occ._id || ""}
                                         handleChange={(e) => handleArrayObjectChange("occupations", idx, "_id", e.target.value)}
@@ -673,7 +686,7 @@ const PersonForm = () => {
                                 </Col>
                             </Row>
                         ))}
-                        <Button variant="outline-primary" onClick={addOccupation}>
+                        <Button variant="secondary" onClick={addOccupation} className="mt-3">
                             <i className="fas fa-plus me-2"></i>Add Occupation
                         </Button>
                     </Card.Body>
@@ -689,7 +702,7 @@ const PersonForm = () => {
                                 <Col md={11}>
                                     <InputSelect
                                         name={`sourceEvidence-${idx}`}
-                                        label={`Source Evidence ${idx + 1}`}
+                                        label="Source"
                                         prompt="Select source"
                                         value={ev._id || ""}
                                         handleChange={(e) => handleArrayObjectChange("sourceEvidences", idx, "_id", e.target.value)}
@@ -705,23 +718,16 @@ const PersonForm = () => {
                                 </Col>
                             </Row>
                         ))}
-                        <Button variant="outline-primary" onClick={addSourceEvidence}>
+                        <Button variant="secondary" onClick={addSourceEvidence} className="mt-3">
                             <i className="fas fa-plus me-2"></i>Add Source Evidence
                         </Button>
                     </Card.Body>
                 </Card>
 
-                {/* Form Action Buttons */}
-                <Row className="mt-4">
-                    <Col className="text-center">
-                        <Button variant="primary" type="submit" className="me-2 shadow">
-                            <i className="fas fa-save me-2"></i>{id ? "Update" : "Create"} Person
-                        </Button>
-                        <Button variant="secondary" onClick={() => navigate("/persons")} className="shadow">
-                            <i className="fas fa-times-circle me-2"></i>Cancel
-                        </Button>
-                    </Col>
-                </Row>
+                {/* Submit Button */}
+                <Button type="submit" variant="primary" className="mt-3 px-4 py-2 shadow-sm rounded-pill">
+                    <i className="fas fa-save me-2"></i>Save Record
+                </Button>
             </Form>
         </Container>
     );

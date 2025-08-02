@@ -19,5 +19,7 @@ public interface ParishLocationMapper {
     @Mapping(target = "location", ignore = true)
     ParishLocationEntity toEntity(ParishLocationDTO dto);
 
+    @Mapping(target = "parish", ignore = true)
+    @Mapping(target = "location", ignore = true)
     void updateParishLocationEntity(ParishLocationDTO dto, @MappingTarget ParishLocationEntity entity);
 }

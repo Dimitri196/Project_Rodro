@@ -13,4 +13,8 @@ public interface OccupationMapper {
     @Mapping(target = "institution", source = "institution")
     OccupationEntity toEntity(OccupationDTO dto);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "institution", ignore = true)
+    void updateOccupationEntity(OccupationDTO dto, @MappingTarget OccupationEntity entity);
+
 }
