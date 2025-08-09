@@ -21,6 +21,6 @@ public class MilitaryOrganizationDTO {
     private String activeFromYear;
     private String activeToYear;
 
-    private List<MilitaryStructureDTO> structures;
-
+    // Use MilitaryStructureSimpleDTO to break the circular dependency
+    private List<MilitaryStructureSimpleDTO> structures;
 }

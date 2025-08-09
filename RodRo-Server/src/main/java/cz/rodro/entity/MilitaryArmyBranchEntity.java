@@ -6,9 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "military_army_branch")
 @Getter
@@ -23,7 +20,4 @@ public class MilitaryArmyBranchEntity {
     @Column(name = "army_branch_name", nullable = false, unique = true)
     private String armyBranchName; // e.g. "Infantry", "Artillery"
 
-    // In MilitaryArmyBranchEntity.java
-    @OneToMany(mappedBy = "armyBranch", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MilitaryRankEntity> ranks = new ArrayList<>();
 }

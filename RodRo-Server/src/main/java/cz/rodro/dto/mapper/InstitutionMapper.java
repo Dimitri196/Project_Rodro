@@ -17,7 +17,5 @@ public interface InstitutionMapper {
     InstitutionEntity toEntity(InstitutionDTO dto);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "institutionLocation  ", ignore = true)
     void updateInstitutionEntity(InstitutionDTO dto, @MappingTarget InstitutionEntity entity);
 }
-

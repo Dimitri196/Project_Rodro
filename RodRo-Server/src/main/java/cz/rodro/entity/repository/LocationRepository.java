@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -36,4 +37,6 @@ public interface LocationRepository extends JpaRepository<LocationEntity, Long> 
 
     @EntityGraph(attributePaths = {"locationHistories", "sources"}, type = EntityGraph.EntityGraphType.FETCH)
     Optional<LocationEntity> findById(Long id);
+
+    List<LocationEntity> findByLocationNameContainingIgnoreCase(String locationName);
 }

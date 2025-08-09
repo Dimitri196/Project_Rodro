@@ -51,7 +51,6 @@ public class PersonServiceImpl implements PersonService {
     @Override
     @Transactional
     public PersonDTO addPerson(PersonDTO personDTO) {
-// Updated Location fetching
         LocationEntity birthPlace = safeFetchLocation(
                 personDTO.getBirthPlace() != null ? personDTO.getBirthPlace().getId() : null,
                 "Birth Place"
@@ -117,23 +116,22 @@ public class PersonServiceImpl implements PersonService {
     public PersonDTO updatePerson(Long id, PersonDTO personDTO) {
         PersonEntity existing = fetchPersonById(id);
 
-// Updated Location fetching
-        LocationEntity birthPlace = safeFetchLocation(
-                personDTO.getBirthPlace() != null ? personDTO.getBirthPlace().getId() : null,
-                "Birth Place"
-        );
-        LocationEntity deathPlace = safeFetchLocation(
-                personDTO.getDeathPlace() != null ? personDTO.getDeathPlace().getId() : null,
-                "Death Place"
-        );
-        LocationEntity burialPlace = safeFetchLocation(
-                personDTO.getBurialPlace() != null ? personDTO.getBurialPlace().getId() : null,
-                "Burial Place"
-        );
-        LocationEntity baptizationPlace = safeFetchLocation(
-                personDTO.getBaptizationPlace() != null ? personDTO.getBaptizationPlace().getId() : null,
-                "Baptization Place"
-        );
+        // Use existing location if DTO's location is null to prevent clearing
+        LocationEntity birthPlace = personDTO.getBirthPlace() != null
+                ? safeFetchLocation(personDTO.getBirthPlace().getId(), "Birth Place")
+                : existing.getBirthPlace();
+
+        LocationEntity deathPlace = personDTO.getDeathPlace() != null
+                ? safeFetchLocation(personDTO.getDeathPlace().getId(), "Death Place")
+                : existing.getDeathPlace();
+
+        LocationEntity burialPlace = personDTO.getBurialPlace() != null
+                ? safeFetchLocation(personDTO.getBurialPlace().getId(), "Burial Place")
+                : existing.getBurialPlace();
+
+        LocationEntity baptizationPlace = personDTO.getBaptizationPlace() != null
+                ? safeFetchLocation(personDTO.getBaptizationPlace().getId(), "Baptization Place")
+                : existing.getBaptizationPlace();
 
         personMapper.updatePersonEntity(personDTO, existing);
         existing.setBirthPlace(birthPlace);
@@ -159,7 +157,9 @@ public class PersonServiceImpl implements PersonService {
 
         // Update occupations
         List<PersonOccupationEntity> newOccupations = buildOccupationEntities(personDTO.getOccupations(), existing);
-        Set<Long> newOccIds = newOccupations.stream().map(o -> o.getOccupation().getId()).collect(Collectors.toSet());
+        Set<Long> newOccIds = newOccupations.stream()
+                .map(o -> o.getOccupation().getId())
+                .collect(Collectors.toSet());
         existing.getOccupations().removeIf(o -> !newOccIds.contains(o.getOccupation().getId()));
 
         Set<Long> existingOccIds = existing.getOccupations().stream()
@@ -173,7 +173,9 @@ public class PersonServiceImpl implements PersonService {
 
         // Update evidences
         List<PersonSourceEvidenceEntity> newEvidences = buildSourceEvidenceEntities(personDTO.getSourceEvidences(), existing);
-        Set<Long> newSrcIds = newEvidences.stream().map(e -> e.getSource().getId()).collect(Collectors.toSet());
+        Set<Long> newSrcIds = newEvidences.stream()
+                .map(e -> e.getSource().getId())
+                .collect(Collectors.toSet());
         existing.getSourceEvidences().removeIf(se -> !newSrcIds.contains(se.getSource().getId()));
 
         Set<Long> existingSrcIds = existing.getSourceEvidences().stream()
@@ -212,8 +214,8 @@ public class PersonServiceImpl implements PersonService {
                 PersonOccupationEntity entity = new PersonOccupationEntity();
                 entity.setPerson(person);
                 entity.setOccupation(occupation);
-                entity.setOccupationStartDate(dto.getStartDate());
-                entity.setOccupationEndDate(dto.getEndDate());
+                entity.setStartYear(dto.getStartYear());
+                entity.setEndYear(dto.getEndYear());
                 list.add(entity);
             });
         }

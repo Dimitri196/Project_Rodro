@@ -31,8 +31,8 @@ public class PersonMilitaryServiceEntity {
     @JoinColumn(name = "military_rank_id")
     private MilitaryRankEntity militaryRank;
 
-    private String enlistmentYear;
-    private String dischargeYear;
+    private Integer enlistmentYear;
+    private Integer dischargeYear;
 
     private String notes;
 

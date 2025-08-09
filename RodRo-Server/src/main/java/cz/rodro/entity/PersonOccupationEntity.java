@@ -21,8 +21,8 @@ public class PersonOccupationEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDate occupationStartDate;
-    private LocalDate occupationEndDate;
+    private Integer startYear;
+    private Integer endYear;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "person_id")

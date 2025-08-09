@@ -62,14 +62,15 @@ public class InstitutionServiceImpl implements InstitutionService {
         InstitutionEntity existing = institutionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Institution not found with id: " + id));
 
-        existing.setInstitutionName(dto.getInstitutionName());
-        existing.setInstitutionDescription(dto.getInstitutionDescription());
+        // Use the mapper to update the entity from the DTO,
+        // which handles all fields including nested ones like location.
+        // This is a much cleaner and more maintainable approach.
+        institutionMapper.updateInstitutionEntity(dto, existing);
 
-        if (dto.getInstitutionLocation() != null && dto.getInstitutionLocation().getId() != null) {
-            LocationEntity location = locationRepository.findById(dto.getInstitutionLocation().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + dto.getInstitutionLocation().getId()));
-            existing.setInstitutionLocation(location);
-        }
+        // MapStruct will handle finding the new LocationEntity based on the DTO's ID
+        // because the mapper has 'uses = {LocationMapper.class}' configured.
+        // You only need to manually handle setting the location if your mapper
+        // wasn't configured to do so. In this case, it is.
 
         InstitutionEntity updated = institutionRepository.save(existing);
         return institutionMapper.toDto(updated);

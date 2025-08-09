@@ -36,8 +36,8 @@ public class PersonOccupationServiceImpl implements PersonOccupationService {
         PersonOccupationEntity entity = new PersonOccupationEntity();
         entity.setPerson(person);
         entity.setOccupation(occupation);
-        entity.setOccupationStartDate(dto.getStartDate());
-        entity.setOccupationEndDate(dto.getEndDate());
+        entity.setStartYear(dto.getStartYear());
+        entity.setEndYear(dto.getEndYear());
 
         PersonOccupationEntity saved = personOccupationRepository.save(entity);
         PersonOccupationDTO result = personOccupationMapper.toDTO(saved);

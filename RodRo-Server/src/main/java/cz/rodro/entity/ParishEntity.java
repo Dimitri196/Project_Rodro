@@ -26,8 +26,6 @@ public class ParishEntity {
 
     private Integer cancellationYear;
 
-    // A Parish is associated with one or more Locations through the join table
-    // A ParishEntity itself does not have a single "parishLocation" field
     @OneToMany(mappedBy = "parish", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonBackReference
     private List<ParishLocationEntity> parishLocations;

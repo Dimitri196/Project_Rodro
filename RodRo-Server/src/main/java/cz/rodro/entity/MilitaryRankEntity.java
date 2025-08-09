@@ -1,6 +1,7 @@
 package cz.rodro.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import cz.rodro.constant.MilitaryRankLevel;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,21 +22,29 @@ public class MilitaryRankEntity {
 
     private String rankName;
     private String rankDescription;
-    private String rankLevel;
 
-    @ManyToOne
-    @JoinColumn(name = "army_branch_id")
-    private MilitaryArmyBranchEntity armyBranch;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rankLevel", nullable = false)
+    private MilitaryRankLevel rankLevel; // Enum representing the level of the rank (e.g., Officer, NCO, Enlisted)
 
     private String activeFromYear;
     private String activeToYear;
-
     private String notes;
 
+    @Column(nullable = true)
+    private String rankImageUrl;
 
     @OneToMany(mappedBy = "militaryRank", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<PersonMilitaryServiceEntity> personMilitaryServices = new ArrayList<>();
 
+    @ManyToOne
+    @JoinColumn(name = "military_organization_id")
+    private MilitaryOrganizationEntity militaryOrganization;
+
+    // A new field to link the rank to a specific military structure (e.g., a regiment)
+    @ManyToOne
+    @JoinColumn(name = "military_structure_id")
+    private MilitaryStructureEntity militaryStructure;
 
 }

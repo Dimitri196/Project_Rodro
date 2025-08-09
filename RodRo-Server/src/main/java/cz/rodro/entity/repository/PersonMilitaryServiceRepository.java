@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface PersonMilitaryServiceRepository extends JpaRepository<PersonMilitaryServiceEntity, Long> {
+
     List<PersonMilitaryServiceEntity> findByPersonId(Long personId);
 
     List<PersonMilitaryServiceEntity> findAllByMilitaryRankId(Long rankId);

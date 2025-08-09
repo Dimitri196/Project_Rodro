@@ -18,4 +18,7 @@ public interface MilitaryStructureService {
 
     // Add this method
     List<MilitaryRankDTO> getRanksForStructure(Long structureId);
+
+    List<MilitaryStructureDTO> getRegimentsWithRanksForStructure(Long parentStructureId);
+
 }

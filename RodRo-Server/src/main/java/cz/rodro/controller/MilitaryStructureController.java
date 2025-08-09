@@ -44,8 +44,21 @@ public class MilitaryStructureController {
         militaryStructureService.removeMilitaryStructure(id);
     }
 
+    // This method has been updated to be private or removed,
+    // as the new method below will provide the necessary data.
     @GetMapping("/militaryStructures/{id}/ranks")
     public List<MilitaryRankDTO> getRanksForStructure(@PathVariable Long id) {
         return militaryStructureService.getRanksForStructure(id);
+    }
+
+    /**
+     * Finds a list of all sub-structures (e.g., regiments) for a given military structure (e.g., a division),
+     * and for each sub-structure, also fetches the ranks for its branch.
+     * @param id The ID of the parent military structure.
+     * @return A list of MilitaryStructureDTO objects, each with its ranks populated.
+     */
+    @GetMapping("/militaryStructures/{id}/regiments")
+    public List<MilitaryStructureDTO> getRegimentsWithRanksForStructure(@PathVariable Long id) {
+        return militaryStructureService.getRegimentsWithRanksForStructure(id);
     }
 }

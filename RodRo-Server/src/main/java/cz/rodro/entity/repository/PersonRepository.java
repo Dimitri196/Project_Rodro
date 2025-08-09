@@ -97,4 +97,6 @@ public interface PersonRepository extends JpaRepository<PersonEntity, Long> {
             @Param("searchTerm") String searchTerm,
             Pageable pageable
     );
+
+    List<PersonEntity> findByGivenNameContainingIgnoreCaseOrGivenSurnameContainingIgnoreCase(String givenName, String givenSurname);
 }

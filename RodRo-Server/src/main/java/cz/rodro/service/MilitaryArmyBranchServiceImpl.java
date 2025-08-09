@@ -59,7 +59,8 @@ public class MilitaryArmyBranchServiceImpl implements MilitaryArmyBranchService 
 
     @Override
     public List<MilitaryRankDTO> getRanksByBranchId(Long branchId) {
-        return rankRepository.findByArmyBranch_Id(branchId)
+        // --- CHANGE HERE: Use the new repository method ---
+        return rankRepository.findByMilitaryOrganization_ArmyBranch_Id(branchId)
                 .stream()
                 .map(rankMapper::toMilitaryRankDTO)
                 .collect(Collectors.toList());

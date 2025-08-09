@@ -4,8 +4,12 @@ import cz.rodro.dto.MilitaryRankDTO;
 import cz.rodro.dto.PersonMilitaryServiceDTO;
 import cz.rodro.dto.mapper.MilitaryRankMapper;
 import cz.rodro.dto.mapper.PersonMilitaryServiceMapper;
+import cz.rodro.entity.MilitaryOrganizationEntity;
 import cz.rodro.entity.MilitaryRankEntity;
+import cz.rodro.entity.MilitaryStructureEntity;
+import cz.rodro.entity.repository.MilitaryOrganizationRepository;
 import cz.rodro.entity.repository.MilitaryRankRepository;
+import cz.rodro.entity.repository.MilitaryStructureRepository;
 import cz.rodro.entity.repository.PersonMilitaryServiceRepository;
 import cz.rodro.exception.NotFoundException;
 import jakarta.persistence.EntityNotFoundException;
@@ -20,16 +24,22 @@ import java.util.stream.Collectors;
 public class MilitaryRankServiceImpl implements MilitaryRankService {
 
     @Autowired
-    MilitaryRankRepository militaryRankRepository;
+    private MilitaryRankRepository militaryRankRepository;
 
     @Autowired
-    MilitaryRankMapper militaryRankMapper;
+    private MilitaryRankMapper militaryRankMapper;
 
     @Autowired
-    PersonMilitaryServiceRepository personMilitaryServiceRepository;
+    private PersonMilitaryServiceRepository personMilitaryServiceRepository;
 
     @Autowired
-    PersonMilitaryServiceMapper personMilitaryServiceMapper;
+    private PersonMilitaryServiceMapper personMilitaryServiceMapper;
+
+    @Autowired
+    private MilitaryOrganizationRepository militaryOrganizationRepository;
+
+    @Autowired
+    private MilitaryStructureRepository militaryStructureRepository; // New dependency
 
     @Override
     public List<MilitaryRankDTO> getAll() {
@@ -42,7 +52,6 @@ public class MilitaryRankServiceImpl implements MilitaryRankService {
 
     @Override
     public MilitaryRankDTO getMilitaryRank(Long id) {
-        // existing implementation
         MilitaryRankEntity entity = militaryRankRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("MilitaryRank with id " + id + " wasn't found."));
         return militaryRankMapper.toMilitaryRankDTO(entity);
@@ -65,8 +74,28 @@ public class MilitaryRankServiceImpl implements MilitaryRankService {
     }
 
     @Override
+    @Transactional
     public MilitaryRankDTO addMilitaryRank(MilitaryRankDTO dto) {
         MilitaryRankEntity entity = militaryRankMapper.toMilitaryRankEntity(dto);
+
+        // Logic to set MilitaryOrganizationEntity
+        if (dto.getMilitaryOrganization() != null && dto.getMilitaryOrganization().getId() != null) {
+            MilitaryOrganizationEntity organizationEntity = militaryOrganizationRepository.findById(dto.getMilitaryOrganization().getId())
+                    .orElseThrow(() -> new NotFoundException("MilitaryOrganization with id " + dto.getMilitaryOrganization().getId() + " wasn't found."));
+            entity.setMilitaryOrganization(organizationEntity);
+        } else {
+            entity.setMilitaryOrganization(null);
+        }
+
+        // NEW LOGIC: Set MilitaryStructureEntity
+        if (dto.getMilitaryStructureDTO() != null && dto.getMilitaryStructureDTO().getId() != null) {
+            MilitaryStructureEntity structureEntity = militaryStructureRepository.findById(dto.getMilitaryStructureDTO().getId())
+                    .orElseThrow(() -> new NotFoundException("MilitaryStructure with id " + dto.getMilitaryStructureDTO().getId() + " wasn't found."));
+            entity.setMilitaryStructure(structureEntity);
+        } else {
+            entity.setMilitaryStructure(null);
+        }
+
         entity = militaryRankRepository.save(entity);
         return militaryRankMapper.toMilitaryRankDTO(entity);
     }
@@ -85,6 +114,25 @@ public class MilitaryRankServiceImpl implements MilitaryRankService {
     public MilitaryRankDTO updateMilitaryRank(Long rankId, MilitaryRankDTO dto) {
         MilitaryRankEntity entity = militaryRankRepository.findById(rankId)
                 .orElseThrow(() -> new NotFoundException("MilitaryRank with id " + rankId + " wasn't found in the database"));
+
+        // Logic to update MilitaryOrganizationEntity
+        if (dto.getMilitaryOrganization() != null && dto.getMilitaryOrganization().getId() != null) {
+            MilitaryOrganizationEntity organizationEntity = militaryOrganizationRepository.findById(dto.getMilitaryOrganization().getId())
+                    .orElseThrow(() -> new NotFoundException("MilitaryOrganization with id " + dto.getMilitaryOrganization().getId() + " wasn't found."));
+            entity.setMilitaryOrganization(organizationEntity);
+        } else {
+            entity.setMilitaryOrganization(null);
+        }
+
+        // NEW LOGIC: Update MilitaryStructureEntity
+        if (dto.getMilitaryStructureDTO() != null && dto.getMilitaryStructureDTO().getId() != null) {
+            MilitaryStructureEntity structureEntity = militaryStructureRepository.findById(dto.getMilitaryStructureDTO().getId())
+                    .orElseThrow(() -> new NotFoundException("MilitaryStructure with id " + dto.getMilitaryStructureDTO().getId() + " wasn't found."));
+            entity.setMilitaryStructure(structureEntity);
+        } else {
+            entity.setMilitaryStructure(null);
+        }
+
         militaryRankMapper.updateMilitaryRankEntity(dto, entity);
         militaryRankRepository.save(entity);
         return militaryRankMapper.toMilitaryRankDTO(entity);

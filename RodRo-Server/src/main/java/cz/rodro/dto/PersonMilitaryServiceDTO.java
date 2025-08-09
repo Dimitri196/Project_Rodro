@@ -1,6 +1,8 @@
 package cz.rodro.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,8 +26,13 @@ public class PersonMilitaryServiceDTO {
     private String armyBranch;            // Optional: for frontend display
     private String rankName;              // Optional: for frontend display
 
-    private String enlistmentYear;
-    private String dischargeYear;
+    @Min(value = 0, message = "Establishment year cannot be negative")
+    @Max(value = 2025, message = "Establishment year cannot exceed 9999")
+    private Integer enlistmentYear;
+
+    @Min(value = 0, message = "Establishment year cannot be negative")
+    @Max(value = 2025, message = "Establishment year cannot exceed 9999")
+    private Integer dischargeYear;
 
     private String notes;
 

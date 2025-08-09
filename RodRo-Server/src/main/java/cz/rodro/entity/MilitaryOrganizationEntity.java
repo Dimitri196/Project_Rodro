@@ -39,4 +39,8 @@ public class MilitaryOrganizationEntity {
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<MilitaryStructureEntity> structures = new ArrayList<>();
+
+    // You might also have a OneToMany back to MilitaryRankEntity
+    @OneToMany(mappedBy = "militaryOrganization", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MilitaryRankEntity> militaryRanks = new ArrayList<>();
 }

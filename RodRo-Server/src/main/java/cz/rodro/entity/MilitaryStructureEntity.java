@@ -21,18 +21,26 @@ public class MilitaryStructureEntity {
 
     private String unitName;
     private String unitType;
+    private String activeFromYear;
+    private String activeToYear;
+    private String notes; // Added notes field
+
+    @Column(nullable = true)
+    private String bannerImageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "military_organization_id")
-    @JsonBackReference
+    @JsonBackReference("organization-structures")
     private MilitaryOrganizationEntity organization;
 
-    @ManyToOne
-    @JoinColumn(name = "army_branch_id")
-    private MilitaryArmyBranchEntity armyBranch;
+    // New self-referential relationship for parent structure
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_structure_id")
+    @JsonBackReference("parent-substructures")
+    private MilitaryStructureEntity parentStructure;
 
-    private String activeFromYear;
-    private String activeToYear;
-    private String notes;
-
+    // New self-referential relationship for sub-structures
+    @OneToMany(mappedBy = "parentStructure", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("parent-substructures")
+    private List<MilitaryStructureEntity> subStructures = new ArrayList<>();
 }
