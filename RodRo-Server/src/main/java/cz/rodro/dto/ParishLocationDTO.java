@@ -18,5 +18,8 @@ public class ParishLocationDTO {
 
     private String parishName;
     private String locationName;
+    private String mainChurchName;
 
+    /** Marks whether this location is the main location of the parish. */
+    private boolean mainLocation;
 }

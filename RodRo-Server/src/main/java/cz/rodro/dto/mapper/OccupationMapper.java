@@ -8,13 +8,16 @@ import org.mapstruct.*;
 public interface OccupationMapper {
 
     @Mapping(target = "institution.occupations", ignore = true)
+    @Mapping(source = "personImageUrl", target = "personImageUrl")
     OccupationDTO toDTO(OccupationEntity entity);
 
     @Mapping(target = "institution", source = "institution")
+    @Mapping(source = "personImageUrl", target = "personImageUrl")
     OccupationEntity toEntity(OccupationDTO dto);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "institution", ignore = true)
+    @Mapping(source = "personImageUrl", target = "personImageUrl")
     void updateOccupationEntity(OccupationDTO dto, @MappingTarget OccupationEntity entity);
 
 }

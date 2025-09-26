@@ -31,4 +31,6 @@ public class CountryDTO {
 
     @JsonIgnore  // Prevents recursive serialization
     private List<ProvinceDTO> provinces;  // Add this if you want to return the list of provinces for the country
+
+    private String countryFlagImgUrl;
 }

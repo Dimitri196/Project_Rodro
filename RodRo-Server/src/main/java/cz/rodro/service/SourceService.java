@@ -1,39 +1,39 @@
 package cz.rodro.service;
 
 import cz.rodro.dto.SourceDTO;
-import cz.rodro.dto.SourceListProjection;
+import cz.rodro.dto.SourceListDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 /**
- * Service interface for managing {@link SourceDTO} operations.
+ * Service interface for managing {@link cz.rodro.entity.SourceEntity} operations.
  * Provides methods for CRUD operations and optimized data retrieval for sources.
  */
 public interface SourceService {
 
     /**
-     * Retrieves a paginated and searchable list of sources.
+     * Retrieves a paginated and searchable list of sources as frontend-ready DTOs.
      *
-     * @param searchTerm An optional term to filter sources.
+     * @param searchTerm An optional term to filter sources by title, reference, or location name.
      * @param pageable   Pagination and sorting information.
-     * @return A Page of SourceListProjection (or SourceDTOs if no projection).
+     * @return A Page of {@link SourceListDTO} containing the requested subset of data.
      */
-    Page<SourceListProjection> getAllSources(String searchTerm, Pageable pageable); // Assuming SourceListProjection
+    Page<SourceListDTO> getAllSourcesAsDTO(String searchTerm, Pageable pageable);
 
     /**
      * Retrieves a single source by its ID.
      *
      * @param sourceId The ID of the source to retrieve.
-     * @return The SourceDTO with detailed information.
+     * @return The {@link SourceDTO} with detailed information.
      * @throws cz.rodro.exception.NotFoundException if the source is not found.
      */
-    SourceDTO getSource(long sourceId);
+    SourceDTO getSource(Long sourceId);
 
     /**
      * Adds a new source to the database.
      *
-     * @param sourceDTO The SourceDTO containing the data for the new source.
-     * @return The created SourceDTO.
+     * @param sourceDTO The {@link SourceDTO} containing the data for the new source.
+     * @return The created {@link SourceDTO}.
      */
     SourceDTO addSource(SourceDTO sourceDTO);
 
@@ -43,14 +43,14 @@ public interface SourceService {
      * @param sourceId The ID of the source to remove.
      * @throws cz.rodro.exception.NotFoundException if the source is not found.
      */
-    void removeSource(long sourceId);
+    void removeSource(Long sourceId);
 
     /**
      * Updates an existing source with new data.
      *
-     * @param sourceId The ID of the source to update.
-     * @param sourceDTO The SourceDTO containing the updated data.
-     * @return The updated SourceDTO.
+     * @param sourceId  The ID of the source to update.
+     * @param sourceDTO The {@link SourceDTO} containing the updated data.
+     * @return The updated {@link SourceDTO}.
      * @throws cz.rodro.exception.NotFoundException if the source is not found.
      */
     SourceDTO updateSource(Long sourceId, SourceDTO sourceDTO);

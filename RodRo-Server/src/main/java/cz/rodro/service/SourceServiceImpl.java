@@ -1,48 +1,54 @@
 package cz.rodro.service;
 
 import cz.rodro.dto.SourceDTO;
-import cz.rodro.dto.SourceListProjection;
-import cz.rodro.dto.mapper.SourceMapper;
+import cz.rodro.dto.SourceListDTO;
 import cz.rodro.entity.LocationEntity;
 import cz.rodro.entity.SourceEntity;
-import cz.rodro.entity.repository.SourceRepository;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 import cz.rodro.exception.NotFoundException;
+import cz.rodro.dto.mapper.SourceListMapper;
+import cz.rodro.dto.mapper.SourceMapper;
+import cz.rodro.dto.SourceListProjection;
+import cz.rodro.entity.repository.SourceRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
- * Service implementation for managing {@link SourceEntity} and {@link SourceDTO} operations.
- * Handles business logic, data mapping, and transaction management for sources.
+ * Implementation of {@link SourceService} handling CRUD operations and paginated list retrieval
+ * for Source entities, with mapping to frontend-ready DTOs.
  */
 @Service
 public class SourceServiceImpl implements SourceService {
 
     private final SourceRepository sourceRepository;
     private final SourceMapper sourceMapper;
-    private final LocationService locationService; // Inject LocationService to fetch LocationEntity
+    private final SourceListMapper sourceListMapper;
+    private final LocationService locationService;
 
     @Autowired
-    public SourceServiceImpl(SourceRepository sourceRepository, SourceMapper sourceMapper, LocationService locationService) {
+    public SourceServiceImpl(SourceRepository sourceRepository,
+                             SourceMapper sourceMapper,
+                             SourceListMapper sourceListMapper,
+                             LocationService locationService) {
         this.sourceRepository = sourceRepository;
         this.sourceMapper = sourceMapper;
+        this.sourceListMapper = sourceListMapper;
         this.locationService = locationService;
     }
 
     @Override
     @Transactional
     public SourceDTO addSource(SourceDTO sourceDTO) {
-        // Fetch the LocationEntity if sourceLocationId is provided in the DTO
-        LocationEntity sourceLocation = null;
-        if (sourceDTO.getSourceLocationId() != null) {
-            sourceLocation = locationService.fetchLocationById(sourceDTO.getSourceLocationId(), "Source Location");
+        LocationEntity location = null;
+        if (sourceDTO.getLocationId() != null) {
+            location = locationService.fetchLocationById(sourceDTO.getLocationId(), "Source Location");
         }
 
         SourceEntity sourceEntity = sourceMapper.toSourceEntity(sourceDTO);
-        sourceEntity.setSourceLocation(sourceLocation); // Set the resolved LocationEntity
+        sourceEntity.setLocation(location);
 
         SourceEntity saved = sourceRepository.save(sourceEntity);
         return sourceMapper.toSourceDTO(saved);
@@ -50,32 +56,37 @@ public class SourceServiceImpl implements SourceService {
 
     @Override
     @Transactional(readOnly = true)
-    public SourceDTO getSource(long sourceId) { // Changed parameter type to long
+    public SourceDTO getSource(Long sourceId) {
         SourceEntity entity = fetchSourceById(sourceId);
         return sourceMapper.toSourceDTO(entity);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SourceListProjection> getAllSources(String searchTerm, Pageable pageable) {
-        // Uses the optimized projection method from the repository
-        return sourceRepository.findAllSourcesProjected(searchTerm, pageable);
+    public Page<SourceListDTO> getAllSourcesAsDTO(String searchTerm, Pageable pageable) {
+        Page<SourceListProjection> projectionPage = sourceRepository.findAllSourcesProjected(searchTerm, pageable);
+
+        List<SourceListDTO> dtos = projectionPage.stream()
+                .map(sourceListMapper::toDTO)
+                .toList();
+
+        return new PageImpl<>(dtos, pageable, projectionPage.getTotalElements());
     }
 
     @Override
     @Transactional
-    public SourceDTO updateSource(Long sourceId, SourceDTO sourceDTO) { // Changed parameter name to sourceId
+    public SourceDTO updateSource(Long sourceId, SourceDTO sourceDTO) {
         SourceEntity existing = fetchSourceById(sourceId);
 
-        // Update primitive fields using MapStruct
+        // Update primitive fields via MapStruct
         sourceMapper.updateSourceEntity(sourceDTO, existing);
 
-        // Update the associated LocationEntity if the ID changes
-        LocationEntity newSourceLocation = null;
-        if (sourceDTO.getSourceLocationId() != null) {
-            newSourceLocation = locationService.fetchLocationById(sourceDTO.getSourceLocationId(), "Source Location");
+        // Update location if provided
+        LocationEntity newLocation = null;
+        if (sourceDTO.getLocationId() != null) {
+            newLocation = locationService.fetchLocationById(sourceDTO.getLocationId(), "Source Location");
         }
-        existing.setSourceLocation(newSourceLocation);
+        existing.setLocation(newLocation);
 
         SourceEntity updated = sourceRepository.save(existing);
         return sourceMapper.toSourceDTO(updated);
@@ -83,12 +94,17 @@ public class SourceServiceImpl implements SourceService {
 
     @Override
     @Transactional
-    public void removeSource(long sourceId) { // Changed method name to removeSource and parameter type to long
+    public void removeSource(Long sourceId) {
         SourceEntity entity = fetchSourceById(sourceId);
         sourceRepository.delete(entity);
     }
 
-    // Private utility method to fetch with exception
+    /**
+     * Utility method to fetch a SourceEntity by ID or throw NotFoundException.
+     *
+     * @param id the source ID
+     * @return the SourceEntity
+     */
     private SourceEntity fetchSourceById(Long id) {
         return sourceRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Source with ID " + id + " not found"));

@@ -21,4 +21,6 @@ public class ProvinceDTO {
     private CountryDTO country;
 
     private List<DistrictDTO> districts;
+
+    private String provinceFlagImgUrl;
 }

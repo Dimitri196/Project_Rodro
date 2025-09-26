@@ -232,7 +232,7 @@ public class PersonServiceImpl implements PersonService {
                 entity.setPerson(person);
                 entity.setSource(source);
                 entity.setPersonName(person.getGivenName() + " " + person.getGivenSurname());
-                entity.setSourceName(source.getSourceTitle());
+                entity.setSourceName(source.getTitle());
                 list.add(entity);
             });
         }
@@ -270,7 +270,7 @@ public class PersonServiceImpl implements PersonService {
                         dto.setPersonName(e.getPerson().getGivenName() + " " + e.getPerson().getGivenSurname());
                     }
                     if (e.getSource() != null) {
-                        dto.setSourceName(e.getSource().getSourceTitle());
+                        dto.setSourceName(e.getSource().getTitle());
                     }
                     return dto;
                 })

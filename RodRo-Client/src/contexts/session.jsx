@@ -1,61 +1,34 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { apiGet, HttpRequestError } from "../utils/api";
+import {createContext, useContext, useEffect, useState} from "react";
+import {apiGet, HttpRequestError} from "../utils/api";
 
+// defaultní hodnota pro lepší napovídání v IDE,
+// také by se použila, pokud bychom ke kontextu přistupovali mimo Provider
 const SessionContext = createContext({
-  session: { data: null, status: "loading" },
-  setSession: () => {},
+    session: {data: null, status: "loading"}, setSession: (data) => {
+    }
 });
 
 export function useSession() {
-  return useContext(SessionContext);
+    return useContext(SessionContext);
 }
 
-export const SessionProvider = ({ children }) => {
-  const [sessionState, setSessionState] = useState({
-    data: null,
-    status: "loading",
-  });
+export const SessionProvider = ({children}) => {
+    const [sessionState, setSessionState] = useState({data: null, status: "loading"});
+    useEffect(() => {
+        apiGet("/api/auth")
+            .then(data => setSessionState({data, status: "authenticated"}))
+            .catch(e => {
+                if (e instanceof HttpRequestError && e.response.status === 401) {
+                    setSessionState({data: null, status: "unauthenticated"});
+                } else {
+                    throw e;
+                }
+            });
+    }, []);
 
-  // Load session from localStorage first (for faster UI rendering)
-  useEffect(() => {
-    const stored = localStorage.getItem("session");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed?.data) {
-          setSessionState({ data: parsed.data, status: "authenticated" });
-        }
-      } catch (e) {
-        console.warn("Corrupted session in localStorage");
-        localStorage.removeItem("session");
-      }
-    }
-
-    // Always revalidate with API in background
-    apiGet("/api/auth")
-      .then((data) => {
-        setSessionState({ data, status: "authenticated" });
-        localStorage.setItem("session", JSON.stringify({ data }));
-      })
-      .catch((e) => {
-        console.error("Session validation failed:", e);
-        setSessionState({ data: null, status: "unauthenticated" });
-        localStorage.removeItem("session");
-      });
-  }, []);
-
-  const setSession = (session) => {
-    setSessionState(session);
-    if (session?.data) {
-      localStorage.setItem("session", JSON.stringify({ data: session.data }));
-    } else {
-      localStorage.removeItem("session");
-    }
-  };
-
-  return (
-    <SessionContext.Provider value={{ session: sessionState, setSession }}>
-      {children}
-    </SessionContext.Provider>
-  );
+    return (
+        <SessionContext.Provider value={{session: sessionState, setSession: setSessionState}}>
+            {children}
+        </SessionContext.Provider>
+    );
 };

@@ -2,18 +2,18 @@ package cz.rodro.service;
 
 import cz.rodro.dto.ParishDTO;
 import cz.rodro.dto.ParishLocationDTO;
-import cz.rodro.dto.mapper.ParishLocationMapper;
-import cz.rodro.dto.mapper.ParishMapper;
 import cz.rodro.entity.LocationEntity;
 import cz.rodro.entity.ParishEntity;
 import cz.rodro.entity.ParishLocationEntity;
 import cz.rodro.entity.repository.ParishLocationRepository;
 import cz.rodro.entity.repository.ParishRepository;
+import cz.rodro.dto.mapper.LocationMapper;
+import cz.rodro.dto.mapper.ParishLocationMapper;
+import cz.rodro.dto.mapper.ParishMapper;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import cz.rodro.exception.NotFoundException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,52 +31,117 @@ public class ParishServiceImpl implements ParishService {
     private ParishLocationMapper parishLocationMapper;
 
     @Autowired
-    private LocationService locationService;
+    private LocationMapper locationMapper;
 
-    // You'll also need a repository for the join table
     @Autowired
     private ParishLocationRepository parishLocationRepository;
 
     @Override
     public List<ParishDTO> getAllParishes() {
-        return parishRepository
-                .findAll()
-                .stream()
-                .map(parishMapper::toParishDTO)
+        return parishRepository.findAll().stream()
+                .map(parish -> {
+                    ParishDTO dto = parishMapper.toParishDTO(parish);
+                    if (!parish.getLocations().isEmpty()) {
+                        ParishLocationEntity firstLocation = parish.getLocations().get(0);
+                        dto.setLocation(locationMapper.toLocationDTO(firstLocation.getLocation()));
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
     @Override
     public ParishDTO getParish(long parishId) {
-        ParishEntity parishEntity = parishRepository
-                .findById(parishId)
-                .orElseThrow(() -> new EntityNotFoundException("Parish not found"));
+        ParishEntity parishEntity = fetchParishById(parishId);
+        ParishDTO dto = parishMapper.toParishDTO(parishEntity);
+
+        List<ParishLocationDTO> associatedLocations = parishEntity.getLocations().stream()
+                .map(pl -> {
+                    ParishLocationDTO plDto = new ParishLocationDTO();
+                    plDto.setId(pl.getId()); // parish_location row ID
+                    plDto.setParishId(pl.getParish().getId());
+                    plDto.setLocationId(pl.getLocation().getId()); // important
+                    plDto.setParishName(pl.getParishName());
+                    plDto.setLocationName(pl.getLocationName());
+                    plDto.setMainChurchName(pl.getMainChurchName());
+                    plDto.setMainLocation(pl.isMainLocation()); // boolean
+                    return plDto;
+                })
+                .collect(Collectors.toList());
+
+        // Set mainLocation in ParishDTO
+        associatedLocations.stream()
+                .filter(ParishLocationDTO::isMainLocation)
+                .findFirst()
+                .ifPresent(mainLoc -> dto.setLocation(
+                        locationMapper.toLocationDTO(
+                                parishEntity.getLocations().stream()
+                                        .filter(pl -> pl.getId().equals(mainLoc.getId()))
+                                        .findFirst()
+                                        .get()
+                                        .getLocation()
+                        )
+                ));
+
+        dto.setLocations(associatedLocations);
+
+        return dto;
+    }
+
+
+    @Override
+    @Transactional
+    public ParishDTO addParish(ParishDTO parishDTO) {
+        // Map DTO to entity
+        ParishEntity parishEntity = parishMapper.toParishEntity(parishDTO);
+        parishEntity = parishRepository.save(parishEntity);
+
+        // Link to location if provided
+        if (parishDTO.getLocation() != null) {
+            LocationEntity locationEntity = parishMapperLocationHelper(parishDTO);
+            ParishLocationEntity parishLocationEntity = new ParishLocationEntity();
+            parishLocationEntity.setParish(parishEntity);
+            parishLocationEntity.setLocation(locationEntity);
+            parishLocationEntity.setParishName(parishDTO.getName());
+            parishLocationEntity.setLocationName(locationEntity.getLocationName());
+            parishLocationRepository.save(parishLocationEntity);
+
+            // Populate DTO with location
+            parishDTO.setLocation(locationMapper.toLocationDTO(locationEntity));
+        }
+
         return parishMapper.toParishDTO(parishEntity);
     }
 
     @Override
-    public ParishDTO addParish(ParishDTO parishDTO) {
-        // Fetch the location entity by its ID
-        LocationEntity parishLocation = locationService.fetchLocationById(parishDTO.getParishLocation().getId(), "Parish Location");
+    @Transactional
+    public ParishDTO updateParish(Long parishId, ParishDTO parishDTO) {
+        ParishEntity existingParish = fetchParishById(parishId);
+        parishMapper.updateParishEntity(parishDTO, existingParish);
+        ParishEntity savedParish = parishRepository.save(existingParish);
 
-        // Map the DTO to the entity. Note: The location field is not mapped here.
-        ParishEntity parishEntity = parishMapper.toParishEntity(parishDTO);
+        // Update location association if provided
+        if (parishDTO.getLocation() != null) {
+            // Check if a ParishLocation exists
+            List<ParishLocationEntity> existingLocations = existingParish.getLocations();
+            ParishLocationEntity parishLocationEntity;
+            if (existingLocations.isEmpty()) {
+                parishLocationEntity = new ParishLocationEntity();
+                parishLocationEntity.setParish(existingParish);
+            } else {
+                parishLocationEntity = existingLocations.get(0);
+            }
+            parishLocationEntity.setLocation(parishMapperLocationHelper(parishDTO));
+            parishLocationEntity.setParishName(savedParish.getName());
+            parishLocationEntity.setLocationName(parishDTO.getLocation().getLocationName());
+            parishLocationRepository.save(parishLocationEntity);
+        }
 
-        // Save the new parish entity first to get an ID
-        parishEntity = parishRepository.save(parishEntity);
-
-        // Create the new join entity to link the parish and location
-        ParishLocationEntity parishLocationEntity = new ParishLocationEntity();
-        parishLocationEntity.setParish(parishEntity);
-        parishLocationEntity.setLocation(parishLocation);
-        parishLocationEntity.setParishName(parishDTO.getParishName());
-        parishLocationEntity.setLocationName(parishLocation.getLocationName());
-
-        // Save the join entity
-        parishLocationRepository.save(parishLocationEntity);
-
-        // Return the saved parish DTO
-        return parishMapper.toParishDTO(parishEntity);
+        ParishDTO resultDTO = parishMapper.toParishDTO(savedParish);
+        if (!savedParish.getLocations().isEmpty()) {
+            resultDTO.setLocation(locationMapper.toLocationDTO(savedParish.getLocations().get(0).getLocation()));
+        }
+        return resultDTO;
     }
 
     @Override
@@ -85,30 +150,19 @@ public class ParishServiceImpl implements ParishService {
             ParishEntity parish = fetchParishById(parishId);
             parishRepository.delete(parish);
         } catch (EntityNotFoundException ignored) {
-            // Silently fail if parish is not found
         }
     }
 
     @Override
-    @Transactional
-    public ParishDTO updateParish(Long parishId, ParishDTO parishDTO) {
-        // Fetch the existing parish
-        ParishEntity existingParish = fetchParishById(parishId);
-
-        // Map updated values from DTO to Entity
-        parishMapper.updateParishEntity(parishDTO, existingParish);
-
-        // Save updated entity
-        ParishEntity savedParishEntity = parishRepository.save(existingParish);
-        return parishMapper.toParishDTO(savedParishEntity);
+    public List<ParishLocationDTO> getParishLocations(long parishId) {
+        return parishLocationRepository.findByParishId(parishId).stream()
+                .map(parishLocationMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-
     @Override
-    public List<ParishLocationDTO> getParishLocations(long parishId) {
-        // Find all ParishLocationEntity records for the given parishId
-        return parishLocationRepository.findByParishId(parishId)
-                .stream()
+    public List<ParishLocationDTO> getParishesByLocationId(long locationId) {
+        return parishLocationRepository.findByLocationId(locationId).stream()
                 .map(parishLocationMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -118,12 +172,13 @@ public class ParishServiceImpl implements ParishService {
                 .orElseThrow(() -> new EntityNotFoundException("Parish with id " + id + " wasn't found in the database."));
     }
 
-    @Override
-    public List<ParishLocationDTO> getParishesByLocationId(long locationId) {
-        return parishLocationRepository.findByLocationId(locationId)
-                .stream()
-                .map(parishLocationMapper::toDto)
-                .collect(Collectors.toList());
+    /**
+     * Helper method to fetch LocationEntity for a given ParishDTO
+     */
+    private LocationEntity parishMapperLocationHelper(ParishDTO parishDTO) {
+        if (parishDTO.getLocation() == null || parishDTO.getLocation().getId() == null) {
+            throw new IllegalArgumentException("Parish location must be provided with a valid id.");
+        }
+        return locationMapper.toLocationEntity(parishDTO.getLocation());
     }
-
 }

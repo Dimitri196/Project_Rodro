@@ -8,13 +8,19 @@ import java.util.List;
 
 @Repository
 public interface ParishLocationRepository extends JpaRepository<ParishLocationEntity, Long> {
+
+    /** Find all ParishLocation links by Parish ID */
     List<ParishLocationEntity> findByParishId(Long parishId);
 
+    /** Find all ParishLocation links by Location ID */
     List<ParishLocationEntity> findByLocationId(Long locationId);
 
-    List<ParishLocationEntity> findByParishParishName(String parishName);
+    /** Find all ParishLocation links by Parish name */
+    List<ParishLocationEntity> findByParishName(String name);
 
+    /** Find all ParishLocation links by Location name */
     List<ParishLocationEntity> findByLocationLocationName(String locationName);
 
-    void deleteByLocationIdAndParishId(Long parishId, Long locationId);
+    /** Delete a link between a specific Parish and Location */
+    void deleteByLocationIdAndParishId(Long locationId, Long parishId);
 }

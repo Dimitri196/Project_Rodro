@@ -23,4 +23,8 @@ public class MilitaryOrganizationDTO {
 
     // Use MilitaryStructureSimpleDTO to break the circular dependency
     private List<MilitaryStructureSimpleDTO> structures;
+
+    private String organizationImageUrl;
+
+    private String organizationDescription;
 }

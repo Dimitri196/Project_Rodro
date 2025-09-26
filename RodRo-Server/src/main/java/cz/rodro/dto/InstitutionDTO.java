@@ -21,5 +21,6 @@ public class InstitutionDTO {
     private String institutionDescription;
     private LocationDTO institutionLocation;
     private List<OccupationDTO> occupations;
+    private String sealImageUrl;
 
 }

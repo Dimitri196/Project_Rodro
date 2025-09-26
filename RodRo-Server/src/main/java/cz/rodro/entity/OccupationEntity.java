@@ -32,5 +32,9 @@ public class OccupationEntity {
 
     @OneToMany(mappedBy = "occupation", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<PersonOccupationEntity> personOccupations; // <-- renamed for consistency
+    private List<PersonOccupationEntity> personOccupations;
+
+    @Column(columnDefinition = "TEXT")
+    private String personImageUrl;
+
 }

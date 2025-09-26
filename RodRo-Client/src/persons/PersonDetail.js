@@ -1,56 +1,42 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Container, Row, Col, Card, ListGroup, Alert, Spinner, Accordion } from "react-bootstrap";
+import { useSession } from "../contexts/session";
 
 import { apiGet } from "../utils/api";
 import socialStatusLabels from "../constants/socialStatusLabels";
 import causeOfDeathLabels from "../constants/causeOfDeathLabels";
 
-// Helper function to format partial dates
 const formatPartialDate = (year, month, day) => {
-    if (year === null || year === undefined) {
-        return "Unknown"; // Or an empty string, depending on desired display
-    }
-
+    if (year === null || year === undefined) return "Unknown";
     let dateParts = [year];
     if (month !== null && month !== undefined) {
-        dateParts.push(String(month).padStart(2, '0')); // Pad month with leading zero
-        if (day !== null && day !== undefined) {
-            dateParts.push(String(day).padStart(2, '0')); // Pad day with leading zero
-        }
+        dateParts.push(String(month).padStart(2, '0'));
+        if (day !== null && day !== undefined) dateParts.push(String(day).padStart(2, '0'));
     }
     return dateParts.join('-');
 };
 
 const PersonDetail = () => {
     const { id } = useParams();
+    const { session } = useSession();
+    const isAdmin = session.data?.isAdmin === true;
 
     const [person, setPerson] = useState({});
-    const [parents, setParents] = useState([]);
+    const [familyData, setFamilyData] = useState([]);
     const [childs, setChilds] = useState([]);
-    const [spouses, setSpouses] = useState([]);
     const [occupations, setOccupations] = useState([]);
     const [militaryServices, setMilitaryServices] = useState([]);
     const [sourceEvidences, setSourceEvidences] = useState([]);
-    const [familyData, setFamilyData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Helper to get full name, handling potential nulls
-    const getFullName = (p) =>
-        p ? `${p.givenName || ""} ${p.givenSurname || ""}`.trim() : "N/A";
+    const getFullName = (p) => p ? `${p.givenName || ""} ${p.givenSurname || ""}`.trim() : "N/A";
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [
-                    personData,
-                    occupationData,
-                    families,
-                    evidences,
-                    childrenData,
-                    militaryServiceData
-                ] = await Promise.all([
+                const [personData, occupationData, families, evidences, childrenData, militaryServiceData] = await Promise.all([
                     apiGet(`/api/persons/${id}`),
                     apiGet(`/api/persons/${id}/occupations`),
                     apiGet(`/api/persons/${id}/families`),
@@ -64,27 +50,6 @@ const PersonDetail = () => {
                 setFamilyData(families);
                 setSourceEvidences(evidences);
                 setMilitaryServices(militaryServiceData);
-
-                // Logic to determine spouses from family data
-                const fetchedSpouses = families
-                    .map(family => {
-                        if (family.spouseMale?.id === parseInt(id)) return family.spouseFemale;
-                        if (family.spouseFemale?.id === parseInt(id)) return family.spouseMale;
-                        return null;
-                    })
-                    .filter(Boolean); // Filter out nulls
-                setSpouses(fetchedSpouses);
-
-                // Logic to determine parents from family data
-                const parentFamilies = families.filter(f =>
-                    f.childs?.some(child => child.id === parseInt(id))
-                );
-                const fetchedParents = parentFamilies.map(f => ({
-                    father: f.father,
-                    mother: f.mother
-                }));
-                setParents(fetchedParents); // Set parents state
-
                 setChilds(childrenData);
             } catch (err) {
                 setError(`Error loading data: ${err.message || err}`);
@@ -92,32 +57,44 @@ const PersonDetail = () => {
                 setLoading(false);
             }
         };
-
         fetchData();
-    }, [id]); // Re-run effect when ID changes
+    }, [id]);
 
-    if (loading) {
-        return (
-            <Container className="mt-5 text-center">
-                <Spinner animation="border" role="status" />
-                <p>Loading...</p>
-            </Container>
-        );
-    }
+    if (loading) return (
+        <Container className="mt-5 text-center">
+            <Spinner animation="border" role="status" />
+            <p>Loading...</p>
+        </Container>
+    );
     if (error) return <Alert variant="danger">{error}</Alert>;
 
     return (
         <Container className="mt-5">
-            <h1 className="mb-4 text-center">Person Details: {getFullName(person)}</h1>
+            {/* Header with Edit button */}
+            <Row className="mb-4 text-center">
+                <Col md={12}>
+                    <h1 className="display-4 fw-bold text-primary mb-2">
+                        {getFullName(person)}
+                    </h1>
+                    {isAdmin && (
+                        <Link
+                            to={`/persons/edit/${person._id || person.id}`}
+                            className="btn btn-warning btn-lg rounded-pill px-4 py-2 shadow-sm mt-3"
+                        >
+                            <i className="fas fa-edit me-2"></i>Edit Person
+                        </Link>
+                    )}
+                </Col>
+            </Row>
+
+            {/* Rest of the PersonDetail content */}
             <Row className="mb-4">
-                {/* Left Column - Basic Information */}
+                {/* Left Column - Basic Info & Dates */}
                 <Col md={4}>
                     <Card className="mb-4 shadow-sm">
                         <Card.Header as="h5" className="bg-primary text-white">Basic Information</Card.Header>
                         <Card.Body>
                             <Card.Title className="text-center mb-3">{getFullName(person)}</Card.Title>
-
-                            {/* GenWeb links based on identification number */}
                             {person.identificationNumber ? (
                                 <div className="mb-3 d-flex flex-column gap-2">
                                     <a
@@ -137,24 +114,17 @@ const PersonDetail = () => {
                                         View Ancestors Tree
                                     </a>
                                 </div>
-                            ) : (
-                                <p className="text-muted text-center">No GenWeb link available</p>
-                            )}
-
-                            {/* Person details list */}
+                            ) : <p className="text-muted text-center">No GenWeb link available</p>}
                             <ListGroup variant="flush">
                                 <ListGroup.Item><strong>Note:</strong> {person.note || "N/A"}</ListGroup.Item>
                                 <ListGroup.Item><strong>Gender:</strong> {person.gender || "N/A"}</ListGroup.Item>
                                 <ListGroup.Item><strong>GenWeb ID:</strong> {person.identificationNumber || "N/A"}</ListGroup.Item>
                                 <ListGroup.Item><strong>Social Status:</strong> {socialStatusLabels[person.socialStatus] || "Unknown"}</ListGroup.Item>
-                                <ListGroup.Item>
-                                    <strong>Cause of Death:</strong> {causeOfDeathLabels[person.causeOfDeath] || "N/A"}
-                                </ListGroup.Item>
+                                <ListGroup.Item><strong>Cause of Death:</strong> {causeOfDeathLabels[person.causeOfDeath] || "N/A"}</ListGroup.Item>
                             </ListGroup>
                         </Card.Body>
                     </Card>
 
-                    {/* Dates and Places Card (consolidated) */}
                     <Card className="mb-4 shadow-sm">
                         <Card.Header as="h5" className="bg-warning text-white">Dates & Places</Card.Header>
                         <Card.Body>
@@ -162,7 +132,7 @@ const PersonDetail = () => {
                                 {["birth", "baptization", "death", "burial"].map(type => (
                                     <React.Fragment key={type}>
                                         <ListGroup.Item>
-                                            <strong>{`${type[0].toUpperCase() + type.slice(1)} Place:`}</strong>{" "}
+                                            <strong>{type[0].toUpperCase() + type.slice(1)} Place:</strong>{" "}
                                             {person[`${type}Place`] ? (
                                                 <Link to={`/locations/show/${person[`${type}Place`]._id}`}>
                                                     {person[`${type}Place`].locationName}
@@ -170,13 +140,8 @@ const PersonDetail = () => {
                                             ) : "N/A"}
                                         </ListGroup.Item>
                                         <ListGroup.Item className="pb-3 border-bottom">
-                                            <strong>{`${type[0].toUpperCase() + type.slice(1)} Date:`}</strong>{" "}
-                                            {/* Use formatPartialDate for all date types */}
-                                            {formatPartialDate(
-                                                person[`${type}Year`],
-                                                person[`${type}Month`],
-                                                person[`${type}Day`]
-                                            )}
+                                            <strong>{type[0].toUpperCase() + type.slice(1)} Date:</strong>{" "}
+                                            {formatPartialDate(person[`${type}Year`], person[`${type}Month`], person[`${type}Day`])}
                                         </ListGroup.Item>
                                     </React.Fragment>
                                 ))}
@@ -291,8 +256,8 @@ const PersonDetail = () => {
                                                     </Link>
                                                 ) : "N/A"}<br />
                                                 {/* Assuming startDate and endDate for occupations are still full dates from backend */}
-                                                <strong>Start Date:</strong> {occ.startDate ? occ.startDate : "N/A"}<br />
-                                                <strong>End Date:</strong> {occ.endDate ? occ.endDate : "N/A"}
+                                                <strong>Start Date:</strong> {occ.startYear ? occ.startYear : "N/A"}<br />
+                                                <strong>End Date:</strong> {occ.endYear ? occ.endYear : "N/A"}
                                             </ListGroup.Item>
                                         ))}
                                     </ListGroup>

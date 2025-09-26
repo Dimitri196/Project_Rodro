@@ -43,4 +43,7 @@ public class CountryEntity {
     @OneToMany(mappedBy = "country", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<MilitaryOrganizationEntity> militaryOrganizations = new ArrayList<>();
+
+    @Column
+    private String countryFlagImgUrl;
 }

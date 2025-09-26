@@ -8,8 +8,8 @@ import cz.rodro.entity.repository.InstitutionRepository;
 import cz.rodro.entity.repository.LocationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,14 +18,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InstitutionServiceImpl implements InstitutionService {
 
-    @Autowired
-    private InstitutionRepository institutionRepository;
-
-    @Autowired
-    private InstitutionMapper institutionMapper;
-
-    @Autowired
-    private LocationRepository locationRepository;
+    private final InstitutionRepository institutionRepository;
+    private final InstitutionMapper institutionMapper;
+    private final LocationRepository locationRepository;
 
     @Override
     public InstitutionDTO getInstitutionById(Long id) {
@@ -42,6 +37,7 @@ public class InstitutionServiceImpl implements InstitutionService {
     }
 
     @Override
+    @Transactional
     public InstitutionDTO createInstitution(InstitutionDTO dto) {
         if (dto.getInstitutionLocation() == null || dto.getInstitutionLocation().getId() == null) {
             throw new IllegalArgumentException("Institution location ID must be provided");
@@ -57,20 +53,23 @@ public class InstitutionServiceImpl implements InstitutionService {
         return institutionMapper.toDto(saved);
     }
 
+    @Transactional
     @Override
     public InstitutionDTO updateInstitution(Long id, InstitutionDTO dto) {
         InstitutionEntity existing = institutionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Institution not found with id: " + id));
 
-        // Use the mapper to update the entity from the DTO,
-        // which handles all fields including nested ones like location.
-        // This is a much cleaner and more maintainable approach.
+        // Use the mapper to update the entity. This will handle all fields,
+        // including the new sealImageUrl, without manual assignment.
         institutionMapper.updateInstitutionEntity(dto, existing);
 
-        // MapStruct will handle finding the new LocationEntity based on the DTO's ID
-        // because the mapper has 'uses = {LocationMapper.class}' configured.
-        // You only need to manually handle setting the location if your mapper
-        // wasn't configured to do so. In this case, it is.
+        if (dto.getInstitutionLocation() != null && dto.getInstitutionLocation().getId() != null) {
+            LocationEntity location = locationRepository.findById(dto.getInstitutionLocation().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + dto.getInstitutionLocation().getId()));
+            existing.setInstitutionLocation(location);
+        } else {
+            existing.setInstitutionLocation(null);
+        }
 
         InstitutionEntity updated = institutionRepository.save(existing);
         return institutionMapper.toDto(updated);

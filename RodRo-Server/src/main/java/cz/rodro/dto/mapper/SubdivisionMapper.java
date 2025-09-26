@@ -10,7 +10,9 @@ import org.mapstruct.MappingTarget;
 public interface SubdivisionMapper {
 
     @Mapping(target = "districtName", source = "district.districtName")
-    @Mapping(target = "administrativeCenterName", source = "administrativeCenter.locationName")  // Mapping admin center name
+    @Mapping(target = "administrativeCenterName", source = "administrativeCenter.locationName")
+    @Mapping(target = "district.provinceId", source = "district.province.id")   // add provinceId
+    @Mapping(target = "district.countryId", source = "district.province.country.id") // add countryId
     SubdivisionDTO toSubdivisionDTO(SubdivisionEntity entity);
 
     SubdivisionEntity toSubdivisionEntity(SubdivisionDTO dto);

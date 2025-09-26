@@ -8,80 +8,62 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import java.util.List;
+
 /**
  * Mapper interface for converting between {@link SourceEntity} and {@link SourceDTO}.
- * Handles mapping of basic fields and specifically addresses bidirectional relationships
- * to prevent StackOverflowError during JSON serialization.
+ *
+ * <p>Uses MapStruct to generate the implementation automatically at build time.
+ * Takes care of flattening relationships (e.g., Location → ID & name) to avoid recursion.</p>
  */
 @Mapper(
         componentModel = "spring",
-        // No 'uses' for LocationMapper here, as we are directly mapping location ID/name
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
 )
 public interface SourceMapper {
 
     /**
      * Converts a {@link SourceDTO} to a {@link SourceEntity}.
-     * Maps sourceLocationId to sourceLocation (entity).
-     * Note: The actual LocationEntity resolution by ID should ideally happen in the service layer
-     * before saving, as MapStruct's direct mapping from ID to entity reference might not always
-     * fetch the managed entity correctly in all contexts.
-     *
-     * @param source The SourceDTO to convert.
-     * @return The converted SourceEntity.
+     * <p>Maps {@code locationId} to a stub {@link LocationEntity}.
+     * The service layer should replace this stub with a managed entity before persisting.</p>
      */
-    @Mapping(target = "sourceLocation", source = "sourceLocationId") // Map ID to entity
+    @Mapping(target = "location", source = "locationId")
     SourceEntity toSourceEntity(SourceDTO source);
 
     /**
      * Converts a {@link SourceEntity} to a {@link SourceDTO}.
-     * Maps sourceLocation (entity) to sourceLocationId and sourceLocationName.
-     * This explicitly breaks the recursion by not mapping the full LocationDTO object.
-     *
-     * @param source The SourceEntity to convert.
-     * @return The converted SourceDTO.
+     * Breaks recursion by only mapping the location ID and name instead of the full LocationEntity.
      */
-    @Mapping(target = "sourceLocationId", source = "sourceLocation.id")
-    @Mapping(target = "sourceLocationName", source = "sourceLocation.locationName")
-    // Removed: @Mapping(target = "sourceLocation", ignore = true) // This was causing the error as SourceDTO doesn't have 'sourceLocation'
+    @Mapping(target = "locationId", source = "location.id")
+    @Mapping(target = "locationName", source = "location.locationName")
     SourceDTO toSourceDTO(SourceEntity source);
 
     /**
-     * Updates an existing {@link SourceEntity} with data from a {@link SourceDTO}.
+     * Updates an existing {@link SourceEntity} with values from {@link SourceDTO}.
+     * <p>Does not update the entity ID.</p>
      *
-     * @param dto The SourceDTO containing updated data.
-     * @param entity The target SourceEntity to update.
+     * @param dto    The DTO containing new values.
+     * @param entity The entity to update.
      */
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "sourceLocation", source = "sourceLocationId") // Update sourceLocation based on ID
+    @Mapping(target = "location", ignore = true) // safer: update location explicitly in service
     void updateSourceEntity(SourceDTO dto, @MappingTarget SourceEntity entity);
 
     /**
-     * Helper method for MapStruct to map a Long ID to a LocationEntity.
-     * This method will be used internally by MapStruct when mapping sourceLocationId to sourceLocation.
-     * It assumes that a LocationRepository is available to fetch or reference the LocationEntity.
-     *
-     * IMPORTANT: This method should ideally be implemented by a concrete mapper class or
-     * in a separate helper class that MapStruct can use. For simplicity in the interface,
-     * we're declaring it here. The actual implementation (e.g., using `locationRepository.getReferenceById(id)`)
-     * would be provided by MapStruct's generated implementation or a custom mapper.
-     *
-     * For a Spring component model, you would typically inject the repository.
-     * MapStruct will automatically generate an implementation for this method if
-     * it can find a suitable bean.
-     *
-     * @param id The ID of the LocationEntity.
-     * @return A reference to the LocationEntity with the given ID.
+     * Maps a location ID to a stub {@link LocationEntity}.
+     * Prevents full fetch unless service resolves it explicitly.
      */
     default LocationEntity map(Long id) {
         if (id == null) {
             return null;
         }
-        // This is a placeholder. In a real application, you'd inject LocationRepository
-        // and use locationRepository.getReferenceById(id) or findById(id).
-        // MapStruct will try to auto-wire this.
         LocationEntity location = new LocationEntity();
         location.setId(id);
         return location;
     }
+
+    /**
+     * Converts a list of {@link SourceEntity} to a list of {@link SourceDTO}.
+     */
+    List<SourceDTO> toSourceDTOList(List<SourceEntity> sources);
 }

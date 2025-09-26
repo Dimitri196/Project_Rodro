@@ -43,4 +43,10 @@ public class MilitaryOrganizationEntity {
     // You might also have a OneToMany back to MilitaryRankEntity
     @OneToMany(mappedBy = "militaryOrganization", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MilitaryRankEntity> militaryRanks = new ArrayList<>();
+
+    private String organizationImageUrl;
+
+    private String organizationDescription;
+
+
 }

@@ -9,9 +9,11 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface DistrictMapper {
 
-    @Mapping(target = "province", ignore = true)  // Prevent circular reference
+    @Mapping(target = "provinceId", source = "province.id")
+    @Mapping(target = "countryId", source = "province.country.id")
     DistrictDTO toDistrictDTO(DistrictEntity districtEntity);
 
+    // When converting back, we ignore province here (will be set in service logic)
     @Mapping(target = "province", ignore = true)
     DistrictEntity toDistrictEntity(DistrictDTO districtDTO);
 

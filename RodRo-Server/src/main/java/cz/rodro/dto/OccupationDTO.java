@@ -21,5 +21,6 @@ public class OccupationDTO {
     private String description;
     private InstitutionDTO institution;
     private List<PersonOccupationDTO> personOccupations;
+    private String personImageUrl;
 
 }

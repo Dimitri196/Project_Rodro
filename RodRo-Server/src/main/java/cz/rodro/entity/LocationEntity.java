@@ -3,6 +3,7 @@ package cz.rodro.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import cz.rodro.constant.SettlementType;
+import cz.rodro.validation.PastOrPresentYear;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -11,7 +12,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.List;
 
-@Entity(name = "location") // Using 'name' attribute for entity name
+/**
+ * Entity representing a geographical location.
+ * <p>
+ * A Location may represent a city, town, village, parish, or other settlement type.
+ * It can have historical records, associated sources, parishes, persons, cemeteries, and institutions.
+ * </p>
+ */
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,55 +30,99 @@ import java.util.List;
 )
 public class LocationEntity {
 
+    /**
+     * Unique identifier of the location.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Name of the location (e.g., "Prague", "Brno").
+     */
     @Column(nullable = false)
     @NotNull
     private String locationName;
 
+    /**
+     * Year the location was established.
+     * Must not be in the future.
+     */
     @Column
+    @PastOrPresentYear
     private Integer establishmentYear;
 
+    /**
+     * Latitude of the location (-90 to 90 degrees).
+     */
     @Column
     private Double gpsLatitude;
 
+    /**
+     * Longitude of the location (-180 to 180 degrees).
+     */
     @Column
     private Double gpsLongitude;
 
+    /**
+     * Type of settlement (e.g., VILLAGE, CITY, TOWN).
+     */
     @Enumerated(EnumType.STRING)
     @Column(name = "settlementType", nullable = false)
     private SettlementType settlementType;
 
-    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
+    /**
+     * Historical records associated with this location.
+     */
+    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<LocationHistoryEntity> locationHistories;
 
-    @OneToMany(mappedBy = "sourceLocation", cascade = CascadeType.ALL, orphanRemoval = true)
+    /**
+     * Sources documenting this location.
+     */
+    @OneToMany(mappedBy = "location", fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<SourceEntity> sources;
 
-    @OneToMany(mappedBy = "birthPlace")
+    /**
+     * Persons born at this location.
+     */
+    @OneToMany(mappedBy = "birthPlace", fetch = FetchType.LAZY)
     @JsonBackReference
     private List<PersonEntity> births;
 
-    @OneToMany(mappedBy = "deathPlace")
+    /**
+     * Persons who died at this location.
+     */
+    @OneToMany(mappedBy = "deathPlace", fetch = FetchType.LAZY)
     @JsonBackReference
     private List<PersonEntity> deaths;
 
-    // This is the CORRECT relationship: it links to the join table entity.
-    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
+    /**
+     * Parish locations associated with this location.
+     */
+    @OneToMany(mappedBy = "location", fetch = FetchType.LAZY)
     @JsonBackReference
     private List<ParishLocationEntity> parishLocations;
 
-    // Cemeteries in this location
-    @OneToMany(mappedBy = "cemeteryLocation")
+    /**
+     * Cemeteries located at this location.
+     */
+    @OneToMany(mappedBy = "cemeteryLocation", fetch = FetchType.LAZY)
     @JsonBackReference
     private List<CemeteryEntity> cemeteries;
 
-    // Institutions in this location
-    @OneToMany(mappedBy = "institutionLocation")
+    /**
+     * Institutions located at this location.
+     */
+    @OneToMany(mappedBy = "institutionLocation", fetch = FetchType.LAZY)
     @JsonBackReference
     private List<InstitutionEntity> institutions;
+
+    /**
+     * URL of an image representing this location.
+     */
+    @Column(length = 2000)
+    private String locationImageUrl;
 }

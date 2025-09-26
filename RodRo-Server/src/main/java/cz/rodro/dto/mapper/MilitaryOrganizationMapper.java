@@ -14,11 +14,14 @@ public interface MilitaryOrganizationMapper {
 
     @Mapping(target = "country.provinces", ignore = true)
     @Mapping(target = "structures", source = "structures")
+    @Mapping(source = "organizationImageUrl", target = "organizationImageUrl")
+    @Mapping(source = "organizationDescription", target = "organizationDescription")
     MilitaryOrganizationDTO toMilitaryOrganizationDTO(MilitaryOrganizationEntity entity);
 
     @Mapping(target = "country", ignore = true)
     @Mapping(target = "militaryRanks", ignore = true)
     @Mapping(target = "structures", source = "structures")
+    @Mapping(source = "organizationDescription", target = "organizationDescription")
     MilitaryOrganizationEntity toMilitaryOrganizationEntity(MilitaryOrganizationDTO dto);
 
     void updateMilitaryOrganizationEntity(MilitaryOrganizationDTO dto, @MappingTarget MilitaryOrganizationEntity entity);

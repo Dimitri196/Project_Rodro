@@ -11,8 +11,8 @@ public interface ParishLocationMapper {
 
     @Mapping(source = "parish.id", target = "parishId")
     @Mapping(source = "location.id", target = "locationId")
-    @Mapping(source = "parish.parishName", target = "parishName")
-    @Mapping(source = "location.locationName", target = "locationName")
+    @Mapping(target = "parishName", expression = "java(entity.getParish() != null ? entity.getParish().getName() : null)")
+    @Mapping(target = "locationName", expression = "java(entity.getLocation() != null ? entity.getLocation().getLocationName() : null)")
     ParishLocationDTO toDto(ParishLocationEntity entity);
 
     @Mapping(target = "parish", ignore = true)

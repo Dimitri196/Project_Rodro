@@ -39,4 +39,7 @@ public class InstitutionEntity {
     @JsonManagedReference
     private List<OccupationEntity> occupations = new ArrayList<>();
 
+    @Column(columnDefinition = "TEXT")
+    private String sealImageUrl;
+
 }

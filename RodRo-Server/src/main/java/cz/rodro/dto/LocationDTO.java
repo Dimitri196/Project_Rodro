@@ -1,6 +1,7 @@
 package cz.rodro.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import cz.rodro.constant.SettlementType;
+import cz.rodro.validation.PastOrPresentYear;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,37 +9,77 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Data Transfer Object (DTO) representing a Location entity.
+ * <p>
+ * A Location represents a geographical or administrative place
+ * (e.g., city, village, parish) with additional metadata such as
+ * establishment year, GPS coordinates, settlement type, and related
+ * historical and source information.
+ * </p>
+ */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class LocationDTO {
 
-    @JsonProperty("_id") // Maps the JSON field "_id" to the Java field "id"
+    /**
+     * Unique identifier of the location.
+     */
+    @JsonProperty("_id")
     private Long id;
 
+    /**
+     * Name of the location (e.g., "Prague", "Brno").
+     */
     @NotBlank(message = "Location name cannot be empty")
     @Size(max = 255, message = "Location name cannot exceed 255 characters")
     private String locationName;
 
+    /**
+     * Year of establishment of the location.
+     */
     @Min(value = 0, message = "Establishment year cannot be negative")
-    @Max(value = 9999, message = "Establishment year cannot exceed 9999")
-    private Integer establishmentYear; // Changed to Integer for just the year
+    @PastOrPresentYear
+    private Integer establishmentYear;
 
-    @Min(value = -90, message = "Latitude must be between -90 and 90")
-    @Max(value = 90, message = "Latitude must be between -90 and 90")
-    private Double gpsLatitude; // Changed to Double for numerical GPS
+    /**
+     * Latitude of the location in decimal degrees (-90.0 to 90.0).
+     */
+    @DecimalMin(value = "-90.0", inclusive = true, message = "Latitude must be >= -90.0")
+    @DecimalMax(value = "90.0", inclusive = true, message = "Latitude must be <= 90.0")
+    private Double gpsLatitude;
 
-    @Min(value = -180, message = "Longitude must be between -180 and 180")
-    @Max(value = 180, message = "Longitude must be between -180 and 180")
-    private Double gpsLongitude; // Changed to Double for numerical GPS
+    /**
+     * Longitude of the location in decimal degrees (-180.0 to 180.0).
+     */
+    @DecimalMin(value = "-180.0", inclusive = true, message = "Longitude must be >= -180.0")
+    @DecimalMax(value = "180.0", inclusive = true, message = "Longitude must be <= 180.0")
+    private Double gpsLongitude;
 
+    /**
+     * Type of settlement (e.g., VILLAGE, CITY, TOWN).
+     */
     @NotNull(message = "Settlement type cannot be null")
     private SettlementType settlementType;
 
-    // Assuming LocationHistoryDTO and SourceDTO exist and are correctly defined
-    private List<LocationHistoryDTO> locationHistories; // Renamed to match entity's plural form
+    /**
+     * Historical changes related to this location (renaming, administrative changes).
+     */
+    private List<LocationHistoryDTO> locationHistories;
 
-    private List<SourceDTO> sources; // Renamed to match entity's plural form and standard naming
+    /**
+     * Sources documenting this location.
+     */
+    private List<SourceDTO> sources;
 
-    private List<ParishDTO> parishes; // Renamed to match entity's plural form and standard naming
+    /**
+     * Parishes associated with this location.
+     */
+    private List<ParishDTO> parishes;
+
+    /**
+     * URL of an image representing the location.
+     */
+    private String locationImageUrl;
 }

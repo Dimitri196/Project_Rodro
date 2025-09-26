@@ -32,6 +32,9 @@ public class ProvinceEntity {
     @OneToMany(mappedBy = "province", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<DistrictEntity> districts = new ArrayList<>();
+
+    @Column
+    private String provinceFlagImgUrl;
 }
 
 

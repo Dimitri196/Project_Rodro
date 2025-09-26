@@ -11,40 +11,48 @@ import org.springframework.stereotype.Repository;
 
 /**
  * Repository interface for accessing {@link SourceEntity} data.
- * Provides methods for CRUD operations and custom queries related to source entities,
- * with an emphasis on performance optimization for related collections.
+ *
+ * <p>Includes custom queries optimized for list views using {@link SourceListProjection}.</p>
  */
 @Repository
 public interface SourceRepository extends JpaRepository<SourceEntity, Long> {
 
     /**
      * Finds a paginated and searchable list of sources,
-     * returning them as a lightweight SourceListProjection.
-     * This query selects specific fields to avoid N+1 problems and
-     * reduce the data payload for list views.
+     * returning them as lightweight {@link SourceListProjection}.
      *
-     * @param searchTerm An optional term to filter by source title, reference, or location name.
-     * If null or empty, no text filtering is applied.
-     * @param pageable   Pagination and sorting information (page number, size, sort order).
-     * @return A Page of SourceListProjection containing the requested subset of data.
+     * <p>Only specific fields are selected to reduce payload size
+     * and avoid N+1 problems with relationships.</p>
+     *
+     * @param searchTerm Optional search term for filtering by title, reference, or location name.
+     * @param pageable   Pagination and sorting details.
+     * @return A page of projections with the requested subset of data.
      */
-    @Query(value = "SELECT s.id AS id, s.sourceTitle AS sourceTitle, s.sourceReference AS sourceReference, " +
-            "s.sourceDescription AS sourceDescription, s.sourceUrl AS sourceUrl, s.sourceType AS sourceType, " +
-            "sl.id AS sourceLocationId, sl.locationName AS sourceLocationName " +
-            "FROM SourceEntity s " +
-            "LEFT JOIN s.sourceLocation sl " +
-            "WHERE (:searchTerm IS NULL OR :searchTerm = '' OR " +
-            "       LOWER(s.sourceTitle) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-            "       LOWER(s.sourceReference) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-            // Removed: LOWER(s.sourceDescription) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
-            "       LOWER(sl.locationName) LIKE LOWER(CONCAT('%', :searchTerm, '%')))",
-            countQuery = "SELECT COUNT(s.id) FROM SourceEntity s " +
-                    "LEFT JOIN s.sourceLocation sl " +
-                    "WHERE (:searchTerm IS NULL OR :searchTerm = '' OR " +
-                    "       LOWER(s.sourceTitle) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-                    "       LOWER(s.sourceReference) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-                    // Removed: LOWER(s.sourceDescription) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
-                    "       LOWER(sl.locationName) LIKE LOWER(CONCAT('%', :searchTerm, '%')))"
+    @Query(value = """
+            SELECT s.id AS id, 
+                   s.title AS title, 
+                   s.reference AS reference,
+                   s.description AS description, 
+                   s.url AS url, 
+                   s.type AS type,
+                   l.id AS locationId, 
+                   l.locationName AS locationName
+            FROM SourceEntity s
+            LEFT JOIN s.location l
+            WHERE (:searchTerm IS NULL OR :searchTerm = '' OR
+                   LOWER(s.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
+                   LOWER(s.reference) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
+                   LOWER(l.locationName) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
+            """,
+            countQuery = """
+            SELECT COUNT(s.id)
+            FROM SourceEntity s
+            LEFT JOIN s.location l
+            WHERE (:searchTerm IS NULL OR :searchTerm = '' OR
+                   LOWER(s.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
+                   LOWER(s.reference) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR
+                   LOWER(l.locationName) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
+            """
     )
     Page<SourceListProjection> findAllSourcesProjected(
             @Param("searchTerm") String searchTerm,

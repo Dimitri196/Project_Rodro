@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { apiGet } from '../utils/api';
+import React, { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { apiGet } from "../utils/api";
 import {
   Container,
+  Row,
+  Col,
   Card,
   ListGroup,
   Alert,
   Button,
   Spinner,
-} from 'react-bootstrap';
+} from "react-bootstrap";
 
 const ProvinceDetail = () => {
   const { countryId, provinceId } = useParams();
@@ -32,7 +34,7 @@ const ProvinceDetail = () => {
         const countryData = await apiGet(`/api/countries/${countryId}`);
         setCountry(countryData);
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error("Error fetching data:", err);
         setError(`Error loading province details: ${err.message || err}`);
       } finally {
         setLoading(false);
@@ -63,12 +65,16 @@ const ProvinceDetail = () => {
   }
 
   const {
-    provinceName = 'N/A',
+    provinceName = "N/A",
+    provinceFlagImgUrl = null,
     districts = [],
   } = province || {};
 
   const countryName =
-    country?.countryNameInPolish || province?.country?.countryNameInPolish || 'Unknown Country';
+    country?.countryNameInEnglish ||
+    country?.countryNameInPolish ||
+    province?.country?.countryNameInEnglish ||
+    "Unknown Country";
 
   return (
     <Container className="mt-5">
@@ -82,46 +88,109 @@ const ProvinceDetail = () => {
         ← Back to {countryName}
       </Button>
 
-      {/* Province Card */}
-      <Card>
-        <Card.Body>
-          <Card.Title as="h3">{provinceName}</Card.Title>
-          <ListGroup variant="flush" className="mt-3">
-            <ListGroup.Item>
-              <strong>Province Name:</strong> {provinceName}
-            </ListGroup.Item>
-            <ListGroup.Item>
-              <strong>Country:</strong> {countryName}
-            </ListGroup.Item>
-          </ListGroup>
-        </Card.Body>
-      </Card>
-
-      {/* Districts List */}
-      <Card className="mt-4">
-        <Card.Body>
-          <Card.Title as="h4">Districts</Card.Title>
-          {districts.length > 0 ? (
-            <ListGroup variant="flush">
-              {districts.map((district) => (
-                <ListGroup.Item key={district._id}>
-                  <Link
-                    to={`/countries/${countryId}/provinces/${provinceId}/districts/${district._id}`}
-                    className="text-decoration-none"
-                  >
-                    {district.districtName}
-                  </Link>
+      {/* Top Info Row */}
+      <Row className="mb-5">
+        {/* Info Card */}
+        <Col md={7} lg={8}>
+          <Card className="shadow-lg border-0 rounded-4 h-100">
+            <Card.Header
+              as="h5"
+              className="bg-primary text-white py-3 rounded-top-4"
+            >
+              <i className="fas fa-map me-2"></i>Province Details
+            </Card.Header>
+            <Card.Body className="p-4">
+              <h3 className="fw-bold mb-4">{provinceName}</h3>
+              <ListGroup variant="flush">
+                <ListGroup.Item>
+                  <strong>Province Name:</strong> {provinceName}
                 </ListGroup.Item>
-              ))}
-            </ListGroup>
-          ) : (
-            <p className="mt-3">No districts available for this province.</p>
-          )}
-        </Card.Body>
-      </Card>
+                <ListGroup.Item>
+                  <strong>Country:</strong>{" "}
+                  {country ? (
+                    <Link
+                      to={`/countries/show/${country._id || countryId}`}
+                      className="text-decoration-none"
+                    >
+                      {countryName}
+                    </Link>
+                  ) : (
+                    "Unknown"
+                  )}
+                </ListGroup.Item>
+              </ListGroup>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* Flag Card */}
+        <Col md={5} lg={4} className="mt-4 mt-md-0">
+          <Card className="shadow-lg border-0 rounded-4 h-100">
+            <Card.Header
+              as="h5"
+              className="bg-primary text-white py-3 rounded-top-4"
+            >
+              <i className="fas fa-flag me-2"></i>Province Flag
+            </Card.Header>
+            <Card.Body className="p-4 d-flex justify-content-center align-items-center">
+              {provinceFlagImgUrl ? (
+                <img
+                  src={provinceFlagImgUrl}
+                  alt={`${provinceName} flag`}
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                    maxHeight: "250px",
+                    borderRadius: "0.5rem",
+                  }}
+                  className="img-fluid"
+                />
+              ) : (
+                <div className="text-center text-muted">
+                  <i className="fas fa-image fa-3x mb-3"></i>
+                  <p>No flag image available.</p>
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Districts */}
+      <Row>
+        <Col md={12}>
+          <Card className="shadow-sm border-0 rounded-4">
+            <Card.Header
+              as="h5"
+              className="bg-success text-white py-3 rounded-top-4"
+            >
+              <i className="fas fa-map-marked-alt me-2"></i>Districts
+            </Card.Header>
+            <Card.Body className="p-4">
+              {districts.length > 0 ? (
+                <ListGroup variant="flush">
+                  {districts.map((district) => (
+                    <ListGroup.Item key={district._id}>
+                      <Link
+                        to={`/countries/${countryId}/provinces/${provinceId}/districts/${district._id}`}
+                        className="text-decoration-none"
+                      >
+                        {district.districtName}
+                      </Link>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              ) : (
+                <p className="mt-3 text-muted">
+                  No districts available for this province.
+                </p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </Container>
   );
 };
 
 export default ProvinceDetail;
-

@@ -31,15 +31,15 @@ public class DistrictServiceImpl implements DistrictService {
 
     @Override
     public DistrictDTO addDistrict(DistrictDTO districtDTO) {
-        // Find the province (country can be inferred from province)
-        ProvinceEntity provinceEntity = provinceRepository.findById(districtDTO.getProvince().getId())
+        // Get province directly from provinceId
+        ProvinceEntity provinceEntity = provinceRepository.findById(districtDTO.getProvinceId())
                 .orElseThrow(() -> new NotFoundException("Province not found"));
 
-        // Create District entity and set relationships
+        // Map DTO to entity and set province
         DistrictEntity districtEntity = districtMapper.toDistrictEntity(districtDTO);
         districtEntity.setProvince(provinceEntity);
 
-        // Save and return the DTO
+        // Save
         districtEntity = districtRepository.save(districtEntity);
         return districtMapper.toDistrictDTO(districtEntity);
     }
@@ -57,12 +57,12 @@ public class DistrictServiceImpl implements DistrictService {
         DistrictEntity districtEntity = districtRepository.findById(districtId)
                 .orElseThrow(() -> new NotFoundException("District not found"));
 
-        // Update fields
+        // Update fields via mapper
         districtMapper.updateDistrictEntity(districtDTO, districtEntity);
 
-        // Update province if needed
-        if (districtDTO.getProvince() != null) {
-            ProvinceEntity provinceEntity = provinceRepository.findById(districtDTO.getProvince().getId())
+        // Update province if present
+        if (districtDTO.getProvinceId() != null) {
+            ProvinceEntity provinceEntity = provinceRepository.findById(districtDTO.getProvinceId())
                     .orElseThrow(() -> new NotFoundException("Province not found"));
             districtEntity.setProvince(provinceEntity);
         }
@@ -85,5 +85,4 @@ public class DistrictServiceImpl implements DistrictService {
                 .map(districtMapper::toDistrictDTO)
                 .collect(Collectors.toList());
     }
-
 }

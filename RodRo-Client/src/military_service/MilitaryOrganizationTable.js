@@ -137,18 +137,23 @@ const MilitaryOrganizationTable = ({ items, deleteOrganization }) => {
                       <td className="py-2 px-4">{item.notes || "-"}</td>
                       {isAdmin && (
                         <td className="py-2 px-4 text-center">
-                          <div className="d-flex justify-content-center gap-2">
-                            <Link to={`/militaryOrganizations/show/${item._id}`} className="btn btn-sm btn-info">
-                              <i className="fas fa-eye"></i> View
-                            </Link>
-                            <Link to={`/militaryOrganizations/edit/${item._id}`} className="btn btn-sm btn-warning">
-                              <i className="fas fa-edit"></i> Edit
-                            </Link>
-                            <Button onClick={() => deleteOrganization(item._id)} className="btn btn-sm btn-danger">
-                              <i className="fas fa-trash-alt"></i> Delete
-                            </Button>
-                          </div>
-                        </td>
+  <div className="d-flex justify-content-center gap-2">
+    <Link to={`/militaryOrganizations/show/${item._id}`} className="btn btn-sm btn-info">
+      <i className="fas fa-eye"></i> View
+    </Link>
+
+    {isAdmin && (
+      <>
+        <Link to={`/militaryOrganizations/edit/${item._id}`} className="btn btn-sm btn-warning">
+          <i className="fas fa-edit"></i> Edit
+        </Link>
+        <Button onClick={() => deleteOrganization(item._id)} className="btn btn-sm btn-danger">
+          <i className="fas fa-trash-alt"></i> Delete
+        </Button>
+      </>
+    )}
+  </div>
+</td>
                       )}
                     </tr>
                   ))

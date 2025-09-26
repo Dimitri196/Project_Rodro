@@ -98,7 +98,7 @@ public class LocationServiceImpl implements LocationService {
             List<SourceEntity> sources = locationDTO.getSources().stream()
                     .map(sourceDTO -> {
                         SourceEntity sourceEntity = sourceMapper.toSourceEntity(sourceDTO);
-                        sourceEntity.setSourceLocation(newLocationEntity); // Use the effectively final newLocationEntity
+                        sourceEntity.setLocation(newLocationEntity); // Use the effectively final newLocationEntity
                         return sourceEntity;
                     })
                     .collect(Collectors.toList());
@@ -170,7 +170,7 @@ public class LocationServiceImpl implements LocationService {
             if (incomingSourceDTO.getId() == null) {
                 // New source - assuming SourceDTO can create a new SourceEntity
                 SourceEntity newSource = sourceMapper.toSourceEntity(incomingSourceDTO);
-                newSource.setSourceLocation(existingLocation); // Set parent
+                newSource.setLocation(existingLocation); // Set parent
                 currentSources.add(newSource);
             } else {
                 // Existing source - find and update

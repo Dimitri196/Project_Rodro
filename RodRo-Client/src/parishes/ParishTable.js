@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { normalizeString } from "../utils/stringUtils";
-import { useSession } from "../contexts/session"; // ✅ Added
+import { useSession } from "../contexts/session";
 
 const ParishTable = ({ label, items, deleteParish }) => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -9,15 +9,15 @@ const ParishTable = ({ label, items, deleteParish }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [sortAsc, setSortAsc] = useState(true);
 
-    const { session } = useSession(); // ✅ Added
-    const isAdmin = session.data?.isAdmin === true; // ✅ Added
+    const { session } = useSession();
+    const isAdmin = session.data?.isAdmin === true;
 
+    // Filter and sort items
     const filteredItems = useMemo(() => {
         const filtered = items.filter(item =>
             normalizeString(item.name).includes(normalizeString(searchTerm)) ||
-            normalizeString(item.churchName).includes(normalizeString(searchTerm)) ||
-            normalizeString(item.cemeteryName).includes(normalizeString(searchTerm)) ||
-            normalizeString(item.parishLocation?.locationName || "").includes(normalizeString(searchTerm))
+            normalizeString(item.mainChurchName || "").includes(normalizeString(searchTerm)) ||
+            normalizeString(item.location?.locationName || "").includes(normalizeString(searchTerm))
         );
 
         return filtered.sort((a, b) => {
@@ -36,7 +36,6 @@ const ParishTable = ({ label, items, deleteParish }) => {
         setItemsPerPage(parseInt(e.target.value, 10) || 1);
         setCurrentPage(1);
     };
-
     const handleSortToggle = () => setSortAsc(prev => !prev);
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
@@ -63,7 +62,7 @@ const ParishTable = ({ label, items, deleteParish }) => {
     return (
         <div className="container my-4">
             <div className="mb-3 d-flex justify-content-between align-items-center">
-                <h4>{label} {items.length}</h4>
+                <h4>{label} ({items.length})</h4>
                 {isAdmin && (
                     <Link to="/parishes/create" className="btn btn-success">Create Parish</Link>
                 )}
@@ -74,7 +73,7 @@ const ParishTable = ({ label, items, deleteParish }) => {
                 <input
                     type="text"
                     className="form-control w-50"
-                    placeholder="Search parishes, churches, cemeteries, or locations..."
+                    placeholder="Search parishes, churches, or locations..."
                     value={searchTerm}
                     onChange={handleSearchChange}
                 />
@@ -110,19 +109,19 @@ const ParishTable = ({ label, items, deleteParish }) => {
                             <th>Parish Name</th>
                             <th>Church Name</th>
                             <th>Location Name</th>
-                            {isAdmin && <th colSpan={3}>Actions</th>}
+                            {isAdmin && <th>Actions</th>}
                         </tr>
                     </thead>
                     <tbody>
-                        {currentItems.map((item, index) => (
-                            <tr key={item._id}>
+                        {currentItems.length > 0 ? currentItems.map((item, index) => (
+                            <tr key={item.id || index}>
                                 <td>{startIndex + index + 1}</td>
-                                <td>{item.parishName}</td>
-                                <td>{item.parishMainChurchName || "-"}</td>
+                                <td>{item.name}</td>
+                                <td>{item.mainChurchName || "-"}</td>
                                 <td>
-                                    {item.parishLocation ? (
-                                        <Link to={`/locations/show/${item.parishLocation._id}`}>
-                                            {item.parishLocation.locationName}
+                                    {item.location ? (
+                                        <Link to={`/locations/show/${item.location._id}`}>
+                                            {item.location.locationName}
                                         </Link>
                                     ) : "-"}
                                 </td>
@@ -138,10 +137,9 @@ const ParishTable = ({ label, items, deleteParish }) => {
                                     </td>
                                 )}
                             </tr>
-                        ))}
-                        {currentItems.length === 0 && (
+                        )) : (
                             <tr>
-                                <td colSpan={isAdmin ? "7" : "4"} className="text-center">No results found.</td>
+                                <td colSpan={isAdmin ? "5" : "4"} className="text-center">No results found.</td>
                             </tr>
                         )}
                     </tbody>

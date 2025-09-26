@@ -15,8 +15,10 @@ import {
   Spinner,
   NavDropdown,
   Image,
-  Button, // Added Button import for logout
+  Button,
 } from "react-bootstrap";
+
+import SearchResultsPage from "./components/SearchResultsPage";
 
 // Import pages
 import HomePage from "./HomePage";
@@ -28,7 +30,6 @@ import TermsOfService from "./TermsOfService";
 import ArticleIndex from "./articles/ArticleIndex";
 import ArticleDetail from "./articles/ArticleDetail";
 import ArticleForm from "./articles/ArticleForm";
-
 
 // Persons
 import PersonIndex from "./persons/PersonIndex";
@@ -68,6 +69,7 @@ import SubdivisionDetail from "./countries/SubdivisionDetail";
 // Institutions
 import InstitutionIndex from "./institutions/InstitutionIndex";
 import InstitutionDetail from "./institutions/InstitutionDetail";
+import InstitutionForm from "./institutions/InstitutionForm";
 
 // Occupations
 import OccupationIndex from "./occupations/OccupationIndex";
@@ -80,17 +82,24 @@ import SourceDetail from "./sources/SourceDetail";
 // Military
 import MilitaryOrganizationIndex from "./military_service/MilitaryOrganizationIndex";
 import MilitaryOrganizationDetail from "./military_service/MilitaryOrganizationDetail";
+import MilitaryOrganizationForm from "./military_service/MilitaryOrganizationForm";
+
 import MilitaryStructureIndex from "./military_service/MilitaryStructureIndex";
 import MilitaryStructureDetail from "./military_service/MilitaryStructureDetail";
+
 import MilitaryRankIndex from "./military_service/MilitaryRankIndex";
 import MilitaryRankDetail from "./military_service/MilitaryRankDetail";
+import MilitaryRankForm from "./military_service/MilitaryRankForm";
 
 // Family Tree
 import FamilyTreeComponent from "./components/FamilyTreeComponent";
 
-// Auth
+
 import RegistrationPage from "./registration/RegistrationPage";
-import LoginPage from "./login/LoginPage";
+import LoginPage  from "./login/LoginPage";
+
+
+
 import ContactMessage from "./contact_messages/ContactMessage";
 
 import { useSession } from "./contexts/session";
@@ -98,13 +107,13 @@ import { apiDelete } from "./utils/api";
 
 export function App() {
   const { session, setSession } = useSession();
-  const [expanded, setExpanded] = useState(false); // 👈 Add collapse control
+  const [expanded, setExpanded] = useState(false);
 
   const handleLogoutClick = () => {
     apiDelete("/api/auth").finally(() =>
       setSession({ data: null, status: "unauthenticated" })
     );
-    setExpanded(false); // 👈 Collapse menu after logout
+    setExpanded(false);
   };
 
   return (
@@ -114,7 +123,7 @@ export function App() {
         <Navbar bg="dark" variant="dark" expand="lg" className="shadow-sm" expanded={expanded} onToggle={() => setExpanded(!expanded)}>
           <Container>
             <Navbar.Brand as={Link} to="/">
-              <i className="fas fa-sitemap me-2"></i>Familiarum.eu {/* Changed brand to match HomePage */}
+              <i className="fas fa-sitemap me-2"></i>Familiarum.eu
             </Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
@@ -150,7 +159,7 @@ export function App() {
                     align="end"
                     menuVariant="dark"
                   >
-                    <NavDropdown.Item as={Link} to="/profile" onClick={() => setExpanded(false)}>Profile</NavDropdown.Item>
+                    <NavDropdown.Item as={Link} to={`/profile/${session.data._id}`} onClick={() => setExpanded(false)}>Profile</NavDropdown.Item>
                     <NavDropdown.Divider />
                     <NavDropdown.Item onClick={handleLogoutClick}>Logout</NavDropdown.Item>
                   </NavDropdown>
@@ -175,7 +184,7 @@ export function App() {
             <Route path="/" element={<Navigate to="/home" />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/contact" element={<ContactMessage />} />
-
+            <Route path="/search" element={<SearchResultsPage />} />
 
             <Route path="/articles" element={<ArticleIndex />} />
             <Route path="/articles/show/:id" element={<ArticleDetail />} />
@@ -209,13 +218,8 @@ export function App() {
             <Route path="/countries/show/:id" element={<CountryDetail />} />
             <Route path="/countries/create" element={<CountryForm />} />
             <Route path="/countries/edit/:id" element={<CountryForm />} />
-            <Route
-              path="/countries/:countryId/provinces/:provinceId"
-              element={<ProvinceDetail />}
-            />
-            <Route
-              path="/countries/:countryId/provinces/:provinceId/districts/:districtId"
-              element={<DistrictDetail />}
+            <Route path="/countries/:countryId/provinces/:provinceId" element={<ProvinceDetail />} />
+            <Route path="/countries/:countryId/provinces/:provinceId/districts/:districtId" element={<DistrictDetail />}
             />
 
             {/* Parishes */}
@@ -231,23 +235,18 @@ export function App() {
             <Route path="/cemeteries/edit/:id" element={<CemeteryForm />} />
 
             {/* Subdivisions */}
-            <Route
-              path="/subdivisions/show/:id"
-              element={<SubdivisionDetail />}
+            <Route path="/subdivisions/show/:id" element={<SubdivisionDetail />}
             />
 
             {/* Institutions */}
             <Route path="/institutions" element={<InstitutionIndex />} />
-            <Route
-              path="/institutions/show/:id"
-              element={<InstitutionDetail />}
-            />
+            <Route path="/institutions/show/:id" element={<InstitutionDetail />} />
+            <Route path="/institutions/create" element={<InstitutionForm />} />
+            <Route path="/institutions/edit/:id" element={<InstitutionForm />} />
 
             {/* Occupations */}
             <Route path="/occupations" element={<OccupationIndex />} />
-            <Route
-              path="/occupations/show/:id"
-              element={<OccupationDetail />}
+            <Route path="/occupations/show/:id" element={<OccupationDetail />}
             />
 
             {/* Sources */}
@@ -255,34 +254,25 @@ export function App() {
             <Route path="/sources/show/:id" element={<SourceDetail />} />
 
             {/* Military */}
-            <Route
-              path="/militaryOrganizations"
-              element={<MilitaryOrganizationIndex />}
-            />
-            <Route
-              path="/militaryOrganizations/show/:id"
-              element={<MilitaryOrganizationDetail />}
-            />
-            <Route
-              path="/militaryStructures"
-              element={<MilitaryStructureIndex />}
-            />
-            <Route
-              path="/militaryStructures/show/:id"
-              element={<MilitaryStructureDetail />}
-            />
+            <Route path="/militaryOrganizations" element={<MilitaryOrganizationIndex />} />
+            <Route path="/militaryOrganizations/show/:id" element={<MilitaryOrganizationDetail />} />
+            <Route path="/militaryOrganizations/create" element={<MilitaryOrganizationForm />} />
+            <Route path="/militaryOrganizations/edit/:id" element={<MilitaryOrganizationForm />} />
+
+            <Route path="/militaryStructures" element={<MilitaryStructureIndex />} />
+            <Route path="/militaryStructures/show/:id" element={<MilitaryStructureDetail />} />
+
             <Route path="/militaryRanks" element={<MilitaryRankIndex />} />
-            <Route
-              path="/militaryRanks/show/:id"
-              element={<MilitaryRankDetail />}
-            />
+            <Route path="/militaryRanks/show/:id" element={<MilitaryRankDetail />} />
+            <Route path="/militaryRanks/create/" element={<MilitaryRankForm />} />
+            <Route path="/militaryRanks/edit/:id" element={<MilitaryRankForm />} />
 
             {/* Family Tree */}
             <Route path="/family-tree/:id" element={<FamilyTreeComponent />} />
 
             {/* Auth */}
-            <Route path="/register" element={<RegistrationPage />} />
-            <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegistrationPage/>}/>
+                    <Route path="/login" element={<LoginPage/>}/>
 
             {/* Fallback */}
             <Route path="*" element={<div>Page not found</div>} />

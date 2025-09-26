@@ -25,7 +25,9 @@ public class OccupationServiceImpl implements OccupationService {
     private final InstitutionRepository institutionRepository;
 
     @Override
+    @Transactional
     public OccupationDTO createOccupation(OccupationDTO dto) {
+        // The mapper automatically handles mapping the personImageUrl field from the DTO to the entity.
         OccupationEntity entity = occupationMapper.toEntity(dto);
 
         if (dto.getInstitution() == null || dto.getInstitution().getId() == null) {
@@ -72,4 +74,3 @@ public class OccupationServiceImpl implements OccupationService {
         return occupationMapper.toDTO(entity);
     }
 }
-
