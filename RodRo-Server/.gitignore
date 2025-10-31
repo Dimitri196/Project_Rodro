@@ -1,0 +1,84 @@
+# =========================
+# Java / Spring Boot
+# =========================
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# Build directories
+/target/
+/out/
+
+# Maven temporary files
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# =========================
+# Node / React
+# =========================
+
+# Node dependencies
+/node_modules/
+
+# Build output
+/build/
+/dist/
+
+# Cache
+/.cache/
+/node_modules/.cache/
+
+# =========================
+# IDE / Editor
+# =========================
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+*.launch
+.settings/
+.project
+.classpath
+
+# VS Code
+.vscode/
+
+# =========================
+# Environment / Secrets
+# =========================
+
+# Local Spring Boot config with secrets
+/src/main/resources/application.yaml
+application-secrets.yaml
+.env
+
+# =========================
+# OS / System files
+# =========================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+
+# =========================
+# Optional / temporary files
+*.tmp
+*.swp
+.git-filter-repo/
