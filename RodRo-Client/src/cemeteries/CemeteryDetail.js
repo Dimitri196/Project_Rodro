@@ -62,6 +62,25 @@ const CemeteryDetail = () => {
     );
   }
 
+  // Historical context cards
+  const cemeteryContext = [
+    {
+      title: "Confessional Structure",
+      icon: "fas fa-people-arrows",
+      text: "Earlier cemeteries were strictly segregated by confession. Later, shared municipal cemeteries emerged with distinct zones for each faith."
+    },
+    {
+      title: "Marker Evolution",
+      icon: "fas fa-monument",
+      text: "Wooden crosses once dominated but decayed quickly. By the 19th century, durable stone markers became symbols of permanence and affluence."
+    },
+    {
+      title: "Modern Landscape",
+      icon: "fas fa-city",
+      text: "Today’s cemeteries reveal contrasts: grassy areas where wooden markers vanished, alongside enduring stone monuments and mausoleums."
+    }
+  ];
+
   return (
     <Container className="my-5 py-4 bg-light rounded shadow-lg">
       <Row className="mb-4 text-center">
@@ -144,7 +163,7 @@ const CemeteryDetail = () => {
           </Card>
         </Col>
 
-        {/* Right: Placeholder for Image */}
+        {/* Right: Image */}
         <Col md={6} className="mb-4">
           <Card className="shadow-lg border-0 rounded-4 h-100">
             <Card.Header
@@ -176,9 +195,33 @@ const CemeteryDetail = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Historical Context Section */}
+      <Row className="mt-5">
+        <Col>
+          <h2 className="fw-bold text-dark mb-3">
+            <i className="fas fa-history me-2 text-primary"></i>
+            Historical Context & Evolution
+          </h2>
+        </Col>
+      </Row>
+
+      <Row className="g-4">
+        {cemeteryContext.map((item, index) => (
+          <Col md={4} key={index}>
+            <Card className="h-100 shadow-sm border-start border-primary border-4 rounded-3">
+              <Card.Body className="p-3">
+                <h6 className="fw-bold text-primary mb-2">
+                  <i className={`${item.icon} me-2`}></i> {item.title}
+                </h6>
+                <p className="text-muted small mb-0">{item.text}</p>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+      </Row>
     </Container>
   );
 };
 
 export default CemeteryDetail;
- 

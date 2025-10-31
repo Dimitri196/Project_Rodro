@@ -28,6 +28,7 @@ public interface SourceMapper {
      * The service layer should replace this stub with a managed entity before persisting.</p>
      */
     @Mapping(target = "location", source = "locationId")
+    @Mapping(target = "evidences", ignore = true)
     SourceEntity toSourceEntity(SourceDTO source);
 
     /**
@@ -47,6 +48,7 @@ public interface SourceMapper {
      */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "location", ignore = true) // safer: update location explicitly in service
+    @Mapping(target = "evidences", ignore = true)
     void updateSourceEntity(SourceDTO dto, @MappingTarget SourceEntity entity);
 
     /**

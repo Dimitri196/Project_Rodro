@@ -38,8 +38,10 @@ public interface LocationRepository extends JpaRepository<LocationEntity, Long> 
                   l.settlementType AS settlementType
            FROM LocationEntity l
            WHERE (:searchTerm IS NULL OR :searchTerm = '' OR 
-                  LOWER(l.locationName) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
-           """)
+              LOWER(FUNCTION('REPLACE', 
+                FUNCTION('REPLACE', l.locationName, 'ł', 'l'), 'Ł', 'L')
+              ) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
+       """)
     Page<LocationListProjection> findAllLocationsProjected(
             @Param("searchTerm") String searchTerm,
             Pageable pageable
@@ -63,4 +65,10 @@ public interface LocationRepository extends JpaRepository<LocationEntity, Long> 
      * @return list of matching {@link LocationEntity}
      */
     List<LocationEntity> findByLocationNameContainingIgnoreCase(String locationName);
+
+    @Query("""
+    SELECT l FROM LocationEntity l
+    WHERE LOWER(FUNCTION('REPLACE', FUNCTION('REPLACE', l.locationName, 'ł','l'), 'Ł','L')) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+""")
+    List<LocationEntity> findByNormalizedLocationName(@Param("searchTerm") String searchTerm);
 }

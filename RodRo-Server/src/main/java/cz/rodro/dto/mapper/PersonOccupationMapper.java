@@ -11,7 +11,7 @@ public interface PersonOccupationMapper {
 
     @Mapping(target = "personId", source = "person.id")
     @Mapping(target = "givenName", source = "person.givenName")
-    @Mapping(target = "givenSurname", source = "person.givenSurname")
+    @Mapping(target = "surname", source = "person.surname")
     @Mapping(target = "occupationId", source = "occupation.id")
     @Mapping(target = "startYear", source = "startYear")
     @Mapping(target = "endYear", source = "endYear")

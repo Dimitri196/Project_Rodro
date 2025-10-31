@@ -46,7 +46,7 @@ public class MilitaryOrganizationEntity {
 
     private String organizationImageUrl;
 
+    @Column(length = 2000)
     private String organizationDescription;
-
 
 }

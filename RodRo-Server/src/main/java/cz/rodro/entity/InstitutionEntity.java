@@ -1,6 +1,7 @@
 package cz.rodro.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import cz.rodro.constant.InstitutionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -41,5 +42,9 @@ public class InstitutionEntity {
 
     @Column(columnDefinition = "TEXT")
     private String sealImageUrl;
+
+    @Enumerated(EnumType.STRING) // store as text in DB, not as ordinal
+    @Column(nullable = false)
+    private InstitutionType institutionType;
 
 }

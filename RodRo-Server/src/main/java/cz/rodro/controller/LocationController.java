@@ -1,12 +1,10 @@
 package cz.rodro.controller;
 
-import cz.rodro.dto.CemeteryDTO;
-import cz.rodro.dto.LocationDTO;
-import cz.rodro.dto.LocationListProjection;
-import cz.rodro.dto.ParishLocationDTO;
+import cz.rodro.dto.*;
 import cz.rodro.service.CemeteryService;
 import cz.rodro.service.LocationService;
 import cz.rodro.service.ParishLocationService;
+import cz.rodro.service.PersonService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,12 +26,15 @@ public class LocationController {
     private final CemeteryService cemeteryService;
     private final ParishLocationService parishLocationService;
 
+    private final PersonService personService;
+
     public LocationController(LocationService locationService,
                               CemeteryService cemeteryService,
-                              ParishLocationService parishLocationService) {
+                              ParishLocationService parishLocationService, PersonService personService) {
         this.locationService = locationService;
         this.cemeteryService = cemeteryService;
         this.parishLocationService = parishLocationService;
+        this.personService = personService;
     }
 
     /**
@@ -156,4 +157,57 @@ public class LocationController {
     public void removeParishFromLocation(@PathVariable Long locationId, @PathVariable Long parishId) {
         parishLocationService.removeParishFromLocation(locationId, parishId);
     }
+
+    // -------------------------------------------------------------------------
+    // --- NEW ENDPOINTS FOR REVERSE GENEALOGICAL QUERIES (PERSON EVENTS) ---
+    // -------------------------------------------------------------------------
+
+    /**
+     * Retrieves all persons born at the specified location.
+     * Maps to frontend endpoint: /api/locations/{id}/births
+     * @param locationId The ID of the birth location.
+     * @return A list of PersonInLocationDTOs.
+     */
+    @GetMapping("/locations/{locationId}/births")
+    public List<PersonInLocationDTO> getPeopleBornAtLocation(@PathVariable Long locationId) {
+        // Assuming PersonService has a method that fetches the required person data (id, name, year)
+        return personService.findPeopleByEvent(locationId, "births");
+    }
+
+    /**
+     * Retrieves all persons who died at the specified location.
+     * Maps to frontend endpoint: /api/locations/{id}/deaths
+     * @param locationId The ID of the death location.
+     * @return A list of PersonInLocationDTOs.
+     */
+    @GetMapping("/locations/{locationId}/deaths")
+    public List<PersonInLocationDTO> getPeopleDiedAtLocation(@PathVariable Long locationId) {
+        return personService.findPeopleByEvent(locationId, "deaths");
+    }
+
+    /**
+     * Retrieves all persons buried at the specified location.
+     * Maps to frontend endpoint: /api/locations/{id}/burials
+     * @param locationId The ID of the burial location.
+     * @return A list of PersonInLocationDTOs.
+     */
+    @GetMapping("/locations/{locationId}/burials")
+    public List<PersonInLocationDTO> getPeopleBuriedAtLocation(@PathVariable Long locationId) {
+        return personService.findPeopleByEvent(locationId, "burials");
+    }
+
+    /**
+     * Retrieves all persons baptised at the specified location.
+     * Maps to frontend endpoint: /api/locations/{id}/baptisms
+     * @param locationId The ID of the baptism location.
+     * @return A list of PersonInLocationDTOs.
+     */
+    @GetMapping("/locations/{locationId}/baptisms")
+    public List<PersonInLocationDTO> getPeopleBaptisedAtLocation(@PathVariable Long locationId) {
+        return personService.findPeopleByEvent(locationId, "baptisms");
+    }
+
+
+
+
 }

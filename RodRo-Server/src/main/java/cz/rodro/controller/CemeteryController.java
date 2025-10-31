@@ -3,6 +3,7 @@ package cz.rodro.controller;
 import cz.rodro.dto.CemeteryDTO;
 import cz.rodro.service.CemeteryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,18 +28,21 @@ public class CemeteryController {
     }
 
     // Add a new cemetery
+    @Secured("ROLE_ADMIN")
     @PostMapping("/cemeteries")
     public CemeteryDTO addCemetery(@RequestBody CemeteryDTO cemeteryDTO) {
         return cemeteryService.addCemetery(cemeteryDTO);
     }
 
     // Update an existing cemetery
+    @Secured("ROLE_ADMIN")
     @PutMapping("/cemeteries/{cemeteryId}")
     public CemeteryDTO updateCemetery(@PathVariable long cemeteryId, @RequestBody CemeteryDTO cemeteryDTO) {
         return cemeteryService.updateCemetery(cemeteryId, cemeteryDTO);
     }
 
     // Delete a cemetery
+    @Secured("ROLE_ADMIN")
     @DeleteMapping("/cemeteries/{cemeteryId}")
     public void deleteCemetery(@PathVariable long cemeteryId) {
         cemeteryService.deleteCemetery(cemeteryId);

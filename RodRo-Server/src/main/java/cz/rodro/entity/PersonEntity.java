@@ -3,6 +3,7 @@ package cz.rodro.entity;
 import cz.rodro.constant.CauseOfDeath;
 import cz.rodro.constant.Gender;
 import cz.rodro.constant.SocialStatus;
+import cz.rodro.entity.helper.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,79 +11,87 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.*;
+
+
 /**
- * Entity representing a person. This class maps to the "person" table in the database.
- * It contains core personal details such as name, identification, gender, social status,
- * cause of death, and details about their birth, baptization, death, and burial.
- * It also models relationships to parents and lists of occupations and source evidences.
+ * Entity representing a person.
+ * Maps to the "person" table in the database.
+ * Stores core personal details, partial dates for life events,
+ * relationships to parents, occupations, and source evidences.
  */
-@Entity(name = "person") // Explicit name is good practice
-@Table(name = "person") // Explicit @Table annotation is also good practice
+@Entity(name = "person")
+@Table(name = "person",
+        indexes = {
+                @Index(name = "idx_mother_id", columnList = "mother_id"),
+                @Index(name = "idx_father_id", columnList = "father_id"),
+                @Index(name = "idx_birth_place_id", columnList = "birth_place_id"),
+                @Index(name = "idx_death_place_id", columnList = "death_place_id"),
+                @Index(name = "idx_burial_place_id", columnList = "burial_place_id"),
+                @Index(name = "idx_baptism_place_id", columnList = "baptism_place_id")
+        })
 @Getter
 @Setter
-public class PersonEntity {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"mother", "father", "occupations", "sourceEvidences"})
+public class PersonEntity extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(nullable = false, length = 100) // Added length for practical string columns
+    @Column(nullable = false, length = 100)
     private String givenName;
 
     @Column(nullable = false, length = 100)
-    private String givenSurname;
-
-    @Enumerated(EnumType.STRING) // Stores enum name as string in DB
-    @Column(nullable = true) // Assuming gender can be optional
-    private Gender gender; // Assuming Gender is an enum
+    private String surname;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true) // Assuming social status can be optional
-    private SocialStatus socialStatus; // Assuming SocialStatus is an enum
+    @Column(nullable = true)
+    private Gender gender;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true) // Assuming cause of death can be optional
-    private CauseOfDeath causeOfDeath; // Assuming CauseOfDeath is an enum
+    @Column(nullable = true)
+    private SocialStatus socialStatus;
 
-    @Column(unique = true, length = 50) // Added unique and length for identification number
-    private String identificationNumber;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private CauseOfDeath causeOfDeath;
 
-    @Column(length = 1000) // Added length for notes
-    private String note;
+    @Column(unique = true, length = 50, nullable = true)
+    private String externalId;
 
-    // --- Relationships to LocationEntity (ManyToOne) ---
-    @ManyToOne(fetch = FetchType.LAZY) // Use LAZY fetching for performance unless always needed
-    @JoinColumn(name = "birth_place_id") // Explicit join column name is good practice
-    // Removed @JsonBackReference: JSON serialization is handled by DTOs
+    @Column(length = 1000)
+    private String bioNote;
+
+    // --- Relationships to LocationEntity ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "birth_place_id")
     private LocationEntity birthPlace;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "death_place_id")
-    // Removed @JsonBackReference
     private LocationEntity deathPlace;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "burial_place_id")
-    // Removed @JsonBackReference
     private LocationEntity burialPlace;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "baptization_place_id")
-    // Removed @JsonBackReference
-    private LocationEntity baptizationPlace;
+    @JoinColumn(name = "baptism_place_id")
+    private LocationEntity baptismPlace;
 
-    // --- Self-referencing Relationships (ManyToOne) ---
+    // --- Self-referencing Relationships ---
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mother_id") // Explicit join column name
-    // Removed @JsonBackReference
+    @JoinColumn(name = "mother_id")
     private PersonEntity mother;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "father_id") // Explicit join column name
-    // Removed @JsonBackReference
+    @JoinColumn(name = "father_id")
     private PersonEntity father;
 
-    // --- Date Fields (Nullable Integers for potentially incomplete dates) ---
+    // --- Partial Dates ---
     @Column(name = "birth_year")
     private Integer birthYear;
     @Column(name = "birth_month")
@@ -90,12 +99,12 @@ public class PersonEntity {
     @Column(name = "birth_day")
     private Integer birthDay;
 
-    @Column(name = "baptization_year")
-    private Integer baptizationYear;
-    @Column(name = "baptization_month")
-    private Integer baptizationMonth;
-    @Column(name = "baptization_day")
-    private Integer baptizationDay;
+    @Column(name = "baptism_year")
+    private Integer baptismYear;
+    @Column(name = "baptism_month")
+    private Integer baptismMonth;
+    @Column(name = "baptism_day")
+    private Integer baptismDay;
 
     @Column(name = "death_year")
     private Integer deathYear;
@@ -111,13 +120,12 @@ public class PersonEntity {
     @Column(name = "burial_day")
     private Integer burialDay;
 
-    // --- One-to-Many Relationships (Collections) ---
-    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY) // LAZY fetch
-    // Removed @JsonManagedReference: JSON serialization is handled by DTOs
+    // --- Collections ---
+    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PersonOccupationEntity> occupations = new ArrayList<>();
 
-    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY) // LAZY fetch
-    // Removed @JsonManagedReference
+
+    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PersonSourceEvidenceEntity> sourceEvidences = new ArrayList<>();
 
 }

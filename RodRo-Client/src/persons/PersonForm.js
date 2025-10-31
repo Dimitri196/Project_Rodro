@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiGet, apiPost, apiPut } from "../utils/api";
-import { Form, Button, Container, Row, Col, Alert, Spinner, Card } from "react-bootstrap";
+import { Form, Button, Container, Row, Col, Alert, Spinner, Card, Accordion } from "react-bootstrap";
 import InputSelect from "../components/InputSelect";
 import InputField from "../components/InputField";
 import InputCheck from "../components/InputCheck";
 import FlashMessage from "../components/FlashMessage";
-import Gender from "./Gender"; // Assuming Gender is an enum or object with values
+import Gender from "../constants/Gender";
 import socialStatusLabels from "../constants/socialStatusLabels";
 import causeOfDeathLabels from "../constants/causeOfDeathLabels";
 
@@ -16,9 +16,9 @@ const PersonForm = () => {
 
   const [person, setPerson] = useState({
     givenName: "",
-    givenSurname: "",
+    surname: "",
     gender: Gender.UNKNOWN,
-    identificationNumber: "",
+    externalId: "",
     note: "",
     socialStatus: "",
     causeOfDeath: "",
@@ -26,9 +26,9 @@ const PersonForm = () => {
     birthYear: null,
     birthMonth: null,
     birthDay: null,
-    baptizationYear: null,
-    baptizationMonth: null,
-    baptizationDay: null,
+    baptismYear: null,
+    baptismMonth: null,
+    baptismDay: null,
     deathYear: null,
     deathMonth: null,
     deathDay: null,
@@ -44,7 +44,13 @@ const PersonForm = () => {
     father: null,
 
     occupations: [],
-    sourceEvidences: []
+    sourceEvidences: [],
+    entitySources: {
+      birth: [],
+      baptization: [],
+      death: [],
+      burial: []
+    }
   });
 
   const [locations, setLocations] = useState([]);
@@ -73,10 +79,22 @@ const PersonForm = () => {
 
         if (id) {
           const data = await apiGet(`/api/persons/${id}`);
+          const entitySourcesResp = await Promise.all([
+            apiGet(`/api/sourceAttributions/person/${id}`),
+          ]);
+
+          // Organize entity sources
+          const entitySources = { birth: [], baptization: [], death: [], burial: [] };
+          entitySourcesResp[0].forEach(src => {
+            if (entitySources[src.eventType]) {
+              entitySources[src.eventType].push(src);
+            }
+          });
+
           setPerson({
             ...data,
             birthPlace: data.birthPlace ? { ...data.birthPlace, _id: data.birthPlace._id ?? data.birthPlace.id } : null,
-            baptizationPlace: data.baptizationPlace ? { ...data.baptizationPlace, _id: data.baptizationPlace._id ?? data.baptizationPlace.id } : null,
+            baptismPlace: data.baptismPlace ? { ...data.baptismPlace, _id: data.baptismPlace._id ?? data.baptismPlace.id } : null,
             deathPlace: data.deathPlace ? { ...data.deathPlace, _id: data.deathPlace._id ?? data.deathPlace.id } : null,
             burialPlace: data.burialPlace ? { ...data.burialPlace, _id: data.burialPlace._id ?? data.burialPlace.id } : null,
             mother: data.mother ? { ...data.mother, _id: data.mother._id ?? data.mother.id } : null,
@@ -89,6 +107,7 @@ const PersonForm = () => {
               ...ev,
               _id: ev.source ? ev.source._id ?? ev.source.id : ""
             })),
+            entitySources
           });
         }
       } catch (error) {
@@ -102,6 +121,7 @@ const PersonForm = () => {
     fetchData();
   }, [id]);
 
+  // --- Utility handlers for dates, parents, places, arrays ---
   const handleLocationChange = (placeType, selectedLocationId) => {
     const selected = locations.find((loc) => String(loc._id ?? loc.id) === String(selectedLocationId));
     setPerson((prev) => ({
@@ -125,13 +145,49 @@ const PersonForm = () => {
     }));
   };
 
+  const handleArrayObjectChange = (arrayName, idx, key, value) => {
+    setPerson((prev) => {
+      const updated = [...prev[arrayName]];
+      updated[idx][key] = value;
+      return { ...prev, [arrayName]: updated };
+    });
+  };
+
+  const handleEntitySourceChange = (eventType, idx, sourceId) => {
+    setPerson((prev) => {
+      const updated = [...prev.entitySources[eventType]];
+      updated[idx] = { ...updated[idx], sourceId };
+      return { ...prev, entitySources: { ...prev.entitySources, [eventType]: updated } };
+    });
+  };
+
+  const addEntitySource = (eventType) => {
+    setPerson((prev) => ({
+      ...prev,
+      entitySources: {
+        ...prev.entitySources,
+        [eventType]: [...prev.entitySources[eventType], { sourceId: "" }]
+      }
+    }));
+  };
+
+  const removeEntitySource = (eventType, idx) => {
+    setPerson((prev) => ({
+      ...prev,
+      entitySources: {
+        ...prev.entitySources,
+        [eventType]: prev.entitySources[eventType].filter((_, i) => i !== idx)
+      }
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const transformedPerson = {
       ...person,
       birthPlaceId: person.birthPlace?._id ?? null,
-      baptizationPlaceId: person.baptizationPlace?._id ?? null,
+      baptismPlaceId: person.baptismPlace?._id ?? null,
       deathPlaceId: person.deathPlace?._id ?? null,
       burialPlaceId: person.burialPlace?._id ?? null,
       motherId: person.mother?._id ?? null,
@@ -144,12 +200,13 @@ const PersonForm = () => {
       sourceEvidences: person.sourceEvidences.map((ev) => ({
         sourceId: ev._id ?? null
       })),
+      entitySources: Object.fromEntries(
+        Object.entries(person.entitySources).map(([eventType, arr]) => [
+          eventType,
+          arr.map(s => ({ sourceId: s.sourceId ?? null }))
+        ])
+      )
     };
-
-    if (transformedPerson.birthYear && transformedPerson.birthYear > new Date().getFullYear()) {
-      setError("Birth year cannot be in the future.");
-      return;
-    }
 
     try {
       const request = id
@@ -197,28 +254,60 @@ const PersonForm = () => {
     );
   }
 
-    // Display error message if data fetching fails
-    if (errorState && !sentState) { // Only show initial fetch error, not submission error here
-        return (
-            <Container className="mt-5">
-                <Alert variant="danger">{errorState}</Alert>
-            </Container>
-        );
-    }
-
+  if (errorState && !sentState) {
     return (
-        <Container className="my-5">
-            <h1 className="mb-4 text-center">{id ? "Update" : "Create New"} Person Record</h1>
+      <Container className="mt-5">
+        <Alert variant="danger">{errorState}</Alert>
+      </Container>
+    );
+  }
 
-            {/* Flash messages for success/error after submission */}
-            {sentState && (
-                <FlashMessage
-                    theme={successState ? "success" : "danger"}
-                    text={successState ? "Person record saved successfully!" : `Error saving person record: ${errorState}`}
+  const renderEntitySources = (eventType, label) => (
+    <Accordion defaultActiveKey="0" className="mb-3">
+      <Accordion.Item eventKey="0">
+        <Accordion.Header>{label} Sources</Accordion.Header>
+        <Accordion.Body>
+          {person.entitySources[eventType].length === 0 && <p className="text-muted">No sources added yet.</p>}
+          {person.entitySources[eventType].map((ev, idx) => (
+            <Row key={idx} className="mb-2 align-items-end">
+              <Col md={11}>
+                <InputSelect
+                  name={`${eventType}-source-${idx}`}
+                  label="Source"
+                  prompt="Select source"
+                  value={ev.sourceId || ""}
+                  handleChange={(e) => handleEntitySourceChange(eventType, idx, e.target.value)}
+                  items={sources}
+                  getLabel={(item) => item.sourceTitle}
+                  getValue={(item) => item._id}
                 />
-            )}
+              </Col>
+              <Col md={1} className="d-flex align-items-end">
+                <Button variant="danger" onClick={() => removeEntitySource(eventType, idx)} className="w-100">
+                  <i className="fas fa-trash-alt"></i>
+                </Button>
+              </Col>
+            </Row>
+          ))}
+          <Button variant="secondary" onClick={() => addEntitySource(eventType)}>
+            <i className="fas fa-plus me-2"></i>Add Source
+          </Button>
+        </Accordion.Body>
+      </Accordion.Item>
+    </Accordion>
+  );
 
-            <Form onSubmit={handleSubmit}>
+  return (
+    <Container className="my-5">
+      <h1 className="mb-4 text-center">{id ? "Update" : "Create New"} Person Record</h1>
+      {sentState && (
+        <FlashMessage
+          theme={successState ? "success" : "danger"}
+          text={successState ? "Person record saved successfully!" : `Error saving person record: ${errorState}`}
+        />
+      )}
+      <Form onSubmit={handleSubmit}>
+        
                 {/* Basic Information Card */}
                 <Card className="mb-4 shadow-sm">
                     <Card.Header as="h5" className="bg-primary text-white">Basic Information</Card.Header>
@@ -239,11 +328,11 @@ const PersonForm = () => {
                                 <InputField
                                     required={true}
                                     type="text"
-                                    name="givenSurname"
-                                    label="Given Surname"
+                                    name="surname"
+                                    label="Surname"
                                     prompt="Enter given surname"
-                                    value={person.givenSurname}
-                                    handleChange={(e) => setPerson({ ...person, givenSurname: e.target.value })}
+                                    value={person.surname}
+                                    handleChange={(e) => setPerson({ ...person, surname: e.target.value })}
                                 />
                             </Col>
                         </Row>
@@ -252,11 +341,11 @@ const PersonForm = () => {
                             <Col md={6}>
                                 <InputField
                                     type="text"
-                                    name="identificationNumber"
+                                    name="externalId"
                                     label="GenWeb ID"
                                     prompt="Enter GenWeb ID (optional)"
-                                    value={person.identificationNumber || ""}
-                                    handleChange={(e) => setPerson({ ...person, identificationNumber: e.target.value })}
+                                    value={person.externalId || ""}
+                                    handleChange={(e) => setPerson({ ...person, externalId: e.target.value })}
                                 />
                             </Col>
                             <Col md={6}>
@@ -369,11 +458,11 @@ const PersonForm = () => {
                         <Row className="mb-3 align-items-end">
                             <Col md={4}>
                                 <InputSelect
-                                    name="baptizationPlace"
-                                    label="Baptization Place"
-                                    prompt="Select baptization place"
-                                    value={person.baptizationPlace?._id || ""}
-                                    handleChange={(e) => handleLocationChange("baptizationPlace", e.target.value)}
+                                    name="baptismPlace"
+                                    label="Baptism Place"
+                                    prompt="Select baptism place"
+                                    value={person.baptismPlace?._id || ""}
+                                    handleChange={(e) => handleLocationChange("baptismPlace", e.target.value)}
                                     items={locations}
                                     getLabel={(item) => item.locationName}
                                     getValue={(item) => item.id}
@@ -382,11 +471,11 @@ const PersonForm = () => {
                             <Col md={2}>
                                 <InputField
                                     type="number"
-                                    name="baptizationYear"
+                                    name="baptismYear"
                                     label="Bapt. Year"
                                     prompt="YYYY"
-                                    value={person.baptizationYear || ""}
-                                    handleChange={(e) => handleDatePartChange("baptization", "Year", e.target.value)}
+                                    value={person.baptismYear || ""}
+                                    handleChange={(e) => handleDatePartChange("baptism", "Year", e.target.value)}
                                     min="1000"
                                     max={new Date().getFullYear()}
                                 />
@@ -394,11 +483,11 @@ const PersonForm = () => {
                             <Col md={3}>
                                 <InputField
                                     type="number"
-                                    name="baptizationMonth"
+                                    name="baptismMonth"
                                     label="Month"
                                     prompt="MM"
-                                    value={person.baptizationMonth || ""}
-                                    handleChange={(e) => handleDatePartChange("baptization", "Month", e.target.value)}
+                                    value={person.baptismMonth || ""}
+                                    handleChange={(e) => handleDatePartChange("baptism", "Month", e.target.value)}
                                     min="1"
                                     max="12"
                                 />
@@ -406,11 +495,11 @@ const PersonForm = () => {
                             <Col md={3}>
                                 <InputField
                                     type="number"
-                                    name="baptizationDay"
+                                    name="baptismDay"
                                     label="Day"
                                     prompt="DD"
-                                    value={person.baptizationDay || ""}
-                                    handleChange={(e) => handleDatePartChange("baptization", "Day", e.target.value)}
+                                    value={person.baptismDay || ""}
+                                    handleChange={(e) => handleDatePartChange("baptism", "Day", e.target.value)}
                                     min="1"
                                     max="31"
                                 />
@@ -635,45 +724,24 @@ const PersonForm = () => {
                     </Card.Body>
                 </Card>
 
-                {/* Source Evidences Card */}
-                <Card className="mb-4 shadow-sm">
-                    <Card.Header as="h5" className="bg-primary text-white">Source Evidences</Card.Header>
-                    <Card.Body>
-                        {person.sourceEvidences.length === 0 && <p className="text-muted">No source evidences added yet.</p>}
-                        {person.sourceEvidences.map((ev, idx) => (
-                            <Row key={idx} className="mb-3 align-items-end border-bottom pb-3">
-                                <Col md={11}>
-                                    <InputSelect
-                                        name={`sourceEvidence-${idx}`}
-                                        label="Source"
-                                        prompt="Select source"
-                                        value={ev._id || ""}
-                                        handleChange={(e) => handleArrayObjectChange("sourceEvidences", idx, "_id", e.target.value)}
-                                        items={sources}
-                                        getLabel={(item) => item.sourceTitle}
-                                        getValue={(item) => item._id}
-                                    />
-                                </Col>
-                                <Col md={1} className="d-flex align-items-end">
-                                    <Button variant="danger" onClick={() => removeSourceEvidence(idx)} className="w-100">
-                                        <i className="fas fa-trash-alt"></i>
-                                    </Button>
-                                </Col>
-                            </Row>
-                        ))}
-                        <Button variant="secondary" onClick={addSourceEvidence} className="mt-3">
-                            <i className="fas fa-plus me-2"></i>Add Source Evidence
-                        </Button>
-                    </Card.Body>
-                </Card>
+                {/* --- NEW: Entity Sources Cards --- */}
+        <Card className="mb-4 shadow-sm">
+          <Card.Header as="h5" className="bg-primary text-white">Event Sources</Card.Header>
+          <Card.Body>
+            {renderEntitySources("birth", "Birth")}
+            {renderEntitySources("baptization", "Baptization")}
+            {renderEntitySources("death", "Death")}
+            {renderEntitySources("burial", "Burial")}
+          </Card.Body>
+        </Card>
 
-                {/* Submit Button */}
-                <Button type="submit" variant="primary" className="mt-3 px-4 py-2 shadow-sm rounded-pill">
-                    <i className="fas fa-save me-2"></i>Save Record
-                </Button>
-            </Form>
-        </Container>
-    );
+        {/* Submit */}
+        <Button type="submit" variant="primary" className="mt-3 px-4 py-2 shadow-sm rounded-pill">
+          <i className="fas fa-save me-2"></i>Save Record
+        </Button>
+      </Form>
+    </Container>
+  );
 };
 
 export default PersonForm;

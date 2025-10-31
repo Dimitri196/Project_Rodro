@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Container, Row, Col, Card, ListGroup, Alert, Spinner } from "react-bootstrap";
+import { Container, Row, Col, Card, ListGroup, Alert, Spinner, Badge } from "react-bootstrap";
 import { apiGet } from "../utils/api";
+import { institutionTypes } from "../constants/institutionTypes"; // mapping type -> display
 
 const OccupationDetail = () => {
   const { id } = useParams();
@@ -23,7 +24,6 @@ const OccupationDetail = () => {
         setLoading(false);
       }
     };
-
     fetchOccupation();
   }, [id]);
 
@@ -71,8 +71,7 @@ const OccupationDetail = () => {
       <Row className="mb-4">
         <Col md={12} className="text-center">
           <h1 className="display-4 fw-bold text-primary mb-3">
-            <i className="fas fa-briefcase me-3"></i>
-            {occupationName}
+            <i className="fas fa-briefcase me-3"></i>{occupationName}
           </h1>
         </Col>
       </Row>
@@ -87,24 +86,41 @@ const OccupationDetail = () => {
             <Card.Body className="p-4">
               <ListGroup variant="flush">
                 <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
-                  <strong>Name:</strong>
-                  <span>{occupationName}</span>
+                  <strong>Name:</strong> <span>{occupationName}</span>
                 </ListGroup.Item>
-                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
-                  <strong>Institution:</strong>
-                  <span>
-                    {institution?._id ? (
-                      <Link
-                        to={`/institutions/show/${institution._id}`}
-                        className="text-decoration-none text-primary"
-                      >
-                        {institution.institutionName}
-                      </Link>
-                    ) : (
-                      "N/A"
-                    )}
-                  </span>
-                </ListGroup.Item>
+
+                {institution && (
+  <>
+    {/* Institution Name */}
+    <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+      <strong>Institution:</strong>
+      <span>
+        {institution._id ? (
+          <Link
+            to={`/institutions/show/${institution._id}`}
+            className="text-decoration-none text-primary fw-bold"
+          >
+            {institution.institutionName}
+          </Link>
+        ) : "N/A"}
+      </span>
+    </ListGroup.Item>
+
+    {/* Institution Type Badge */}
+    {institution.institutionType && (
+      <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+        <strong>Type:</strong>
+        <Badge
+          bg="info"
+          text="dark"
+          className="px-2 py-1 rounded-pill shadow-sm"
+        >
+          {institutionTypes[institution.institutionType] || institution.institutionType}
+        </Badge>
+      </ListGroup.Item>
+    )}
+  </>
+)}
                 <ListGroup.Item className="px-0">
                   <strong>Description:</strong>
                   <p className="mb-0">{description || "-"}</p>
@@ -114,7 +130,7 @@ const OccupationDetail = () => {
           </Card>
         </Col>
 
-        {/* Image */}
+        {/* Occupation Image */}
         <Col md={6} className="mb-4">
           <Card className="shadow-lg border-0 rounded-4 h-100">
             <Card.Header as="h5" className="bg-primary text-white py-3 rounded-top-4">
@@ -124,7 +140,7 @@ const OccupationDetail = () => {
               {personImageUrl ? (
                 <img
                   src={personImageUrl}
-                  alt={`${occupationName}`}
+                  alt={occupationName}
                   style={{
                     maxWidth: "100%",
                     height: "auto",
@@ -157,7 +173,7 @@ const OccupationDetail = () => {
             <Card.Body className="p-4">
               {personOccupations?.length > 0 ? (
                 <ListGroup>
-                  {personOccupations.map((po) => (
+                  {personOccupations.map(po => (
                     <ListGroup.Item key={po._id} className="pb-3 px-0 border-bottom d-flex align-items-center">
                       {po.personImageUrl ? (
                         <img
@@ -171,8 +187,8 @@ const OccupationDetail = () => {
                       )}
                       {po.personId ? (
                         <Link to={`/persons/show/${po.personId}`} className="text-decoration-none">
-                          {po.givenName && po.givenSurname
-                            ? `${po.givenName} ${po.givenSurname}`
+                          {po.givenName && po.surname
+                            ? `${po.givenName} ${po.surname}`
                             : `Person #${po.personId}`}
                         </Link>
                       ) : (

@@ -35,6 +35,9 @@ public interface SourceRepository extends JpaRepository<SourceEntity, Long> {
                    s.description AS description, 
                    s.url AS url, 
                    s.type AS type,
+                   s.creationYear AS creationYear,
+                   s.startYear AS startYear,
+                     s.endYear AS endYear,
                    l.id AS locationId, 
                    l.locationName AS locationName
             FROM SourceEntity s

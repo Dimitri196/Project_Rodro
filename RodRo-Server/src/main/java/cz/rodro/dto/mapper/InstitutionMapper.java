@@ -12,13 +12,16 @@ public interface InstitutionMapper {
 
     @Mapping(source = "institutionLocation", target = "institutionLocation")
     @Mapping(source = "sealImageUrl", target = "sealImageUrl")
+    @Mapping(source = "institutionType", target = "institutionType")
     InstitutionDTO toDto(InstitutionEntity entity);
 
     @Mapping(source = "institutionLocation", target = "institutionLocation")
     @Mapping(source = "sealImageUrl", target = "sealImageUrl")
+    @Mapping(source = "institutionType", target = "institutionType")
     InstitutionEntity toEntity(InstitutionDTO dto);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(source = "sealImageUrl", target = "sealImageUrl")
+    @Mapping(source = "institutionType", target = "institutionType")
     void updateInstitutionEntity(InstitutionDTO dto, @MappingTarget InstitutionEntity entity);
 }

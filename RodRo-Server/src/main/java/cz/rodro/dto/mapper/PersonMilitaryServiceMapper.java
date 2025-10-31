@@ -18,7 +18,7 @@ public interface PersonMilitaryServiceMapper {
     @Mapping(target = "personId", source = "person.id")
     @Mapping(target = "rankName", source = "militaryRank.rankName")
     @Mapping(target = "givenName", source = "person.givenName")
-    @Mapping(target = "givenSurname", source = "person.givenSurname")
+    @Mapping(target = "surname", source = "person.surname")
     PersonMilitaryServiceDTO toDto(PersonMilitaryServiceEntity entity);
 
     PersonMilitaryServiceEntity toEntity(PersonMilitaryServiceDTO dto);

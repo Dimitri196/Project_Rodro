@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import cz.rodro.constant.CauseOfDeath;
 import cz.rodro.constant.Gender;
 import cz.rodro.constant.SocialStatus;
+import cz.rodro.validation.Create;
+import cz.rodro.validation.Update;
+import cz.rodro.validation.ValidPartialDate;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,154 +16,91 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * Data Transfer Object (DTO) for representing a Person.
- * This DTO is designed for efficient data transfer between the backend (Spring Boot)
- * and the frontend (React), providing a flattened and tailored view of the Person entity.
- *
- * It incorporates nullable fields for dates to accommodate incomplete historical data
- * and uses IDs for referenced entities to minimize payload size.
+ * Data Transfer Object for a Person.
+ * Supports creation, update, and transfer of person details,
+ * partial dates for life events, relationships, occupations,
+ * source evidences, and optional military services.
  */
-@Data // Lombok annotation: Generates getters, setters, toString, equals, and hashCode methods.
-@AllArgsConstructor // Lombok annotation: Generates a constructor with all fields.
-@NoArgsConstructor // Lombok annotation: Generates a no-argument constructor.
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@ValidPartialDate(yearField = "birthYear", monthField = "birthMonth", dayField = "birthDay", message = "Birth date is invalid", allowNegativeYear = true)
+@ValidPartialDate(yearField = "baptismYear", monthField = "baptismMonth", dayField = "baptismDay", message = "Baptism date is invalid", allowNegativeYear = true)
+@ValidPartialDate(yearField = "deathYear", monthField = "deathMonth", dayField = "deathDay", message = "Death date is invalid", allowNegativeYear = true)
+@ValidPartialDate(yearField = "burialYear", monthField = "burialMonth", dayField = "burialDay", message = "Burial date is invalid", allowNegativeYear = true)
 public class PersonDTO {
 
-    /**
-     * Unique identifier for the person.
-     * Mapped to "_id" for compatibility, potentially with NoSQL databases or specific frontend requirements.
-     */
     @JsonProperty("_id")
+    @Null(groups = Create.class)
+    @NotNull(groups = Update.class)
     private Long id;
 
-    /**
-     * The given name(s) of the person.
-     */
+    @NotBlank(groups = Create.class)
+    @Size(max = 100)
     private String givenName;
 
-    /**
-     * The surname(s) of the person.
-     */
-    private String givenSurname;
+    @NotBlank(groups = Create.class)
+    @Size(max = 100)
+    private String surname;
 
-    /**
-     * The gender of the person. Assumed to be an enumeration (e.g., Gender.MALE, Gender.FEMALE, Gender.OTHER).
-     */
-    private Gender gender; // Assuming Gender is an enum in your domain
+    @NotNull(groups = Create.class)
+    @Size(max = 50)
+    private String externalId;
 
-    /**
-     * An identification number for the person, if applicable (e.g., national ID, passport number).
-     */
-    private String identificationNumber;
+    private Gender gender;
 
-    /**
-     * General notes or remarks about the person.
-     */
-    private String note;
+    @Size(max = 1000)
+    private String bioNote;
 
-    /**
-     * The ID of the geographical location where the person was born.
-     * Transferred as an ID to reduce payload; full Location details are fetched separately if needed.
-     */
-    // Instead of Long birthPlaceId, etc., use LocationDTO objects
     private LocationDTO birthPlace;
-    private LocationDTO baptizationPlace;
+    private LocationDTO baptismPlace;
     private LocationDTO deathPlace;
     private LocationDTO burialPlace;
 
-    /**
-     * The ID of the person's mother.
-     * Represents a relationship to another Person entity by ID.
-     */
+    @Positive
     private Long motherId;
 
-    /**
-     * The ID of the person's father.
-     * Represents a relationship to another Person entity by ID.
-     */
+    @Positive
     private Long fatherId;
 
-    /**
-     * The social status of the person. Assumed to be an enumeration (e.g., SocialStatus.NOBLE, SocialStatus.COMMONER).
-     */
-    private SocialStatus socialStatus; // Assuming SocialStatus is an enum in your domain
+    private SocialStatus socialStatus;
+    private CauseOfDeath causeOfDeath;
 
-    /**
-     * The cause of death for the person. Assumed to be an enumeration (e.g., CauseOfDeath.NATURAL, CauseOfDeath.ACCIDENT).
-     */
-    private CauseOfDeath causeOfDeath; // Assuming CauseOfDeath is an enum in your domain
+    @Valid
+    private List<PersonOccupationDTO> occupations;
 
-    /**
-     * A list of occupations associated with the person.
-     * Transferred as a list of PersonOccupationDTOs, implying that the frontend
-     * requires details of each occupation directly within the Person's data.
-     */
-    private List<PersonOccupationDTO> occupations; // Assuming PersonOccupationDTO is another DTO
+    @Valid
+    private List<PersonSourceEvidenceDTO> sourceEvidences;
 
-    /**
-     * A list of source evidences related to the person's information.
-     * Transferred as a list of PersonSourceEvidenceDTOs.
-     */
-    private List<PersonSourceEvidenceDTO> sourceEvidences; // Assuming PersonSourceEvidenceDTO is another DTO
+    @Valid
+    private List<PersonMilitaryServiceDTO> militaryServices; // Optional
 
-    /**
-     * The year of birth. Can be null if only month/day or no birth date information is available.
-     * For full date representation and validation (e.g., "February 30th"),
-     * conversion to {@link java.time.LocalDate} should occur in the service layer or entity.
-     */
+    // --- Partial Dates ---
+    @Min(-9999)
     private Integer birthYear;
-
-    /**
-     * The month of birth (1-12). Can be null if only the year is known.
-     */
+    @Min(1) @Max(12)
     private Integer birthMonth;
-
-    /**
-     * The day of birth (1-31). Can be null if only the year or month is known.
-     */
+    @Min(1) @Max(31)
     private Integer birthDay;
 
-    /**
-     * The year of baptization. Can be null.
-     */
-    private Integer baptizationYear;
+    @Min(-9999)
+    private Integer baptismYear;
+    @Min(1) @Max(12)
+    private Integer baptismMonth;
+    @Min(1) @Max(31)
+    private Integer baptismDay;
 
-    /**
-     * The month of baptization. Can be null.
-     */
-    private Integer baptizationMonth;
-
-    /**
-     * The day of baptization. Can be null.
-     */
-    private Integer baptizationDay;
-
-    /**
-     * The year of death. Can be null.
-     */
+    @Min(-9999)
     private Integer deathYear;
-
-    /**
-     * The month of death. Can be null.
-     */
+    @Min(1) @Max(12)
     private Integer deathMonth;
-
-    /**
-     * The day of death. Can be null.
-     */
+    @Min(1) @Max(31)
     private Integer deathDay;
 
-    /**
-     * The year of burial. Can be null.
-     */
+    @Min(-9999)
     private Integer burialYear;
-
-    /**
-     * The month of burial. Can be null.
-     */
+    @Min(1) @Max(12)
     private Integer burialMonth;
-
-    /**
-     * The day of burial. Can be null.
-     */
+    @Min(1) @Max(31)
     private Integer burialDay;
 }

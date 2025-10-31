@@ -1,6 +1,7 @@
 package cz.rodro.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import cz.rodro.constant.InstitutionType;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,5 +23,7 @@ public class InstitutionDTO {
     private LocationDTO institutionLocation;
     private List<OccupationDTO> occupations;
     private String sealImageUrl;
+
+    private InstitutionType institutionType;
 
 }

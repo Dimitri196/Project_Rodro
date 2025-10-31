@@ -11,7 +11,7 @@ const PrivacyPolicy = () => {
       <Row className="mb-4">
         <Col md={10} className="offset-md-1 text-center">
           <h1 className="display-4 fw-bold text-primary mb-3">Privacy Policy</h1>
-          <p className="lead text-muted fst-italic mb-4">Effective Date: [Insert Date]</p>
+          <p className="lead text-muted fst-italic mb-4">Effective Date: [September 1, 2025]</p>
         </Col>
       </Row>
 

@@ -20,7 +20,7 @@ public class PersonMilitaryServiceDTO {
     private MilitaryRankDTO militaryRank;           // Reference to rank DTO
 
     private String givenName;
-    private String givenSurname;
+    private String surname;
 
     private String militaryStructureName; // Optional: for frontend display
     private String armyBranch;            // Optional: for frontend display

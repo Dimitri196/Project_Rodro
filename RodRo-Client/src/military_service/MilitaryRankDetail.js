@@ -191,7 +191,7 @@ const MilitaryRankDetail = () => {
                                                 <Card.Body>
                                                     <Card.Title className="text-info">
                                                         <Link to={`/persons/show/${person.personId}`} className="text-decoration-none">
-                                                            {person.givenName} {person.givenSurname}
+                                                            {person.givenName} {person.surname}
                                                         </Link>
                                                     </Card.Title>
                                                     <ListGroup variant="flush">

@@ -1,0 +1,44 @@
+
+
+PersonEntity.java
+
+@OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<PersonIdentifierEntity> identifiers;
+
+
+then in PersonIdentifierEntity.java
+
+@Entity
+@Table(name = "person_identifier")
+@Getter
+@Setter
+public class PersonIdentifierEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 50)
+    private String identifierValue;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private IdentifierType type; // e.g. GENEWEB_ID, ARCHIVE_REF, DNA_CODE, etc.
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "person_id", nullable = false)
+    private PersonEntity person;
+}
+
+This annotation declares a one-to-many relationship between PersonEntity and PersonIdentifierEntity, where:
+
+One Person → may have many identifiers.
+
+Each PersonIdentifierEntity has a person field annotated with @ManyToOne.
+
+The mappedBy = "person" tells JPA that the foreign key lives on the PersonIdentifierEntity side.
+
+This side (PersonEntity) is inverse (non-owning).
+
+
+reason: To allow multiple identifiers of different types to be associated with a single person, we create a separate entity for person identifiers. This design improves data normalization and flexibility, enabling the system to handle various identifier types without cluttering the PersonEntity with multiple fields.

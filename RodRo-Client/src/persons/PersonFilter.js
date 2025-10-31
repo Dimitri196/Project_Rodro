@@ -26,7 +26,7 @@ const PersonFilter = ({ handleChange, handleSubmit, handleClear, locationList, f
       <Row className="mb-3">
         {[
           { label: "Birth Location", name: "personBirthLocationId" },
-          { label: "Baptization Location", name: "personBaptizationLocationId" },
+          { label: "Baptism Location", name: "personBaptismLocationId" },
           { label: "Death Location", name: "personDeathLocationId" },
           { label: "Burial Location", name: "personBurialLocationId" }
         ].map((field, index) => (
@@ -50,7 +50,7 @@ const PersonFilter = ({ handleChange, handleSubmit, handleClear, locationList, f
       <Row className="mb-3">
         {[
           { label: "Birth Date", name: "personBirthDate" },
-          { label: "Baptization Date", name: "personBaptizationDate" },
+          { label: "Baptism Date", name: "personBaptisDate" },
           { label: "Death Date", name: "personDeathDate" },
           { label: "Burial Date", name: "personBurialDate" }
         ].map((field, index) => (

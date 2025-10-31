@@ -7,9 +7,11 @@ import {
   Col,
   Card,
   ListGroup,
-  Alert,
   Button,
   Spinner,
+  Alert,
+  Tab,
+  Nav,
 } from "react-bootstrap";
 
 const ProvinceDetail = () => {
@@ -20,17 +22,16 @@ const ProvinceDetail = () => {
   const [country, setCountry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeDistrict, setActiveDistrict] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch province with districts
         const provinceData = await apiGet(
           `/api/countries/${countryId}/provinces/${provinceId}`
         );
         setProvince(provinceData);
 
-        // Fetch country
         const countryData = await apiGet(`/api/countries/${countryId}`);
         setCountry(countryData);
       } catch (err) {
@@ -64,16 +65,21 @@ const ProvinceDetail = () => {
     );
   }
 
-  const {
-    provinceName = "N/A",
-    provinceFlagImgUrl = null,
-    districts = [],
-  } = province || {};
+  if (!province) {
+    return (
+      <Container className="mt-5">
+        <Alert variant="warning">No province data found.</Alert>
+        <Button variant="secondary" onClick={() => navigate(-1)}>
+          Go Back
+        </Button>
+      </Container>
+    );
+  }
 
+  const { provinceName, provinceFlagImgUrl, districts = [] } = province;
   const countryName =
     country?.countryNameInEnglish ||
     country?.countryNameInPolish ||
-    province?.country?.countryNameInEnglish ||
     "Unknown Country";
 
   return (
@@ -88,7 +94,7 @@ const ProvinceDetail = () => {
         ← Back to {countryName}
       </Button>
 
-      {/* Top Info Row */}
+      {/* Province Info & Flag */}
       <Row className="mb-5">
         {/* Info Card */}
         <Col md={7} lg={8}>
@@ -107,16 +113,12 @@ const ProvinceDetail = () => {
                 </ListGroup.Item>
                 <ListGroup.Item>
                   <strong>Country:</strong>{" "}
-                  {country ? (
-                    <Link
-                      to={`/countries/show/${country._id || countryId}`}
-                      className="text-decoration-none"
-                    >
-                      {countryName}
-                    </Link>
-                  ) : (
-                    "Unknown"
-                  )}
+                  <Link
+                    to={`/countries/show/${country?._id || countryId}`}
+                    className="text-decoration-none text-primary fw-semibold"
+                  >
+                    {countryName}
+                  </Link>
                 </ListGroup.Item>
               </ListGroup>
             </Card.Body>
@@ -156,39 +158,70 @@ const ProvinceDetail = () => {
         </Col>
       </Row>
 
-      {/* Districts */}
-      <Row>
-        <Col md={12}>
-          <Card className="shadow-sm border-0 rounded-4">
-            <Card.Header
-              as="h5"
-              className="bg-success text-white py-3 rounded-top-4"
+      {/* Districts Section with Tabs */}
+      <h4 className="fw-bold text-dark mt-4 mb-3">Districts</h4>
+      <Tab.Container
+        id="province-district-tabs"
+        activeKey={activeDistrict || (districts[0]?._id || null)}
+        onSelect={(k) => setActiveDistrict(k)}
+      >
+        <Row>
+          {/* Nav Column */}
+          <Col md={3} className="mb-3">
+            <Nav
+              variant="pills"
+              className="flex-column p-3 bg-light rounded-3 shadow-sm border"
             >
-              <i className="fas fa-map-marked-alt me-2"></i>Districts
-            </Card.Header>
-            <Card.Body className="p-4">
               {districts.length > 0 ? (
-                <ListGroup variant="flush">
-                  {districts.map((district) => (
-                    <ListGroup.Item key={district._id}>
-                      <Link
-                        to={`/countries/${countryId}/provinces/${provinceId}/districts/${district._id}`}
-                        className="text-decoration-none"
-                      >
-                        {district.districtName}
-                      </Link>
-                    </ListGroup.Item>
-                  ))}
-                </ListGroup>
+                districts.map((district) => (
+                  <Nav.Item key={district._id}>
+                    <Nav.Link
+                      eventKey={district._id}
+                      className="text-start mb-1 fw-semibold"
+                    >
+                      <i className="fas fa-circle me-2 text-secondary"></i>
+                      {district.districtName}
+                    </Nav.Link>
+                  </Nav.Item>
+                ))
               ) : (
-                <p className="mt-3 text-muted">
-                  No districts available for this province.
-                </p>
+                <Nav.Item>
+                  <Nav.Link disabled>No districts</Nav.Link>
+                </Nav.Item>
               )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+            </Nav>
+          </Col>
+
+          {/* District Content Column */}
+          <Col md={9}>
+<Tab.Content className="p-4 bg-white rounded-3 shadow border">
+  {districts.length > 0 ? (
+    districts.map((district) => (
+      <Tab.Pane key={district._id} eventKey={district._id}>
+        <h5 className="fw-bold text-primary mb-3">
+          <span className="text-muted me-2">{provinceName} —</span>{" "}
+          <Link
+            to={`/countries/${countryId}/provinces/${provinceId}/districts/${district._id}`}
+            className="text-decoration-none text-primary"
+          >
+            {district.districtName}
+          </Link>
+        </h5>
+        <p className="text-muted">
+          {district.description ||
+            "This district is an administrative unit within the province."}
+        </p>
+      </Tab.Pane>
+    ))
+  ) : (
+    <Alert variant="info" className="mb-0">
+      No districts available for this province.
+    </Alert>
+  )}
+</Tab.Content>
+          </Col>
+        </Row>
+      </Tab.Container>
     </Container>
   );
 };

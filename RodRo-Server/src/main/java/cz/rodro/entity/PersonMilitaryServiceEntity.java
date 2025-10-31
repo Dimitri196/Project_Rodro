@@ -36,7 +36,4 @@ public class PersonMilitaryServiceEntity {
 
     private String notes;
 
-    @OneToMany(mappedBy = "personMilitaryService", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    private List<PersonSourceEvidenceEntity> sourceEvidences = new ArrayList<>();
 }

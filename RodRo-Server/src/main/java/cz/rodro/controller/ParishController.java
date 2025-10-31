@@ -4,6 +4,7 @@ import cz.rodro.dto.ParishDTO;
 import cz.rodro.dto.ParishLocationDTO;
 import cz.rodro.service.ParishService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +16,7 @@ public class ParishController {
     @Autowired
     private ParishService parishService;
 
+    @Secured("ROLE_ADMIN")
     @PostMapping("/parishes")
     public ParishDTO addParish(@RequestBody ParishDTO parishDTO) {
         return parishService.addParish(parishDTO);
@@ -25,6 +27,7 @@ public class ParishController {
         return parishService.getParish(parishId);
     }
 
+    @Secured("ROLE_ADMIN")
     @PutMapping("/parishes/{parishId}")
     public ParishDTO updateParish(@PathVariable long parishId, @RequestBody ParishDTO parishDTO) {
         // Validate input
@@ -35,6 +38,7 @@ public class ParishController {
         return parishService.updateParish(parishId, parishDTO);
     }
 
+    @Secured("ROLE_ADMIN")
     @DeleteMapping("/parishes/{parishId}")
     public String removeParish(@PathVariable long parishId) {
         parishService.removeParish(parishId);

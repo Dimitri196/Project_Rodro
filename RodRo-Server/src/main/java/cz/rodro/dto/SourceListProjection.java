@@ -5,9 +5,9 @@ import cz.rodro.constant.SourceType;
 /**
  * Projection interface for retrieving lightweight source data.
  *
- * <p>Used when querying large collections of sources to avoid fetching
+ * Used when querying large collections of sources to avoid fetching
  * full entity graphs. Provides only essential fields, including
- * location ID and name, to prevent recursion and unnecessary joins.</p>
+ * temporal data and location reference.
  */
 public interface SourceListProjection {
 
@@ -29,9 +29,32 @@ public interface SourceListProjection {
     /** Type of the source (e.g., BOOK, ARTICLE, WEBSITE). */
     SourceType getType();
 
+    // --- NEW TEMPORAL GETTERS ---
+    /** Year the source was created or published. */
+    Integer getCreationYear();
+
+    /** Temporal start year of the data contained within the source. */
+    Integer getStartYear();
+
+    /** Temporal end year of the data contained within the source. */
+    Integer getEndYear();
+    // ----------------------------
+
     /** Identifier of the associated location (lightweight reference). */
     Long getLocationId();
 
     /** Human-readable name of the associated location. */
     String getLocationName();
+
+    default Integer getEffectiveYear() {
+        if (getCreationYear() != null) {
+            return getCreationYear();
+        }
+        if (getStartYear() != null) {
+            return getStartYear();
+        }
+        // Use endYear as a final fallback, or 0 if all are null.
+        return getEndYear();
+    }
+
 }

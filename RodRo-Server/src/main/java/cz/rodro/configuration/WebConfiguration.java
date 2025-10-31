@@ -9,11 +9,18 @@ public class WebConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        WebMvcConfigurer.super.addCorsMappings(registry);
         registry.addMapping("/**")
-                .allowedMethods("HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedOrigins("http://localhost:3000")
-                .allowedHeaders("*") // Allow all headers
-                .allowCredentials(true);
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "http://127.0.0.1:3000",
+                        "http://www.familiarum.eu",
+                        "https://www.familiarum.eu",
+                        "http://194.182.86.112",
+                        "http://194.182.86.112:8080"
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600); // cache preflight responses for 1 hour
     }
 }

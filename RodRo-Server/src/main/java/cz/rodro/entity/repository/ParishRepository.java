@@ -2,6 +2,8 @@ package cz.rodro.entity.repository;
 
 import cz.rodro.entity.ParishEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,5 +25,11 @@ public interface ParishRepository extends JpaRepository<ParishEntity, Long> {
      * @return A list of matching {@link ParishEntity} objects. Returns an empty list if no matches.
      */
     List<ParishEntity> findByNameContainingIgnoreCase(String name);
+
+    @Query("""
+    SELECT p FROM parish p
+    WHERE LOWER(FUNCTION('REPLACE', FUNCTION('REPLACE', p.name, 'ł','l'), 'Ł','L')) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+""")
+    List<ParishEntity> findByNormalizedName(@Param("searchTerm") String searchTerm);
 
 }

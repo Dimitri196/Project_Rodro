@@ -10,6 +10,8 @@ import {
   Button,
   Spinner,
   Alert,
+  Tab,
+  Nav,
 } from "react-bootstrap";
 
 const CountryDetail = () => {
@@ -29,15 +31,17 @@ const CountryDetail = () => {
         setCountry(countryData);
 
         const provincesData = await apiGet(`/api/countries/${id}/provinces`);
-
-        // ✅ Sort provinces by name
         const sortedProvinces = [...provincesData].sort((a, b) =>
           a.provinceName.localeCompare(b.provinceName, undefined, {
             sensitivity: "base",
           })
         );
-
         setProvinces(sortedProvinces);
+
+        // ✅ default tab to first province
+        if (sortedProvinces.length > 0) {
+          setOpenProvince(sortedProvinces[0]._id);
+        }
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(`Error loading data: ${err.message || err}`);
@@ -98,7 +102,7 @@ const CountryDetail = () => {
         ← Back to Countries List
       </Button>
 
-      {/* Top Info Row */}
+      {/* --- Top Info Row --- */}
       <Row className="mb-5">
         {/* Info Card */}
         <Col md={7} lg={8}>
@@ -120,8 +124,18 @@ const CountryDetail = () => {
                   {countryEstablishmentYear || "N/A"}
                 </ListGroup.Item>
                 <ListGroup.Item>
-                  <strong>Cancellation Year:</strong>{" "}
-                  {countryCancellationYear || "Still Exists"}
+                  <strong>Status:</strong>{" "}
+                  {countryCancellationYear ? (
+                    <>
+                      Dissolved in {countryCancellationYear}{" "}
+                      <span className="badge bg-danger ms-2">Dissolved</span>
+                    </>
+                  ) : (
+                    <>
+                      Still Exists{" "}
+                      <span className="badge bg-success ms-2">Active</span>
+                    </>
+                  )}
                 </ListGroup.Item>
               </ListGroup>
             </Card.Body>
@@ -161,84 +175,118 @@ const CountryDetail = () => {
         </Col>
       </Row>
 
-      {/* Provinces Section */}
-{/* Provinces Section */}
-<Row>
-  <Col>
-    <Card className="shadow-lg border-0 rounded-4">
-      <Card.Header
-        as="h5"
-        className="bg-success text-white py-3 rounded-top-4"
-      >
-        <i className="fas fa-map-marked-alt me-2"></i>Provinces
-      </Card.Header>
-      <Card.Body className="p-4">
-        {provinces.length > 0 ? (
-          <ListGroup variant="flush">
-            {provinces.map((province) => {
-              const isOpen = openProvince === province._id;
-              return (
-                <ListGroup.Item
-                  key={province._id}
-                  className="px-3 py-2"
-                  style={{ border: "none" }}
-                >
-                  <div className="d-flex justify-content-between align-items-center">
-                    {/* Province Name (clickable) */}
-                    <Link
-                      to={`/countries/${id}/provinces/${province._id}`}
-                      className="fw-bold text-primary text-decoration-none"
+      {/* --- Provinces Section --- */}
+      <h2 className="fw-bold text-dark mt-5 mb-4">
+        II. Administrative Hierarchies & Provincial Divisions
+      </h2>
+
+      {provinces.length > 0 ? (
+        <Tab.Container
+          id="province-tabs"
+          activeKey={openProvince}
+          onSelect={(k) => setOpenProvince(k)}
+        >
+          <Row>
+            {/* Province Sidebar */}
+            <Col md={3} className="mb-3">
+              <Nav
+                variant="pills"
+                className="flex-column p-3 bg-light rounded-3 shadow-sm border"
+              >
+                {provinces.map((province) => (
+                  <Nav.Item key={province._id}>
+                    <Nav.Link
+                      eventKey={province._id}
+                      className="text-start mb-1 fw-semibold"
                     >
+                      <i className="fas fa-landmark me-2 text-secondary"></i>
                       {province.provinceName}
-                    </Link>
+                      {province.districts?.length > 0 && (
+                        <span className="badge bg-primary ms-2">
+                          {province.districts.length}
+                        </span>
+                      )}
+                    </Nav.Link>
+                  </Nav.Item>
+                ))}
+              </Nav>
+            </Col>
 
-                    {/* Toggle arrow */}
-                    {province.districts?.length > 0 && (
-                      <span
-                        role="button"
-                        aria-expanded={isOpen}
-                        onClick={() =>
-                          setOpenProvince(isOpen ? null : province._id)
-                        }
-                        className="ms-2 text-muted"
-                        style={{ cursor: "pointer", fontSize: "1.1rem" }}
-                      >
-                        {isOpen ? "▼" : "▶"}
-                      </span>
-                    )}
-                  </div>
+{/* Province Content */}
+<Col md={9}>
+  <Tab.Content className="p-4 bg-white rounded-3 shadow border">
+    {provinces.map((province) => (
+      <Tab.Pane key={province._id} eventKey={province._id}>
+        <h4 className="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center">
+          <Link
+            to={`/countries/${id}/provinces/${province._id}`}
+            className="text-decoration-none text-primary me-2"
+          >
+            <i className="fas fa-landmark me-2"></i>
+            {province.provinceName}
+          </Link>
+        </h4>
 
-                  {/* Districts list (expandable) */}
-                  {isOpen && province.districts?.length > 0 && (
-                    <ul className="mt-2 ps-3 list-unstyled">
-                      {province.districts.map((district) => (
-                        <li key={district._id} className="mb-1">
-                          <Link
-                            to={`/countries/${id}/provinces/${province._id}/districts/${district._id}`}
-                            className="text-decoration-none text-secondary"
-                          >
-                            <i className="fas fa-circle me-2" style={{ fontSize: "0.6rem" }}></i>
-                            {district.districtName}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </ListGroup.Item>
-              );
-            })}
-          </ListGroup>
-        ) : (
-          <Alert variant="info" className="text-center mb-0">
-            <i className="fas fa-info-circle me-2"></i>
-            No provinces available for this country.
-          </Alert>
-        )}
-      </Card.Body>
-    </Card>
-  </Col>
-</Row>
+        <p className="text-muted mb-4">
+          {province.description ||
+            "This province is a primary administrative division within the country."}
+        </p>
 
+                    <h5 className="fw-bold text-primary mb-3">
+                      District Structure:
+                    </h5>
+
+                    <Row className="g-3">
+                      {province.districts && province.districts.length > 0 ? (
+                        province.districts.map((district) => (
+                          <Col md={6} key={district._id}>
+                            <Card className="h-100 border-0 border-start border-4 border-secondary-subtle">
+                              <Card.Body className="p-3">
+                                <h6 className="mb-1 text-dark">
+                                  <i className="fas fa-map-pin me-2 text-secondary"></i>
+                                  <Link
+                                    to={`/countries/${id}/provinces/${province._id}/districts/${district._id}`}
+                                    className="text-decoration-none text-dark fw-semibold"
+                                  >
+                                    {district.districtName}
+                                  </Link>
+                                </h6>
+                                <p className="small text-muted mb-0">
+                                  {district.description ||
+                                    "District-level administration"}
+                                </p>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        ))
+                      ) : (
+                        <Col>
+                          <Alert variant="info" className="mb-0">
+                            <i className="fas fa-info-circle me-2"></i>
+                            No districts found for this province.
+                          </Alert>
+                        </Col>
+                      )}
+                    </Row>
+
+                    <p className="small fst-italic text-muted mt-4 mb-0 border-top pt-3">
+                      <i className="fas fa-info-circle me-1 text-primary"></i>
+                      Contextual Note:{" "}
+                      {province.context ||
+                        "This province has historical, cultural, and administrative significance within the country."}
+                    </p>
+                  </Tab.Pane>
+                ))}
+              </Tab.Content>
+            </Col>
+          </Row>
+        </Tab.Container>
+      ) : (
+        <Alert variant="info" className="text-center mb-0">
+          <i className="fas fa-info-circle me-2"></i>
+          No provinces available for this country.
+        </Alert>
+      )}
     </Container>
   );
 };

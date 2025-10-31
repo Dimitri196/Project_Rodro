@@ -1,25 +1,83 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Container, Row, Col, Card, ListGroup, Alert, Spinner, Accordion } from "react-bootstrap";
+import { Container, Row, Col, Card, ListGroup, Alert, Spinner, Accordion, Badge, Form} from "react-bootstrap";
 import { apiGet } from "../utils/api";
 import settlementTypeLabels from "../constants/settlementTypeLabels";
 import { useSession } from "../contexts/session";
-
-// 1. Import react-leaflet components
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-// 2. Import Leaflet CSS (make sure this is globally accessible, e.g., in App.js or index.js)
 import 'leaflet/dist/leaflet.css';
-
-// 3. IMPORTANT: Fix for default marker icons not showing up in Webpack/Create React App environments
-// This is a common issue with react-leaflet and needs to be included once per application
 import L from 'leaflet';
-delete L.Icon.Default.prototype._getIconUrl; // Prevents webpack from trying to find default icons
+
+// Fix for default marker icon issue with Leaflet in React
+delete L.Icon.Default.prototype._getIconUrl; 
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon2x.png',
     iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
+// --- Settlement Color Map ---
+const colorMap = {
+    'CITY': 'primary',
+    'TOWN': 'info',
+    'VILLAGE': 'success',
+    'FARM': 'secondary',
+    'FORESTERS_LODGE': 'dark',
+    'KHUTOR': 'secondary',
+    'SETTLEMENT': 'info',
+    'COLONY': 'warning',
+    'RAILWAY_STATION': 'primary',
+    'BRICKYARD': 'danger',
+    'MILL_SETTLEMENT': 'success',
+    'ZASCIANEK': 'secondary',
+    'FOREST_SETTLEMENT': 'dark',
+    'FACTORY_SETTLEMENT': 'danger',
+    'SAWMILL': 'warning',
+    'SUBURB': 'info',
+    'TAR_FACTORY': 'danger'
+};
+
+// =========================================================================
+// Person List Helper Component (Optimized to display full name from parts)
+// =========================================================================
+/**
+ * Renders a list of people for a specific event (e.g., births, deaths).
+ * @param {{ people: Array<{id: number, givenName: string, surname: string, birthYear: number, deathYear: number, socialStatus: string}>, label: string }} props
+ */
+const PersonList = ({ people, label }) => {
+    if (!people || people.length === 0) {
+        return (
+            <Alert variant="secondary" className="text-center mb-0 py-2 small">
+                No recorded {label} match the current filter.
+            </Alert>
+        );
+    }
+
+    return (
+        <ListGroup variant="flush" style={{ maxHeight: "300px", overflowY: "auto" }}>
+            {people.map((person) => (
+                <ListGroup.Item 
+                    key={person.id} 
+                    className="d-flex justify-content-between align-items-center px-2 py-1 small"
+                >
+                    <Link 
+                        to={`/persons/show/${person.id}`} 
+                        className="text-decoration-none text-primary fw-medium"
+                    >
+                        {person.givenName} {person.surname}
+                    </Link>
+                    <span className="text-muted small">
+                        {person.birthYear || "?"} - {person.deathYear || "?"}
+                    </span>
+                    <Badge bg="secondary" className="ms-2">
+                        {person.socialStatus || 'Unknown'}
+                    </Badge>
+                </ListGroup.Item>
+            ))}
+        </ListGroup>
+    );
+};
+// =========================================================================
 
 const LocationDetail = () => {
     const { id } = useParams();
@@ -29,24 +87,56 @@ const LocationDetail = () => {
     const [location, setLocation] = useState(null);
     const [cemeteries, setCemeteries] = useState([]);
     const [parishLocations, setParishLocations] = useState([]);
+    
+    // START: NEW STATE VARIABLES
+    const [births, setBirths] = useState([]);
+    const [deaths, setDeaths] = useState([]);
+    const [burials, setBurials] = useState([]);
+    const [baptisms, setBaptisms] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    // END: NEW STATE VARIABLES
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const getSettlementColor = (type) => colorMap[type] || 'secondary';
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             setError(null);
             try {
-                const locationData = await apiGet(`/api/locations/${id}`);
-                setLocation(locationData);
-
-                const [cemeteryData, parishLocationData] = await Promise.all([
+                // Fetch all data concurrently
+                const [
+                    locationData, 
+                    cemeteryData, 
+                    parishLocationData, 
+                    birthData, 
+                    deathData, 
+                    burialData, 
+                    baptismData
+                ] = await Promise.all([
+                    apiGet(`/api/locations/${id}`),
                     apiGet(`/api/locations/${id}/cemeteries`),
-                    apiGet(`/api/locations/${id}/parishes`)
+                    apiGet(`/api/locations/${id}/parishes`),
+                    // START: NEW API CALLS
+                    apiGet(`/api/locations/${id}/births`),
+                    apiGet(`/api/locations/${id}/deaths`),
+                    apiGet(`/api/locations/${id}/burials`),
+                    apiGet(`/api/locations/${id}/baptisms`),
+                    // END: NEW API CALLS
                 ]);
 
+                setLocation(locationData);
                 setCemeteries(cemeteryData);
                 setParishLocations(parishLocationData);
+                
+                // START: NEW STATE UPDATES
+                setBirths(birthData);
+                setDeaths(deathData);
+                setBurials(burialData);
+                setBaptisms(baptismData);
+                // END: NEW STATE UPDATES
 
             } catch (err) {
                 console.error("Error fetching location details:", err);
@@ -58,6 +148,32 @@ const LocationDetail = () => {
 
         fetchData();
     }, [id]);
+
+    const handleSearchChange = (event) => {
+        setSearchTerm(event.target.value);
+    };
+
+    // =========================================================================
+    // NEW: Search Filtering Logic using useMemo for performance
+    // =========================================================================
+    const normalizeSearchTerm = searchTerm.toLowerCase().trim();
+
+    const filterPeople = (people) => {
+        if (!normalizeSearchTerm) {
+            return people;
+        }
+        return people.filter(person => {
+            const fullName = `${person.givenName} ${person.surname}`.toLowerCase();
+            return fullName.includes(normalizeSearchTerm);
+        });
+    };
+
+    const filteredBirths = useMemo(() => filterPeople(births), [births, normalizeSearchTerm]);
+    const filteredDeaths = useMemo(() => filterPeople(deaths), [deaths, normalizeSearchTerm]);
+    const filteredBurials = useMemo(() => filterPeople(burials), [burials, normalizeSearchTerm]);
+    const filteredBaptisms = useMemo(() => filterPeople(baptisms), [baptisms, normalizeSearchTerm]);
+    // =========================================================================
+
 
     if (loading) {
         return (
@@ -90,15 +206,11 @@ const LocationDetail = () => {
         );
     }
 
-    // Check if GPS coordinates are available to render the map
     const hasGps = location.gpsLatitude && location.gpsLongitude;
-
-    // Define the initial map center and zoom for Leaflet
-    // Use the location's coordinates if available, otherwise a default for safety (though map won't render without GPS)
     const position = hasGps ? [location.gpsLatitude, location.gpsLongitude] : [0, 0];
-    const initialZoom = 14; // A good starting zoom for a close-up view (e.g., 10-16 for city/street level)
+    const initialZoom = hasGps ? 14 : 2; 
+    const badgeVariant = getSettlementColor(location.settlementType);
 
-    
     return (
         <Container className="my-5 py-4 bg-light rounded shadow-lg">
             {/* Font Awesome for icons (ensure it's linked in index.html) */}
@@ -106,13 +218,20 @@ const LocationDetail = () => {
 
             <Row className="mb-4">
                 <Col md={12} className="text-center">
-                    <h1 className="display-4 fw-bold text-primary mb-3">
-                        <i className="fas fa-map-marker-alt me-3"></i>
+                    <h1 className="display-4 fw-bold text-dark mb-3">
+                        <i className="fas fa-map-marker-alt me-3 text-primary"></i>
                         {location.locationName}
                     </h1>
-                    <p className="lead text-muted fst-italic">
-                        {settlementTypeLabels[location.settlementType] || location.settlementType}
-                    </p>
+                    
+                    <div className="mb-4">
+                        <Badge 
+                            bg={badgeVariant} 
+                            className="fs-6 p-2 fw-semibold shadow-sm text-uppercase"
+                        >
+                            {settlementTypeLabels[location.settlementType] || location.settlementType}
+                        </Badge>
+                    </div>
+
                     {isAdmin && (
                         <Link to={`/locations/edit/${location._id}`} className="btn btn-warning btn-lg rounded-pill px-4 py-2 shadow-sm mt-3">
                             <i className="fas fa-edit me-2"></i>Edit Location
@@ -213,8 +332,76 @@ const LocationDetail = () => {
                 </Col>
             </Row>
 
+            {/* START: NEW ROW FOR GENEALOGICAL EVENTS (With Search Panel) */}
+            <Row className="justify-content-center">
+                <Col md={12} className="mb-4">
+                    <Card className="shadow-lg border-0 rounded-4">
+                        <Card.Header as="h5" className="bg-success text-white py-3 rounded-top-4">
+                            <i className="fas fa-users me-2"></i>Associated Persons by Event
+                        </Card.Header>
+                        <Card.Body className="p-4">
+                            
+                            {/* START: SEARCH FIELD */}
+                            <div className="mb-4">
+                                <Form.Control
+                                    type="search"
+                                    placeholder="Search persons by name (First or Last)..."
+                                    className="rounded-pill"
+                                    value={searchTerm}
+                                    onChange={handleSearchChange}
+                                />
+                            </div>
+                            {/* END: SEARCH FIELD */}
+
+                            <Accordion defaultActiveKey="0">
+                                <Accordion.Item eventKey="0">
+                                    <Accordion.Header>
+                                        <i className="fas fa-baby me-2 text-info"></i>
+                                        **Births** ({filteredBirths.length} of {births.length})
+                                    </Accordion.Header>
+                                    <Accordion.Body className="p-2">
+                                        <PersonList people={filteredBirths} label="births" />
+                                    </Accordion.Body>
+                                </Accordion.Item>
+
+                                <Accordion.Item eventKey="1">
+                                    <Accordion.Header>
+                                        <i className="fas fa-cross me-2 text-danger"></i>
+                                        **Deaths** ({filteredDeaths.length} of {deaths.length})
+                                    </Accordion.Header>
+                                    <Accordion.Body className="p-2">
+                                        <PersonList people={filteredDeaths} label="deaths" />
+                                    </Accordion.Body>
+                                </Accordion.Item>
+
+                                <Accordion.Item eventKey="2">
+                                    <Accordion.Header>
+                                        <i className="fas fa-tombstone-alt me-2 text-secondary"></i>
+                                        **Burials** ({filteredBurials.length} of {burials.length})
+                                    </Accordion.Header>
+                                    <Accordion.Body className="p-2">
+                                        <PersonList people={filteredBurials} label="burials" />
+                                    </Accordion.Body>
+                                </Accordion.Item>
+                                
+                                <Accordion.Item eventKey="3">
+                                    <Accordion.Header>
+                                        <i className="fas fa-hands-praying me-2 text-warning"></i>
+                                        **Baptisms** ({filteredBaptisms.length} of {baptisms.length})
+                                    </Accordion.Header>
+                                    <Accordion.Body className="p-2">
+                                        <PersonList people={filteredBaptisms} label="baptisms" />
+                                    </Accordion.Body>
+                                </Accordion.Item>
+                            </Accordion>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
+            {/* END: NEW ROW FOR GENEALOGICAL EVENTS */}
+
+            {/* Historical Details Card */}
             <Row>
-                {/* Historical Details Card */}
                 <Col md={12} className="mb-4">
                     <Card className="shadow-lg border-0 rounded-4 h-100">
                         <Card.Header as="h5" className="bg-primary text-white py-3 rounded-top-4">
@@ -335,7 +522,6 @@ const LocationDetail = () => {
                                                     className="text-decoration-none text-primary"
                                                 >
                                                     {parishLocation.parishName} ({parishLocation.mainChurchName})
-
                                                 </Link>
                                                 {/* Additional parish details can go here */}
                                             </ListGroup.Item>
@@ -397,7 +583,6 @@ const LocationDetail = () => {
                     </Card>
                 </Col>
             </Row>
-
 
             <Row className="justify-content-center">
                 <Col md={12} className="mb-4">

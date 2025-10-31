@@ -24,4 +24,6 @@ public interface PersonService {
     List<PersonSourceEvidenceDTO> getSourceEvidences(Long personId);
     List<PersonDTO> getSiblings(Long personId);
 
+    List<PersonInLocationDTO> findPeopleByEvent(Long locationId, String eventType);
+
 }

@@ -36,7 +36,7 @@ public class PersonOccupationDTO {
     private String institutionLocationName;
 
     private String givenName;
-    private String givenSurname;
+    private String surname;
 
 
 }

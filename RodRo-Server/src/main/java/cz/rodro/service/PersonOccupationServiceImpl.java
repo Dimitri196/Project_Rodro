@@ -42,7 +42,7 @@ public class PersonOccupationServiceImpl implements PersonOccupationService {
         PersonOccupationEntity saved = personOccupationRepository.save(entity);
         PersonOccupationDTO result = personOccupationMapper.toDTO(saved);
         result.setGivenName(person.getGivenName());
-        result.setGivenSurname(person.getGivenSurname());
+        result.setSurname(person.getSurname());
         return result;
     }
 
@@ -54,7 +54,7 @@ public class PersonOccupationServiceImpl implements PersonOccupationService {
                     PersonEntity person = entity.getPerson();
                     if (person != null) {
                         dto.setGivenName(person.getGivenName());
-                        dto.setGivenSurname(person.getGivenSurname());
+                        dto.setSurname(person.getSurname());
                     }
                     return dto;
                 })
@@ -69,7 +69,7 @@ public class PersonOccupationServiceImpl implements PersonOccupationService {
                     PersonEntity person = entity.getPerson();
                     if (person != null) {
                         dto.setGivenName(person.getGivenName());
-                        dto.setGivenSurname(person.getGivenSurname());
+                        dto.setSurname(person.getSurname());
                     }
                     return dto;
                 })
