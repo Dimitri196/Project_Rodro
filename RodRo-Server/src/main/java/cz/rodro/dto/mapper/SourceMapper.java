@@ -1,12 +1,10 @@
 package cz.rodro.dto.mapper;
 
 import cz.rodro.dto.SourceDTO;
+import cz.rodro.dto.SourceSummaryDTO;
 import cz.rodro.entity.LocationEntity;
 import cz.rodro.entity.SourceEntity;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 import java.util.List;
 
@@ -68,4 +66,12 @@ public interface SourceMapper {
      * Converts a list of {@link SourceEntity} to a list of {@link SourceDTO}.
      */
     List<SourceDTO> toSourceDTOList(List<SourceEntity> sources);
+
+    // 🆕 NEW method for the summary DTO (MUST BE NAMED)
+    @Named("toSummaryDto") // Naming the single DTO converter as well for robustness
+    SourceSummaryDTO toSummaryDto(SourceEntity entity);
+
+    // Also, you need a method to convert the list for the LocationDTO (MUST BE NAMED)
+    @Named("toSummaryDtoList")
+    List<SourceSummaryDTO> toSummaryDtoList(List<SourceEntity> entities);
 }

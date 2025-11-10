@@ -3,6 +3,7 @@ package cz.rodro.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.vladmihalcea.hibernate.type.json.JsonType;
+import cz.rodro.constant.ConfessionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -40,6 +41,10 @@ public class SourceEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SourceType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ConfessionType confession;
 
     @URL(message = "Invalid URL")
     private String url;

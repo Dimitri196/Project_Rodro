@@ -1,6 +1,7 @@
 package cz.rodro.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import cz.rodro.constant.ConfessionType;
 import cz.rodro.constant.SourceType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -45,6 +46,9 @@ public class SourceDTO {
 
     @NotNull(message = "Source type cannot be null")
     private SourceType type;
+
+    @NotNull(message = "Confession cannot be null")
+    private ConfessionType confession;
 
     // --- Temporal Fields ---
     private Integer creationYear;

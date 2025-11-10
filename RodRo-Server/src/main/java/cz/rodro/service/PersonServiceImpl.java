@@ -6,7 +6,7 @@ import cz.rodro.dto.mapper.PersonMapper;
 import cz.rodro.dto.mapper.PersonSourceEvidenceMapper;
 import cz.rodro.entity.*;
 import cz.rodro.entity.repository.*;
-import cz.rodro.exception.NotFoundException;
+import cz.rodro.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable; // Ensure this specific import is used
@@ -95,7 +95,7 @@ public class PersonServiceImpl implements PersonService {
      *
      * @param personId ID of the person
      * @return PersonDTO representing the person
-     * @throws NotFoundException if no person with the given ID exists
+     * @throws ResourceNotFoundException if no person with the given ID exists
      */
     @Override
     @Transactional(readOnly = true)
@@ -107,7 +107,7 @@ public class PersonServiceImpl implements PersonService {
      * Removes a person by their ID.
      *
      * @param personId ID of the person to remove
-     * @throws NotFoundException if the person does not exist
+     * @throws ResourceNotFoundException if the person does not exist
      */
     @Override
     @Transactional
@@ -137,7 +137,7 @@ public class PersonServiceImpl implements PersonService {
      * @param id        ID of the person to update
      * @param personDTO DTO containing updated data
      * @return updated PersonDTO
-     * @throws NotFoundException if the person does not exist
+     * @throws ResourceNotFoundException if the person does not exist
      */
     @Override
     @Transactional
@@ -261,14 +261,14 @@ public class PersonServiceImpl implements PersonService {
     // ------------------- Private Helpers -------------------
 
     /**
-     * Fetches a person by ID or throws NotFoundException.
+     * Fetches a person by ID or throws ResourceNotFoundException.
      *
      * @param id person ID
      * @return PersonEntity
      */
     private PersonEntity fetchPersonById(Long id) {
         return personRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Person with ID " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Person with ID " + id + " not found"));
     }
 
     /**

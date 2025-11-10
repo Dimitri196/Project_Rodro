@@ -12,9 +12,9 @@ import cz.rodro.entity.SubdivisionEntity;
 import cz.rodro.entity.repository.DistrictRepository;
 import cz.rodro.entity.repository.LocationHistoryRepository;
 import cz.rodro.entity.repository.SubdivisionRepository;
+import cz.rodro.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import cz.rodro.exception.NotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -72,7 +72,7 @@ public class SubdivisionServiceImpl implements SubdivisionService {
     @Override
     public SubdivisionDTO getById(Long id) {
         SubdivisionEntity entity = subdivisionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Subdivision not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Subdivision not found"));
 
         SubdivisionDTO dto = subdivisionMapper.toSubdivisionDTO(entity);
 
@@ -91,11 +91,11 @@ public class SubdivisionServiceImpl implements SubdivisionService {
     public SubdivisionDTO create(SubdivisionDTO dto) {
         // District lookup and validation
         if (dto.getDistrict() == null || dto.getDistrict().getId() == null) {
-            throw new NotFoundException("District not provided for Subdivision creation");
+            throw new ResourceNotFoundException("District not provided for Subdivision creation");
         }
 
         DistrictEntity district = districtRepository.findById(dto.getDistrict().getId())
-                .orElseThrow(() -> new NotFoundException("District not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("District not found"));
 
         // Convert DTO to Entity
         SubdivisionEntity entity = subdivisionMapper.toSubdivisionEntity(dto);
@@ -109,12 +109,12 @@ public class SubdivisionServiceImpl implements SubdivisionService {
     @Override
     public SubdivisionDTO update(Long id, SubdivisionDTO dto) {
         SubdivisionEntity existingEntity = subdivisionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Subdivision not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Subdivision not found"));
 
         // If district is provided in the DTO, update it
         if (dto.getDistrict() != null && dto.getDistrict().getId() != null) {
             DistrictEntity district = districtRepository.findById(dto.getDistrict().getId())
-                    .orElseThrow(() -> new NotFoundException("District not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("District not found"));
             existingEntity.setDistrict(district);
         }
 
@@ -130,7 +130,7 @@ public class SubdivisionServiceImpl implements SubdivisionService {
     public void delete(Long id) {
         // Check if the subdivision exists before deleting
         if (!subdivisionRepository.existsById(id)) {
-            throw new NotFoundException("Subdivision not found");
+            throw new ResourceNotFoundException("Subdivision not found");
         }
         subdivisionRepository.deleteById(id);
     }

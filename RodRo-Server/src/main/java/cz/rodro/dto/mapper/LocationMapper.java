@@ -25,6 +25,7 @@ public interface LocationMapper {
     /**
      * Maps a full entity to a DTO.
      */
+    @Mapping(target = "sources", source = "sources", qualifiedByName = "toSummaryDtoList")
     LocationDTO toLocationDTO(LocationEntity entity);
 
     /**

@@ -32,6 +32,8 @@ const ProvinceDetail = () => {
         );
         setProvince(provinceData);
 
+        // Fetching country details is still necessary if you need complex country info
+        // or its name, even though ProvinceDTO now contains countryId/countryName.
         const countryData = await apiGet(`/api/countries/${countryId}`);
         setCountry(countryData);
       } catch (err) {
@@ -76,10 +78,15 @@ const ProvinceDetail = () => {
     );
   }
 
-  const { provinceName, provinceFlagImgUrl, districts = [] } = province;
+  // 1. DTO FIELD CORRECTION:
+  // ProvinceDTO now uses 'name' and 'imgUrl', not 'provinceName' and 'provinceFlagImgUrl'
+  const { name, imgUrl, districts = [] } = province;
+  
+  // Note: We use the country data fetched from /api/countries/{countryId}
+  // The backend CountryDTO uses 'nameInEnglish' and 'nameInPolish'
   const countryName =
-    country?.countryNameInEnglish ||
-    country?.countryNameInPolish ||
+    country?.nameInEnglish || // Corrected from countryNameInEnglish
+    country?.nameInPolish || // Corrected from countryNameInPolish
     "Unknown Country";
 
   return (
@@ -87,7 +94,8 @@ const ProvinceDetail = () => {
       {/* Back Button */}
       <Button
         as={Link}
-        to={`/countries/show/${country?._id || countryId}`}
+        // Use the ID from the country object (if fetched successfully) or the param
+        to={`/countries/show/${country?._id || countryId}`} 
         variant="secondary"
         className="mb-4"
       >
@@ -106,10 +114,10 @@ const ProvinceDetail = () => {
               <i className="fas fa-map me-2"></i>Province Details
             </Card.Header>
             <Card.Body className="p-4">
-              <h3 className="fw-bold mb-4">{provinceName}</h3>
+              <h3 className="fw-bold mb-4">{name}</h3>
               <ListGroup variant="flush">
                 <ListGroup.Item>
-                  <strong>Province Name:</strong> {provinceName}
+                  <strong>Province Name:</strong> {name} 
                 </ListGroup.Item>
                 <ListGroup.Item>
                   <strong>Country:</strong>{" "}
@@ -135,10 +143,10 @@ const ProvinceDetail = () => {
               <i className="fas fa-flag me-2"></i>Province Flag
             </Card.Header>
             <Card.Body className="p-4 d-flex justify-content-center align-items-center">
-              {provinceFlagImgUrl ? (
+              {imgUrl ? ( // Use 'imgUrl'
                 <img
-                  src={provinceFlagImgUrl}
-                  alt={`${provinceName} flag`}
+                  src={imgUrl}
+                  alt={`${name} flag`}
                   style={{
                     maxWidth: "100%",
                     height: "auto",
@@ -180,7 +188,8 @@ const ProvinceDetail = () => {
                       className="text-start mb-1 fw-semibold"
                     >
                       <i className="fas fa-circle me-2 text-secondary"></i>
-                      {district.districtName}
+                      {/* 2. DTO FIELD CORRECTION: Use 'district.name' */}
+                      {district.name} 
                     </Nav.Link>
                   </Nav.Item>
                 ))
@@ -194,31 +203,32 @@ const ProvinceDetail = () => {
 
           {/* District Content Column */}
           <Col md={9}>
-<Tab.Content className="p-4 bg-white rounded-3 shadow border">
-  {districts.length > 0 ? (
-    districts.map((district) => (
-      <Tab.Pane key={district._id} eventKey={district._id}>
-        <h5 className="fw-bold text-primary mb-3">
-          <span className="text-muted me-2">{provinceName} —</span>{" "}
-          <Link
-            to={`/countries/${countryId}/provinces/${provinceId}/districts/${district._id}`}
-            className="text-decoration-none text-primary"
-          >
-            {district.districtName}
-          </Link>
-        </h5>
-        <p className="text-muted">
-          {district.description ||
-            "This district is an administrative unit within the province."}
-        </p>
-      </Tab.Pane>
-    ))
-  ) : (
-    <Alert variant="info" className="mb-0">
-      No districts available for this province.
-    </Alert>
-  )}
-</Tab.Content>
+            <Tab.Content className="p-4 bg-white rounded-3 shadow border">
+              {districts.length > 0 ? (
+                districts.map((district) => (
+                  <Tab.Pane key={district._id} eventKey={district._id}>
+                    <h5 className="fw-bold text-primary mb-3">
+                      <span className="text-muted me-2">{name} —</span>{" "}
+                      <Link
+                        to={`/countries/${countryId}/provinces/${provinceId}/districts/${district._id}`}
+                        className="text-decoration-none text-primary"
+                      >
+                        {/* 3. DTO FIELD CORRECTION: Use 'district.name' */}
+                        {district.name} 
+                      </Link>
+                    </h5>
+                    <p className="text-muted">
+                      {district.description ||
+                        "This district is an administrative unit within the province."}
+                    </p>
+                  </Tab.Pane>
+                ))
+              ) : (
+                <Alert variant="info" className="mb-0">
+                  No districts available for this province.
+                </Alert>
+              )}
+            </Tab.Content>
           </Col>
         </Row>
       </Tab.Container>

@@ -19,4 +19,6 @@ public interface LocationHistoryService {
     List<LocationHistoryDTO> getHistoryForSubdivision(Long subdivisionId);
 
     List<LocationDTO> getLocationsBySubdivisionId(Long subdivisionId);
+
+    List<LocationDTO> getLocationsByDistrictId(Long districtId);
 }

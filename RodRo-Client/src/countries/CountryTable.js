@@ -59,8 +59,8 @@ const CountryTable = ({ label, items = [], deleteCountry }) => {
 
     const filteredItems = useMemo(() => {
         const filtered = items.filter(item =>
-            normalizeString(item.countryNameInPolish || "").includes(normalizeString(searchTerm)) ||
-            normalizeString(item.countryNameInEnglish || "").includes(normalizeString(searchTerm))
+            normalizeString(item.nameInPolish || "").includes(normalizeString(searchTerm)) ||
+            normalizeString(item.nameInEnglish || "").includes(normalizeString(searchTerm))
         );
 
         return filtered.sort((a, b) => {
@@ -158,10 +158,10 @@ const CountryTable = ({ label, items = [], deleteCountry }) => {
                     <thead>
                         <tr>
                             <th>#</th>
-                            {renderHeader("countryNameInPolish", "Polish Name")}
-                            {renderHeader("countryNameInEnglish", "English Name")}
-                            {renderHeader("countryEstablishmentYear", "Established")}
-                            {renderHeader("countryCancellationYear", "Cancelled")}
+                            {renderHeader("nameInPolish", "Polish Name")}
+                            {renderHeader("nameInEnglish", "English Name")}
+                            {renderHeader("establishmentYear", "Established")}
+                            {renderHeader("cancellationYear", "Cancelled")}
                             <th>Flag</th>
                             {isAdmin && <th>Actions</th>}
                         </tr>
@@ -172,17 +172,17 @@ const CountryTable = ({ label, items = [], deleteCountry }) => {
                                 <td>{startIndex + index + 1}</td>
                                 <td>
                                     <Link to={`/countries/show/${item._id}`} className="fw-bold text-dark text-decoration-none">
-                                        {item.countryNameInPolish}
+                                        {item.nameInPolish}
                                     </Link>
                                 </td>
-                                <td>{item.countryNameInEnglish}</td>
-                                <td>{item.countryEstablishmentYear || "-"}</td>
-                                <td>{item.countryCancellationYear || "-"}</td>
-                                <td>{item.countryFlagImgUrl ? <img src={item.countryFlagImgUrl} alt="Flag" className="flag-img"/> : "-"}</td>
+                                <td>{item.nameInEnglish}</td>
+                                <td>{item.establishmentYear || "-"}</td>
+                                <td>{item.cancellationYear || "-"}</td>
+                                <td>{item.flagImgUrl ? <img src={item.flagImgUrl} alt="Flag" className="flag-img"/> : "-"}</td>
                                 {isAdmin && (
                                     <td>
                                         <div className="btn-group">
-                                            <Link to={`/countries/edit/${item.id}`} className="btn btn-sm btn-warning">
+                                            <Link to={`/countries/edit/${item._id}`} className="btn btn-sm btn-warning">
                                                 <i className="fas fa-edit"></i>
                                             </Link>
                                             <Button onClick={() => deleteCountry(item.id)} variant="danger" size="sm">

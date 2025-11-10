@@ -40,26 +40,26 @@ const DistrictDetail = () => {
   };
 
   const sortLocationList = (list, asc) => {
-  const sorted = [...list].sort((a, b) => {
-    const nameA = normalizeString(a.locationName);
-    const nameB = normalizeString(b.locationName);
-    return asc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-  });
-  setSortedLocations(sorted);
-  filterLocations(sorted, searchTerm);
-};
+    const sorted = [...list].sort((a, b) => {
+      const nameA = normalizeString(a.locationName);
+      const nameB = normalizeString(b.locationName);
+      return asc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+    });
+    setSortedLocations(sorted);
+    filterLocations(sorted, searchTerm);
+  };
 
-const filterLocations = (list, term) => {
-  const normalizedTerm = normalizeString(term);
-  if (!normalizedTerm) {
-    setFilteredLocations(list);
-  } else {
-    const filtered = list.filter((loc) =>
-      normalizeString(loc.locationName).includes(normalizedTerm)
-    );
-    setFilteredLocations(filtered);
-  }
-};
+  const filterLocations = (list, term) => {
+    const normalizedTerm = normalizeString(term);
+    if (!normalizedTerm) {
+      setFilteredLocations(list);
+    } else {
+      const filtered = list.filter((loc) =>
+        normalizeString(loc.locationName).includes(normalizedTerm)
+      );
+      setFilteredLocations(filtered);
+    }
+  };
 
 
   const toggleSort = () => {
@@ -74,28 +74,33 @@ const filterLocations = (list, term) => {
     filterLocations(sortedLocations, term);
   };
 
-  useEffect(() => {
+useEffect(() => {
     const fetchData = async () => {
       try {
+        // 1. Fetch District: Use the dedicated DistrictController endpoint
         const districtData = await apiGet(
-          `/api/countries/${countryId}/provinces/${provinceId}/districts/${districtId}`
+          `/api/districts/${districtId}` 
         );
         setDistrict(districtData);
 
+        // 2. Fetch Province: Use the dedicated ProvinceController endpoint
         const provinceData = await apiGet(
-          `/api/countries/${countryId}/provinces/${provinceId}`
+          `/api/provinces/${provinceId}` // <-- FIX: Changed from /countries/{id}/provinces/{id}
         );
         setProvince(provinceData);
 
+        // 3. Fetch Country: This path remains correct
         const countryData = await apiGet(`/api/countries/${countryId}`);
         setCountry(countryData);
 
+        // 4. Fetch Locations: This path should still be valid in DistrictController
         const locationsData = await apiGet(
           `/api/districts/${districtId}/locations`
         );
         const uniqueLocations = deduplicateLocations(locationsData);
         setLocations(uniqueLocations);
         sortLocationList(uniqueLocations, true);
+        
       } catch (err) {
         setError(`Error loading district details: ${err.message || err}`);
       } finally {
@@ -124,10 +129,18 @@ const filterLocations = (list, term) => {
       </Container>
     );
   }
-
-  const { districtName = "N/A", districtFlagImgUrl } = district || {};
-  const provinceName = province?.provinceName || "Unknown Province";
-  const countryName = country?.countryNameInPolish || "Unknown Country";
+  
+  // FIX 1: Update destructuring for DistrictDTO fields
+  // Changed districtName to name and districtFlagImgUrl to imgUrl
+  const { name: districtName = "N/A", imgUrl: districtImgUrl } = district || {}; 
+  
+  // FIX 2: Update field access for ProvinceDTO field
+  // Changed provinceName to name
+  const provinceName = province?.name || "Unknown Province";
+  
+  // FIX 3: Update field access for CountryDTO field
+  // Changed countryNameInPolish to nameInPolish
+  const countryName = country?.nameInPolish || "Unknown Country";
 
   return (
     <Container className="mt-5">
@@ -191,9 +204,9 @@ const filterLocations = (list, term) => {
               <i className="fas fa-flag me-2"></i> District Flag / Image
             </Card.Header>
             <Card.Body className="d-flex justify-content-center align-items-center">
-              {districtFlagImgUrl ? (
+              {districtImgUrl ? ( // FIX 4: Use districtImgUrl
                 <img
-                  src={districtFlagImgUrl}
+                  src={districtImgUrl}
                   alt={`${districtName} flag`}
                   className="img-fluid rounded shadow-sm"
                   style={{ maxHeight: "250px" }}
@@ -251,7 +264,7 @@ const filterLocations = (list, term) => {
                         style={{ fontSize: "0.9rem" }}
                       />
                       <Link
-                        to={`/locations/show/${location.locationId}`}
+                        to={`/locations/show/${location._id}`}
                         className="text-decoration-none fw-bold text-dark"
                       >
                         {location.locationName || "Unnamed Location"}

@@ -1,99 +1,116 @@
 package cz.rodro.controller;
 
+import cz.rodro.dto.CountryContinentHistoryDTO;
 import cz.rodro.dto.CountryDTO;
-import cz.rodro.dto.DistrictDTO;
 import cz.rodro.dto.ProvinceDTO;
+import cz.rodro.service.CountryContinentHistoryService;
 import cz.rodro.service.CountryService;
-import cz.rodro.service.DistrictService;
 import cz.rodro.service.ProvinceService;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/countries")
+@Tag(name = "Country Management", description = "Endpoints for handling Countries and their nested geographical data.")
 public class CountryController {
 
-    @Autowired
-    private CountryService countryService;
+    private final CountryService countryService;
+    private final ProvinceService provinceService;
+    private final CountryContinentHistoryService historyService;
 
-    @Autowired
-    private ProvinceService provinceService;
-
-    @Autowired
-    private DistrictService districtService;
-
-    // Country endpoints
-    @GetMapping("/countries")
-    public List<CountryDTO> getAll() {
-        return countryService.getAll();
+    public CountryController(
+            CountryService countryService,
+            ProvinceService provinceService,
+            CountryContinentHistoryService historyService) {
+        this.countryService = countryService;
+        this.provinceService = provinceService;
+        this.historyService = historyService;
     }
 
-    @PostMapping("/countries")
-    public CountryDTO addCountry(@RequestBody CountryDTO countryDTO) {
-        return countryService.addCountry(countryDTO);
+    // ------------------------------------
+    // --- 1. CORE COUNTRY ENDPOINTS ---
+    // ------------------------------------
+
+    @Operation(summary = "Get a list of all countries.")
+    @PreAuthorize("permitAll()")
+    @GetMapping // Maps to /api/countries
+    public ResponseEntity<List<CountryDTO>> getAllCountries() {
+        return ResponseEntity.ok(countryService.getAll());
     }
 
-    @GetMapping("/countries/{countryId}")
-    public CountryDTO getCountry(@PathVariable long countryId) {
-        CountryDTO countryDTO = countryService.getCountry(countryId);
-        System.out.println("Country DTO: " + countryDTO);  // Log the returned countryDTO
-        return countryDTO;
+    @Operation(summary = "Create a new country.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    public ResponseEntity<CountryDTO> addCountry(@Valid @RequestBody CountryDTO countryDTO) {
+        return new ResponseEntity<>(countryService.addCountry(countryDTO), HttpStatus.CREATED);
     }
 
-    @PutMapping("/countries/{countryId}")
-    public CountryDTO updateCountry(@PathVariable long countryId, @RequestBody CountryDTO countryDTO) {
-        return countryService.updateCountry(countryId, countryDTO);
+    @Operation(summary = "Get a country by ID, including its provinces and continent history.")
+    @PreAuthorize("permitAll()")
+    @GetMapping("/{countryId}")
+    public ResponseEntity<CountryDTO> getCountry(@PathVariable long countryId) {
+        return ResponseEntity.ok(countryService.getCountry(countryId));
     }
 
-    // Province endpoints integrated with CountryController
-    @PostMapping("/countries/{countryId}/provinces")
-    public ProvinceDTO addProvinceToCountry(@PathVariable long countryId, @RequestBody ProvinceDTO provinceDTO) {
-        // Create an empty CountryDTO and set the countryId
-        CountryDTO countryDTO = new CountryDTO();  // Empty countryDTO
-        countryDTO.setId(countryId);  // Set the countryId
-
-        // Set the country reference to the province
-        provinceDTO.setCountry(countryDTO);
-
-        // Add the province to the country
-        return provinceService.addProvince(provinceDTO);
+    @Operation(summary = "Update an existing country.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{countryId}")
+    public ResponseEntity<CountryDTO> updateCountry(
+            @PathVariable long countryId,
+            @Valid @RequestBody CountryDTO countryDTO) {
+        return ResponseEntity.ok(countryService.updateCountry(countryId, countryDTO));
     }
 
-    @GetMapping("/countries/{countryId}/provinces/{provinceId}")
-    public ProvinceDTO getProvinceFromCountry(@PathVariable long countryId, @PathVariable long provinceId) {
-        return provinceService.getProvince(provinceId);
+    // ------------------------------------
+    // --- 2. HISTORY ENDPOINTS (Nested) ---
+    // ------------------------------------
+
+    @Operation(summary = "Get all continent history records for a specific country.")
+    @PreAuthorize("permitAll()")
+    @GetMapping("/{countryId}/continent-history")
+    public ResponseEntity<List<CountryContinentHistoryDTO>> getHistoryByCountry(
+            @PathVariable long countryId) {
+        return ResponseEntity.ok(historyService.getHistoryByCountry(countryId));
     }
 
-    @PutMapping("/countries/{countryId}/provinces/{provinceId}")
-    public ProvinceDTO updateProvinceFromCountry(@PathVariable long countryId, @PathVariable long provinceId, @RequestBody ProvinceDTO provinceDTO) {
-        // Set the country reference using the countryId
-        CountryDTO countryDTO = new CountryDTO();
-        countryDTO.setId(countryId);
-        provinceDTO.setCountry(countryDTO);
+    @Operation(summary = "Create a new continent history record for a country.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{countryId}/continent-history")
+    public ResponseEntity<CountryContinentHistoryDTO> addHistoryToCountry(
+            @PathVariable long countryId,
+            @Valid @RequestBody CountryContinentHistoryDTO historyDTO) {
 
-        return provinceService.updateProvince(provinceId, provinceDTO);
+        historyDTO.setCountryId(countryId);
+        return new ResponseEntity<>(historyService.addHistoryRecord(historyDTO), HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/countries/{countryId}/provinces/{provinceId}")
-    public void deleteProvinceFromCountry(@PathVariable long countryId, @PathVariable long provinceId) {
-        provinceService.removeProvince(provinceId);
+    @Operation(summary = "Update an existing continent history record.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{countryId}/continent-history/{historyId}")
+    public ResponseEntity<CountryContinentHistoryDTO> updateHistoryFromCountry(
+            @PathVariable long countryId,
+            @PathVariable long historyId,
+            @Valid @RequestBody CountryContinentHistoryDTO historyDTO) {
+
+        historyDTO.setCountryId(countryId);
+        return ResponseEntity.ok(historyService.updateHistoryRecord(historyId, historyDTO));
     }
 
-    // Districts endpoints integrated with ProvinceController
-    @GetMapping("/countries/{countryId}/provinces/{provinceId}/districts")
-    public List<DistrictDTO> getDistrictsByProvince(@PathVariable long countryId, @PathVariable long provinceId) {
-        return districtService.getDistrictsByProvince(provinceId);
-    }
+    @Operation(summary = "Delete a specific continent history record.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{countryId}/continent-history/{historyId}")
+    public ResponseEntity<Void> deleteHistoryFromCountry(
+            @PathVariable long countryId,
+            @PathVariable long historyId) {
 
-    @GetMapping("/countries/{countryId}/provinces/{provinceId}/districts/{districtId}")
-    public DistrictDTO getDistrictById(@PathVariable long countryId, @PathVariable long provinceId, @PathVariable long districtId) {
-        return districtService.getDistrict(districtId);
-    }
-
-    @GetMapping("/countries/{countryId}/provinces")
-    public List<ProvinceDTO> getProvincesByCountry(@PathVariable long countryId) {
-        return provinceService.getProvincesByCountry(countryId);
+        historyService.deleteHistoryRecord(historyId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

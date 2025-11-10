@@ -48,12 +48,14 @@ const MilitaryStructureTable = ({ label = "Military Structures", items, deleteSt
         const filtered = items.filter(item =>
             normalizeString(item.unitName || "").includes(normalizeString(searchTerm)) ||
             normalizeString(item.unitType || "").includes(normalizeString(searchTerm)) ||
-            normalizeString(item.organization?.armyName || "").includes(normalizeString(searchTerm))
+            // 🌟 REFACTOR: Use item.organization?.name instead of item.organization?.armyName
+            normalizeString(item.organization?.name || "").includes(normalizeString(searchTerm))
         );
 
         return filtered.sort((a, b) => {
-            let valA = sortKey === "organization" ? a.organization?.armyName || "" : a[sortKey] || "";
-            let valB = sortKey === "organization" ? b.organization?.armyName || "" : b[sortKey] || "";
+            // 🌟 REFACTOR: Use item.organization?.name for organization sort key
+            let valA = sortKey === "organization" ? a.organization?.name || "" : a[sortKey] || "";
+            let valB = sortKey === "organization" ? b.organization?.name || "" : b[sortKey] || "";
 
             if (typeof valA === 'number' && typeof valB === 'number') return sortAsc ? valA - valB : valB - valA;
             return sortAsc
@@ -101,7 +103,7 @@ const MilitaryStructureTable = ({ label = "Military Structures", items, deleteSt
 
     const renderActiveYears = (from, to) => (
         <>
-            <Badge bg="success" className="me-1">{from || "?"}</Badge> – 
+            <Badge bg="success" className="me-1">{from || "?"}</Badge> –
             {to ? <Badge bg="danger" className="ms-1">{to}</Badge> : <Badge bg="info" className="ms-1">Present</Badge>}
         </>
     );
@@ -149,17 +151,23 @@ const MilitaryStructureTable = ({ label = "Military Structures", items, deleteSt
                     </thead>
                     <tbody>
                         {currentItems.length > 0 ? currentItems.map((item, index) => (
-                            <tr key={item._id || index}>
+                            <tr key={item._id || item.id || index}> {/* Added item.id fallback for robustness */}
                                 <td>{startIndex + index + 1}</td>
-                                <td><Link to={`/militaryStructures/show/${item._id}`} className="fw-bold text-dark text-decoration-none">{item.unitName}</Link></td>
+                                <td><Link to={`/militaryStructures/show/${item._id || item.id}`} className="fw-bold text-dark text-decoration-none">{item.unitName}</Link></td>
                                 <td>{renderUnitTypeBadge(item.unitType)}</td>
-                                <td>{item.organization ? <Link to={`/militaryOrganizations/show/${item.organization._id}`} className="text-primary fw-semibold">{item.organization.armyName}</Link> : <i className="text-muted">N/A</i>}</td>
+                                <td>
+                                    {item.organizationName && item.organizationId ? ( // Check for the flat properties
+                                        <Link to={`/militaryOrganizations/show/${item.organizationId}`} className="text-primary fw-semibold">
+                                            {item.organizationName}
+                                        </Link>
+                                    ) : <i className="text-muted">N/A</i>}
+                                </td>
                                 <td>{renderActiveYears(item.activeFromYear, item.activeToYear)}</td>
                                 {isAdmin && (
                                     <td className="text-center">
                                         <div className="btn-group action-button-group">
-                                            <Link to={`/militaryStructures/edit/${item._id}`} className="btn btn-sm btn-warning"><i className="fas fa-edit"></i></Link>
-                                            <Button onClick={() => deleteStructure(item._id)} variant="danger" size="sm"><i className="fas fa-trash-alt"></i></Button>
+                                            <Link to={`/militaryStructures/edit/${item._id || item.id}`} className="btn btn-sm btn-warning"><i className="fas fa-edit"></i></Link>
+                                            <Button onClick={() => deleteStructure(item._id || item.id)} variant="danger" size="sm"><i className="fas fa-trash-alt"></i></Button>
                                         </div>
                                     </td>
                                 )}

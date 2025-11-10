@@ -18,4 +18,7 @@ public interface LocationHistoryRepository extends JpaRepository<LocationHistory
 
     @Query("SELECT DISTINCT lh.location FROM LocationHistoryEntity lh WHERE lh.subdivision.id = :subdivisionId")
     List<LocationEntity> findDistinctLocationsBySubdivisionId(@Param("subdivisionId") Long subdivisionId);
+
+    @Query("SELECT DISTINCT lh.location FROM LocationHistoryEntity lh WHERE lh.district.id = :districtId")
+    List<LocationEntity> findDistinctLocationsByDistrictId(@Param("districtId") Long districtId);
 }

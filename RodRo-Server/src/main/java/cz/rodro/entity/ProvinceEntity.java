@@ -22,7 +22,7 @@ public class ProvinceEntity {
 
     @Column(nullable = false)
     @NotNull
-    private String provinceName;
+    private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "province_country_id", nullable = false)
@@ -33,8 +33,6 @@ public class ProvinceEntity {
     @JsonManagedReference
     private List<DistrictEntity> districts = new ArrayList<>();
 
-    @Column
-    private String provinceFlagImgUrl;
+    @Column(length = 2000)
+    private String imgUrl;
 }
-
-

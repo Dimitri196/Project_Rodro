@@ -10,36 +10,33 @@ import cz.rodro.entity.MilitaryStructureEntity;
 import cz.rodro.entity.repository.MilitaryOrganizationRepository;
 import cz.rodro.entity.repository.MilitaryRankRepository;
 import cz.rodro.entity.repository.MilitaryStructureRepository;
-import cz.rodro.exception.NotFoundException;
+import cz.rodro.exception.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-
+/**
+ * Concrete implementation of the MilitaryStructureService interface.
+ * Handles business logic, including linking to the parent organization and rank lookups.
+ */
 @Service
+@RequiredArgsConstructor
 public class MilitaryStructureServiceImpl implements MilitaryStructureService {
 
-    @Autowired
-    private MilitaryStructureRepository militaryStructureRepository;
+    private final MilitaryStructureRepository militaryStructureRepository;
+    private final MilitaryStructureMapper militaryStructureMapper;
+    private final MilitaryRankMapper militaryRankMapper;
+    private final MilitaryRankRepository militaryRankRepository;
+    private final MilitaryOrganizationRepository militaryOrganizationRepository;
 
-    @Autowired
-    private MilitaryStructureMapper militaryStructureMapper;
-
-    @Autowired
-    private MilitaryRankMapper militaryRankMapper;
-
-    @Autowired
-    private MilitaryRankRepository militaryRankRepository;
-
-    // New dependency for handling the organization relationship
-    @Autowired
-    private MilitaryOrganizationRepository militaryOrganizationRepository;
-
-
+    /**
+     * @inheritDoc
+     */
     @Override
     public List<MilitaryStructureDTO> getAll() {
         return militaryStructureRepository
@@ -49,87 +46,88 @@ public class MilitaryStructureServiceImpl implements MilitaryStructureService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
-    public MilitaryStructureDTO getMilitaryStructure(long structureId) {
-        MilitaryStructureEntity entity = militaryStructureRepository.findByIdWithParent(structureId)
-                .orElseThrow(() -> new NotFoundException("MilitaryStructure with id " + structureId + " wasn't found."));
+    public MilitaryStructureDTO getMilitaryStructure(Long structureId) {
+        // FIX: Find by ID, as findByIdWithParent relies on removed hierarchy field
+        MilitaryStructureEntity entity = militaryStructureRepository.findById(structureId)
+                .orElseThrow(() -> new ResourceNotFoundException("Military Structure", "ID", structureId));
         return militaryStructureMapper.toMilitaryStructureDTO(entity);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     @Transactional
     public MilitaryStructureDTO addMilitaryStructure(MilitaryStructureDTO dto) {
         MilitaryStructureEntity entity = militaryStructureMapper.toMilitaryStructureEntity(dto);
 
         // Logic to set the MilitaryOrganizationEntity from the DTO
-        if (dto.getOrganization() != null && dto.getOrganization().getId() != null) {
-            MilitaryOrganizationEntity organizationEntity = militaryOrganizationRepository.findById(dto.getOrganization().getId())
-                    .orElseThrow(() -> new NotFoundException("MilitaryOrganization with id " + dto.getOrganization().getId() + " wasn't found."));
-            entity.setOrganization(organizationEntity);
-        } else {
-            entity.setOrganization(null);
-        }
+        setOrganization(entity, dto.getOrganizationId());
 
-        // Logic to set the parent structure from the DTO
-        if (dto.getParentStructure() != null && dto.getParentStructure().getId() != null) {
-            MilitaryStructureEntity parentEntity = militaryStructureRepository.findById(dto.getParentStructure().getId())
-                    .orElseThrow(() -> new NotFoundException("Parent MilitaryStructure with id " + dto.getParentStructure().getId() + " wasn't found."));
-            entity.setParentStructure(parentEntity);
-        } else {
-            entity.setParentStructure(null);
-        }
+        // REMOVED: Logic to set the parent structure (Hierarchy is removed)
 
         entity = militaryStructureRepository.save(entity);
         return militaryStructureMapper.toMilitaryStructureDTO(entity);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
-    public MilitaryStructureDTO removeMilitaryStructure(long structureId) {
-        MilitaryStructureEntity entity = militaryStructureRepository.findById(structureId)
-                .orElseThrow(EntityNotFoundException::new);
-        MilitaryStructureDTO dto = militaryStructureMapper.toMilitaryStructureDTO(entity);
-        militaryStructureRepository.delete(entity);
-        return dto;
+    @Transactional
+    public void deleteMilitaryStructure(Long structureId) {
+        // FIX: Changed return type to void and used ResourceNotFoundException
+        if (!militaryStructureRepository.existsById(structureId)) {
+            throw new ResourceNotFoundException("Military Structure", "ID", structureId);
+        }
+        militaryStructureRepository.deleteById(structureId);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     @Transactional
     public MilitaryStructureDTO updateMilitaryStructure(Long structureId, MilitaryStructureDTO dto) {
         MilitaryStructureEntity entity = militaryStructureRepository.findById(structureId)
-                .orElseThrow(() -> new NotFoundException("MilitaryStructure with id " + structureId + " wasn't found in the database"));
+                .orElseThrow(() -> new ResourceNotFoundException("Military Structure", "ID", structureId));
 
         // Logic to update the MilitaryOrganizationEntity from the DTO
-        if (dto.getOrganization() != null && dto.getOrganization().getId() != null) {
-            MilitaryOrganizationEntity organizationEntity = militaryOrganizationRepository.findById(dto.getOrganization().getId())
-                    .orElseThrow(() -> new NotFoundException("MilitaryOrganization with id " + dto.getOrganization().getId() + " wasn't found."));
-            entity.setOrganization(organizationEntity);
-        } else {
-            entity.setOrganization(null);
+        if (dto.getOrganizationId() != null) {
+            setOrganization(entity, dto.getOrganizationId());
         }
 
-        // Logic to update the parent structure from the DTO
-        if (dto.getParentStructure() != null && dto.getParentStructure().getId() != null) {
-            MilitaryStructureEntity parentEntity = militaryStructureRepository.findById(dto.getParentStructure().getId())
-                    .orElseThrow(() -> new NotFoundException("Parent MilitaryStructure with id " + dto.getParentStructure().getId() + " wasn't found."));
-            entity.setParentStructure(parentEntity);
-        } else {
-            entity.setParentStructure(null);
-        }
+        // REMOVED: Logic to update the parent structure
 
         militaryStructureMapper.updateMilitaryStructureEntity(dto, entity);
         militaryStructureRepository.save(entity);
         return militaryStructureMapper.toMilitaryStructureDTO(entity);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public MilitaryStructureEntity fetchMilitaryStructureById(Long id, String type) {
         return militaryStructureRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(type + " with id " + id + " wasn't found in the database."));
+                .orElseThrow(() -> new ResourceNotFoundException(type, "ID", id));
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public List<MilitaryRankDTO> getRanksForStructure(Long structureId) {
-        // Find ranks associated directly with the military structure using the new repository method.
+        // 1. Ensure the structure exists before querying for ranks
+        if (!militaryStructureRepository.existsById(structureId)) {
+            throw new ResourceNotFoundException("Military Structure", "ID", structureId);
+        }
+
+        // 2. Find ranks associated directly with the military structure.
         List<MilitaryRankEntity> ranks = militaryRankRepository.findByMilitaryStructureId(structureId);
 
         return ranks.stream()
@@ -137,33 +135,17 @@ public class MilitaryStructureServiceImpl implements MilitaryStructureService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Corrected method to get all sub-structures (e.g., regiments) for a given parent structure,
-     * with each sub-structure containing its specific ranks.
-     * @param parentStructureId The ID of the parent military structure.
-     * @return A list of MilitaryStructureDTO objects, each with its specific ranks populated.
-     */
-    @Override
-    public List<MilitaryStructureDTO> getRegimentsWithRanksForStructure(Long parentStructureId) {
-        // Step 1: Find all sub-structures (regiments) of the parent structure.
-        List<MilitaryStructureEntity> regiments = militaryStructureRepository.findByParentStructure_Id(parentStructureId);
+    // --- Private Helper Method ---
 
-        // Step 2: For each regiment, get the ranks associated directly with it and populate the DTO.
-        return regiments.stream()
-                .map(regiment -> {
-                    MilitaryStructureDTO regimentDto = militaryStructureMapper.toMilitaryStructureDTO(regiment);
-
-                    // We now get ranks directly from the MilitaryRankRepository using the new method
-                    List<MilitaryRankEntity> ranks = militaryRankRepository.findByMilitaryStructureId(regiment.getId());
-
-                    List<MilitaryRankDTO> rankDtos = ranks.stream()
-                            .map(militaryRankMapper::toMilitaryRankDTO)
-                            .collect(Collectors.toList());
-
-                    regimentDto.setRanks(rankDtos);
-
-                    return regimentDto;
-                })
-                .collect(Collectors.toList());
+    private void setOrganization(MilitaryStructureEntity entity, Long organizationId) {
+        if (organizationId != null) {
+            MilitaryOrganizationEntity organizationEntity = militaryOrganizationRepository.findById(organizationId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Military Organization", "ID", organizationId));
+            entity.setOrganization(organizationEntity);
+        } else {
+            // You might want to allow null organization or enforce it based on business rules
+            entity.setOrganization(null);
+        }
     }
+
 }

@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 public class MilitaryStructureSimpleDTO {
     @JsonProperty("_id")
     private Long id;
-    private String unitName;
+    private String name;
+    private String type;
 }

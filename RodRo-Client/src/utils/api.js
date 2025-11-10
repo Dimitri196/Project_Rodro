@@ -1,5 +1,6 @@
-// API_URL = "http://194.182.86.112:8080";
+// const API_URL = "https://api.familiarum.eu";
 
+// API_URL = "https://194.182.86.112:8080";
 const API_URL = "http://localhost:8080";
 
 // Custom error for better debugging

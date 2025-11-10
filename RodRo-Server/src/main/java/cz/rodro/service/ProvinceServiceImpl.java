@@ -1,6 +1,5 @@
 package cz.rodro.service;
 
-import cz.rodro.dto.CountryDTO;
 import cz.rodro.dto.DistrictDTO;
 import cz.rodro.dto.ProvinceDTO;
 import cz.rodro.dto.mapper.DistrictMapper;
@@ -8,12 +7,10 @@ import cz.rodro.dto.mapper.ProvinceMapper;
 import cz.rodro.entity.CountryEntity;
 import cz.rodro.entity.ProvinceEntity;
 import cz.rodro.entity.repository.CountryRepository;
-import cz.rodro.entity.repository.DistrictRepository;
 import cz.rodro.entity.repository.ProvinceRepository;
+import cz.rodro.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import cz.rodro.exception.NotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,27 +32,24 @@ public class ProvinceServiceImpl implements ProvinceService {
 
     @Override
     public ProvinceDTO addProvince(ProvinceDTO provinceDTO) {
-        // Find the country from the CountryDTO (assuming the country is already provided in the DTO)
-        CountryEntity countryEntity = countryRepository.findById(provinceDTO.getCountry().getId())
-                .orElseThrow(() -> new NotFoundException("Country not found"));
+        CountryEntity countryEntity = countryRepository.findById(provinceDTO.getCountryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Country not found with ID: " + provinceDTO.getCountryId()));
 
-        // Map the ProvinceDTO to ProvinceEntity and associate the country
         ProvinceEntity provinceEntity = provinceMapper.toProvinceEntity(provinceDTO);
-        provinceEntity.setCountry(countryEntity);
+        provinceEntity.setCountry(countryEntity); // Associate the fetched CountryEntity
 
-        // Save the entity and return the DTO
         provinceEntity = provinceRepository.save(provinceEntity);
+
         return provinceMapper.toProvinceDTO(provinceEntity);
     }
 
     @Override
     public ProvinceDTO getProvince(long provinceId) {
         ProvinceEntity provinceEntity = provinceRepository.findById(provinceId)
-                .orElseThrow(() -> new NotFoundException("Province not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Province not found"));
 
         ProvinceDTO provinceDTO = provinceMapper.toProvinceDTO(provinceEntity);
 
-        // Manually populate districts
         List<DistrictDTO> districtDTOs = provinceEntity.getDistricts().stream()
                 .map(districtMapper::toDistrictDTO)
                 .collect(Collectors.toList());
@@ -67,7 +61,7 @@ public class ProvinceServiceImpl implements ProvinceService {
     @Override
     public void removeProvince(long provinceId) {
         ProvinceEntity provinceEntity = provinceRepository.findById(provinceId)
-                .orElseThrow(() -> new NotFoundException("Province not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Province not found"));
 
         provinceRepository.delete(provinceEntity);
     }
@@ -75,31 +69,33 @@ public class ProvinceServiceImpl implements ProvinceService {
     @Override
     public ProvinceDTO updateProvince(Long provinceId, ProvinceDTO provinceDTO) {
         ProvinceEntity provinceEntity = provinceRepository.findById(provinceId)
-                .orElseThrow(() -> new NotFoundException("Province not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Province not found"));
 
-        // Update the entity's fields using the provided DTO
         provinceMapper.updateProvinceEntity(provinceDTO, provinceEntity);
 
-        // Optionally update the associated country if needed (like in the addProvince method)
-        if (provinceDTO.getCountry() != null) {
-            CountryEntity countryEntity = countryRepository.findById(provinceDTO.getCountry().getId())
-                    .orElseThrow(() -> new NotFoundException("Country not found"));
+        if (provinceDTO.getCountryId() != null) {
+            CountryEntity countryEntity = countryRepository.findById(provinceDTO.getCountryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Country not found with ID: " + provinceDTO.getCountryId()));
             provinceEntity.setCountry(countryEntity);
+        } else if (provinceEntity.getCountry() != null) {
+
         }
 
         provinceEntity = provinceRepository.save(provinceEntity);
+
         return provinceMapper.toProvinceDTO(provinceEntity);
     }
 
     @Override
     public List<ProvinceDTO> getProvincesByCountry(long countryId) {
-        List<ProvinceEntity> provinces = provinceRepository.findByCountryId(countryId);
+
+        List<ProvinceEntity> provinces = provinceRepository.findByCountry_Id(countryId);
 
         return provinces.stream()
                 .map(province -> {
+
                     ProvinceDTO provinceDTO = provinceMapper.toProvinceDTO(province);
 
-                    // Manually populate districts
                     List<DistrictDTO> districtDTOs = province.getDistricts().stream()
                             .map(districtMapper::toDistrictDTO)
                             .collect(Collectors.toList());

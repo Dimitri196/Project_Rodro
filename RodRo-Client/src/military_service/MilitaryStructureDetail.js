@@ -153,7 +153,7 @@ const MilitaryStructureDetail = () => {
                                     {ranks.map((rank) => (
                                         <Nav.Item key={rank._id}>
                                             <Nav.Link eventKey={rank._id} className="text-start mb-1 fw-semibold">
-                                                <i className="fas fa-medal me-2"></i> {rank.rankName}
+                                                <i className="fas fa-medal me-2"></i> {rank.name}
                                             </Nav.Link>
                                         </Nav.Item>
                                     ))}
@@ -167,7 +167,7 @@ const MilitaryStructureDetail = () => {
                                         <Tab.Pane key={rank._id} eventKey={rank._id}>
                                             <h4 className="fw-bold text-dark border-bottom pb-2 mb-3">
                                                 <Link to={`/militaryRanks/show/${rank._id}`} className="text-decoration-none text-primary">
-                                                    {rank.rankName}
+                                                    {rank.name}
                                                 </Link>
                                             </h4>
 

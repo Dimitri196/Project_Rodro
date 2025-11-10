@@ -18,7 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
-import cz.rodro.exception.NotFoundException;
+import cz.rodro.exception.ResourceNotFoundException;
 
 import java.net.URI;
 import java.util.List;
@@ -235,7 +235,7 @@ public class PersonController {
     @GetMapping("/persons/{id}/children")
     public ResponseEntity<List<PersonDTO>> getChildren(@PathVariable Long id) {
         PersonEntity parent = personRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Person not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Person not found"));
         List<PersonDTO> childrenDTOs = personRepository.findChildrenByParent(parent).stream()
                 .map(personMapper::toDTO)
                 .collect(Collectors.toList());

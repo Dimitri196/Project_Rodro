@@ -4,7 +4,7 @@ import cz.rodro.dto.SourceDTO;
 import cz.rodro.dto.SourceListDTO;
 import cz.rodro.entity.LocationEntity;
 import cz.rodro.entity.SourceEntity;
-import cz.rodro.exception.NotFoundException;
+import cz.rodro.exception.ResourceNotFoundException;
 import cz.rodro.dto.mapper.SourceListMapper;
 import cz.rodro.dto.mapper.SourceMapper;
 import cz.rodro.dto.SourceListProjection;
@@ -100,13 +100,13 @@ public class SourceServiceImpl implements SourceService {
     }
 
     /**
-     * Utility method to fetch a SourceEntity by ID or throw NotFoundException.
+     * Utility method to fetch a SourceEntity by ID or throw ResourceNotFoundException.
      *
      * @param id the source ID
      * @return the SourceEntity
      */
     private SourceEntity fetchSourceById(Long id) {
         return sourceRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Source with ID " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Source with ID " + id + " not found"));
     }
 }

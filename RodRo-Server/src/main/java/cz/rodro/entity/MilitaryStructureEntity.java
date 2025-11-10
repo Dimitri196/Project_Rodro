@@ -19,11 +19,17 @@ public class MilitaryStructureEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String unitName;
-    private String unitType;
+    @Column(name = "unit_name", nullable = false, length = 255)
+    private String name;
+
+    @Column(name = "unit_type", nullable = false, length = 100)
+    private String type;
+
     private String activeFromYear;
     private String activeToYear;
-    private String notes; // Added notes field
+
+    @Column(length = 1000)
+    private String notes;
 
     @Column(nullable = true)
     private String bannerImageUrl;
@@ -33,14 +39,5 @@ public class MilitaryStructureEntity {
     @JsonBackReference("organization-structures")
     private MilitaryOrganizationEntity organization;
 
-    // New self-referential relationship for parent structure
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_structure_id")
-    @JsonBackReference("parent-substructures")
-    private MilitaryStructureEntity parentStructure;
 
-    // New self-referential relationship for sub-structures
-    @OneToMany(mappedBy = "parentStructure", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference("parent-substructures")
-    private List<MilitaryStructureEntity> subStructures = new ArrayList<>();
 }

@@ -11,36 +11,35 @@ import cz.rodro.entity.repository.MilitaryOrganizationRepository;
 import cz.rodro.entity.repository.MilitaryRankRepository;
 import cz.rodro.entity.repository.MilitaryStructureRepository;
 import cz.rodro.entity.repository.PersonMilitaryServiceRepository;
-import cz.rodro.exception.NotFoundException;
+import cz.rodro.exception.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Concrete implementation of the MilitaryRankService interface.
+ * Handles business logic, including linking to the organization/structure and fetching associated personnel.
+ */
 @Service
+@RequiredArgsConstructor
 public class MilitaryRankServiceImpl implements MilitaryRankService {
 
-    @Autowired
-    private MilitaryRankRepository militaryRankRepository;
+    // Using @RequiredArgsConstructor for constructor injection
+    private final MilitaryRankRepository militaryRankRepository;
+    private final MilitaryRankMapper militaryRankMapper;
+    private final PersonMilitaryServiceRepository personMilitaryServiceRepository;
+    private final PersonMilitaryServiceMapper personMilitaryServiceMapper;
+    private final MilitaryOrganizationRepository militaryOrganizationRepository;
+    private final MilitaryStructureRepository militaryStructureRepository;
 
-    @Autowired
-    private MilitaryRankMapper militaryRankMapper;
-
-    @Autowired
-    private PersonMilitaryServiceRepository personMilitaryServiceRepository;
-
-    @Autowired
-    private PersonMilitaryServiceMapper personMilitaryServiceMapper;
-
-    @Autowired
-    private MilitaryOrganizationRepository militaryOrganizationRepository;
-
-    @Autowired
-    private MilitaryStructureRepository militaryStructureRepository; // New dependency
-
+    /**
+     * @inheritDoc
+     */
     @Override
     public List<MilitaryRankDTO> getAll() {
         return militaryRankRepository
@@ -50,20 +49,28 @@ public class MilitaryRankServiceImpl implements MilitaryRankService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public MilitaryRankDTO getMilitaryRank(Long id) {
         MilitaryRankEntity entity = militaryRankRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("MilitaryRank with id " + id + " wasn't found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Military Rank", "ID", id));
         return militaryRankMapper.toMilitaryRankDTO(entity);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public MilitaryRankDTO getMilitaryRankWithPersons(Long id) {
+        // Use findByIdWithDetails if implemented, otherwise rely on the default findById and map.
         MilitaryRankEntity entity = militaryRankRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("MilitaryRank with id " + id + " wasn't found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Military Rank", "ID", id));
 
         MilitaryRankDTO dto = militaryRankMapper.toMilitaryRankDTO(entity);
 
+        // Fetch the list of associated service records
         List<PersonMilitaryServiceDTO> persons = personMilitaryServiceRepository.findAllByMilitaryRankId(id)
                 .stream()
                 .map(personMilitaryServiceMapper::toDto)
@@ -73,74 +80,90 @@ public class MilitaryRankServiceImpl implements MilitaryRankService {
         return dto;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     @Transactional
     public MilitaryRankDTO addMilitaryRank(MilitaryRankDTO dto) {
         MilitaryRankEntity entity = militaryRankMapper.toMilitaryRankEntity(dto);
 
-        // Logic to set MilitaryOrganizationEntity
-        if (dto.getMilitaryOrganization() != null && dto.getMilitaryOrganization().getId() != null) {
-            MilitaryOrganizationEntity organizationEntity = militaryOrganizationRepository.findById(dto.getMilitaryOrganization().getId())
-                    .orElseThrow(() -> new NotFoundException("MilitaryOrganization with id " + dto.getMilitaryOrganization().getId() + " wasn't found."));
-            entity.setMilitaryOrganization(organizationEntity);
-        } else {
-            entity.setMilitaryOrganization(null);
-        }
-
-        // NEW LOGIC: Set MilitaryStructureEntity
-        if (dto.getMilitaryStructureDTO() != null && dto.getMilitaryStructureDTO().getId() != null) {
-            MilitaryStructureEntity structureEntity = militaryStructureRepository.findById(dto.getMilitaryStructureDTO().getId())
-                    .orElseThrow(() -> new NotFoundException("MilitaryStructure with id " + dto.getMilitaryStructureDTO().getId() + " wasn't found."));
-            entity.setMilitaryStructure(structureEntity);
-        } else {
-            entity.setMilitaryStructure(null);
-        }
+        // Helper method to set foreign keys
+        setForeignKeys(entity, dto.getOrganizationId(), dto.getStructureId());
 
         entity = militaryRankRepository.save(entity);
         return militaryRankMapper.toMilitaryRankDTO(entity);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
-    public MilitaryRankDTO removeMilitaryRank(Long rankId) {
-        MilitaryRankEntity entity = militaryRankRepository.findById(rankId)
-                .orElseThrow(EntityNotFoundException::new);
-        MilitaryRankDTO dto = militaryRankMapper.toMilitaryRankDTO(entity);
-        militaryRankRepository.delete(entity);
-        return dto;
+    @Transactional
+    public void deleteMilitaryRank(Long rankId) {
+        // FIX: Changed return type to void and used ResourceNotFoundException
+        if (!militaryRankRepository.existsById(rankId)) {
+            throw new ResourceNotFoundException("Military Rank", "ID", rankId);
+        }
+        militaryRankRepository.deleteById(rankId);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     @Transactional
     public MilitaryRankDTO updateMilitaryRank(Long rankId, MilitaryRankDTO dto) {
         MilitaryRankEntity entity = militaryRankRepository.findById(rankId)
-                .orElseThrow(() -> new NotFoundException("MilitaryRank with id " + rankId + " wasn't found in the database"));
+                .orElseThrow(() -> new ResourceNotFoundException("Military Rank", "ID", rankId));
 
-        // Logic to update MilitaryOrganizationEntity
-        if (dto.getMilitaryOrganization() != null && dto.getMilitaryOrganization().getId() != null) {
-            MilitaryOrganizationEntity organizationEntity = militaryOrganizationRepository.findById(dto.getMilitaryOrganization().getId())
-                    .orElseThrow(() -> new NotFoundException("MilitaryOrganization with id " + dto.getMilitaryOrganization().getId() + " wasn't found."));
+        // Update fields using MapStruct mapper
+        militaryRankMapper.updateMilitaryRankEntity(dto, entity);
+
+        // Conditionally update Foreign Keys if IDs are provided in DTO
+        if (dto.getOrganizationId() != null || dto.getStructureId() != null) {
+            setForeignKeys(entity, dto.getOrganizationId(), dto.getStructureId());
+        }
+
+        militaryRankRepository.save(entity);
+        return militaryRankMapper.toMilitaryRankDTO(entity);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public MilitaryRankEntity fetchMilitaryRankById(Long id, String type) {
+        return militaryRankRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(type, "ID", id));
+    }
+
+    // --- Private Helper Method to set Foreign Key Entities ---
+
+    private void setForeignKeys(MilitaryRankEntity entity, Long organizationId, String structureIdStr) {
+        // Set MilitaryOrganizationEntity
+        if (organizationId != null) {
+            MilitaryOrganizationEntity organizationEntity = militaryOrganizationRepository.findById(organizationId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Military Organization", "ID", organizationId));
             entity.setMilitaryOrganization(organizationEntity);
         } else {
             entity.setMilitaryOrganization(null);
         }
 
-        // NEW LOGIC: Update MilitaryStructureEntity
-        if (dto.getMilitaryStructureDTO() != null && dto.getMilitaryStructureDTO().getId() != null) {
-            MilitaryStructureEntity structureEntity = militaryStructureRepository.findById(dto.getMilitaryStructureDTO().getId())
-                    .orElseThrow(() -> new NotFoundException("MilitaryStructure with id " + dto.getMilitaryStructureDTO().getId() + " wasn't found."));
+        // Set MilitaryStructureEntity (Requires String conversion for ID from DTO)
+        if (structureIdStr != null && !structureIdStr.isBlank()) {
+            Long structureId;
+            try {
+                structureId = Long.parseLong(structureIdStr);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid structure ID format: " + structureIdStr);
+            }
+
+            MilitaryStructureEntity structureEntity = militaryStructureRepository.findById(structureId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Military Structure", "ID", structureId));
             entity.setMilitaryStructure(structureEntity);
         } else {
             entity.setMilitaryStructure(null);
         }
-
-        militaryRankMapper.updateMilitaryRankEntity(dto, entity);
-        militaryRankRepository.save(entity);
-        return militaryRankMapper.toMilitaryRankDTO(entity);
-    }
-
-    @Override
-    public MilitaryRankEntity fetchMilitaryRankById(Long id, String type) {
-        return militaryRankRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(type + " with id " + id + " wasn't found in the database."));
     }
 }

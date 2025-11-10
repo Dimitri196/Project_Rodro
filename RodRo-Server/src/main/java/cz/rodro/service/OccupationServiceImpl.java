@@ -6,8 +6,8 @@ import cz.rodro.entity.InstitutionEntity;
 import cz.rodro.entity.OccupationEntity;
 import cz.rodro.entity.repository.InstitutionRepository;
 import cz.rodro.entity.repository.OccupationRepository;
+import cz.rodro.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
-import cz.rodro.exception.NotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,7 +35,7 @@ public class OccupationServiceImpl implements OccupationService {
         }
 
         InstitutionEntity institution = institutionRepository.findById(dto.getInstitution().getId())
-                .orElseThrow(() -> new NotFoundException("Institution not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Institution not found"));
 
         entity.setInstitution(institution);
 
@@ -65,12 +65,12 @@ public class OccupationServiceImpl implements OccupationService {
 
     private OccupationEntity findOccupationOrThrow(Long id) {
         return occupationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Occupation with ID " + id + " not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Occupation with ID " + id + " not found."));
     }
 
     public OccupationDTO getOccupationDetail(Long id) {
         OccupationEntity entity = occupationRepository.findByIdWithPersons(id)
-                .orElseThrow(() -> new NotFoundException("Occupation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Occupation not found"));
         return occupationMapper.toDTO(entity);
     }
 }

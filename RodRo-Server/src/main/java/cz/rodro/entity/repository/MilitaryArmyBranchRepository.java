@@ -10,7 +10,9 @@ import java.util.Optional;
 @Repository
 public interface MilitaryArmyBranchRepository extends JpaRepository<MilitaryArmyBranchEntity, Long> {
 
-    Optional<MilitaryArmyBranchEntity> findByArmyBranchName(String name);
+    // FIX: Changed findByArmyBranchName to findByName
+    Optional<MilitaryArmyBranchEntity> findByName(String name);
 
-    List<MilitaryArmyBranchEntity> findByArmyBranchNameContainingIgnoreCase(String partialName);
+    // FIX: Changed findByArmyBranchNameContainingIgnoreCase to findByNameContainingIgnoreCase
+    List<MilitaryArmyBranchEntity> findByNameContainingIgnoreCase(String partialName);
 }

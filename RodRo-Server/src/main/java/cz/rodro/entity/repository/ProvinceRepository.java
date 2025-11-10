@@ -7,5 +7,12 @@ import java.util.List;
 
 public interface ProvinceRepository extends JpaRepository<ProvinceEntity, Long> {
 
-    List<ProvinceEntity> findByCountryId(Long countryId);
+    /**
+     * Finds all ProvinceEntity records associated with a specific country ID.
+     * Spring Data JPA navigates the 'country' field to access its 'id'.
+     *
+     * @param countryId The ID of the parent CountryEntity.
+     * @return A list of ProvinceEntity objects.
+     */
+    List<ProvinceEntity> findByCountry_Id(Long countryId);
 }

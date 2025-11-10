@@ -14,7 +14,8 @@ const InstitutionTable = ({ label, items, deleteInstitution }) => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortAsc, setSortAsc] = useState(true);
-  const [sortKey, setSortKey] = useState("institutionName");
+  // Using 'name' as the primary sort key, aligning with the DTO field
+  const [sortKey, setSortKey] = useState("name");
 
   // --- Styles ---
   const customStyles = `
@@ -66,11 +67,16 @@ const InstitutionTable = ({ label, items, deleteInstitution }) => {
   const filteredItems = useMemo(() => {
     const filtered = items.filter(
       (item) =>
-        normalizeString(item.institutionName).includes(normalizeString(searchTerm)) ||
-        normalizeString(item.institutionLocation?.locationName || "").includes(
+        // Filtering by name (DTO field: 'name')
+        normalizeString(item.name || "").includes(normalizeString(searchTerm)) ||
+        // Filtering by country name (NEW)
+        normalizeString(item.countryName || "").includes(normalizeString(searchTerm)) ||
+        // Filtering by location name (DTO field: 'locationName')
+        normalizeString(item.locationName || "").includes(
           normalizeString(searchTerm)
         ) ||
-        normalizeString(item.institutionType || "").includes(normalizeString(searchTerm))
+        // Filtering by type (DTO field: 'type')
+        normalizeString(item.type || "").includes(normalizeString(searchTerm))
     );
 
     return filtered.sort((a, b) => {
@@ -200,9 +206,10 @@ const InstitutionTable = ({ label, items, deleteInstitution }) => {
           <thead>
             <tr>
               <th style={{ width: "40px" }}>#</th>
-              {renderHeader("institutionName", "Institution Name")}
-              <th>Location</th>
-              <th>Type</th>
+              {renderHeader("name", "Institution Name")}
+              {renderHeader("countryName", "Country")}
+              {renderHeader("locationName", "Location")}
+              {renderHeader("type", "Type")}
               {isAdmin && (
                 <th className="text-center" style={{ width: "150px" }}>
                   Actions
@@ -220,29 +227,42 @@ const InstitutionTable = ({ label, items, deleteInstitution }) => {
                       to={`/institutions/show/${item._id}`}
                       className="fw-bold text-dark text-decoration-none"
                     >
-                      {item.institutionName}
+                      {item.name}
                     </Link>
                   </td>
                   <td>
-                    {item.institutionLocation ? (
+                    {item.countryId ? (
                       <Link
-                        to={`/locations/show/${item.institutionLocation._id}`}
+                        to={`/countries/show/${item.countryId}`}
+                        className="text-info fw-semibold"
+                      >
+                        {item.countryName}
+                      </Link>
+                    ) : (
+                      <i className="text-muted">N/A</i>
+                    )}
+                  </td>
+                  <td>
+                    {/* Accessing the flattened fields: locationId and locationName */}
+                    {item.locationId ? (
+                      <Link
+                        to={`/locations/show/${item.locationId}`}
                         className="text-primary fw-semibold"
                       >
                         <i className="fas fa-map-marker-alt me-1"></i>{" "}
-                        {item.institutionLocation.locationName}
+                        {item.locationName}
                       </Link>
                     ) : (
                       <i className="text-muted">None</i>
                     )}
                   </td>
                   <td>
-                    {item.institutionType ? (
+                    {item.type ? (
                       <span
                         className="badge bg-info text-dark"
-                        title={institutionTypes[item.institutionType]}
+                        title={institutionTypes[item.type]}
                       >
-                        {item.institutionType.charAt(0) + item.institutionType.slice(1).toLowerCase()}
+                        {item.type.charAt(0) + item.type.slice(1).toLowerCase()}
                       </span>
                     ) : (
                       <i className="text-muted">Unknown</i>

@@ -25,14 +25,9 @@ public class MilitaryStructureDTO {
     // Added back to resolve the mapper error
     private String armyBranchName;
 
-    // Link to the parent structure
-    private MilitaryStructureSimpleDTO parentStructure;
-
-    // List of sub-structures
-    private List<MilitaryStructureSimpleDTO> subStructures;
-
-    // Link to the top-level organization
-    private MilitaryOrganizationDTO organization;
+    // Link to the top-level organization using only IDs/Names (AVOIDS CIRCULAR REFERENCE)
+    private Long organizationId;
+    private String organizationName;
 
     // A list of ranks associated with this structure, which is populated by the service layer
     private List<MilitaryRankDTO> ranks;

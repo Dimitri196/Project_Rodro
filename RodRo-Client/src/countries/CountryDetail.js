@@ -14,12 +14,25 @@ import {
   Nav,
 } from "react-bootstrap";
 
+// Helper to determine the badge color for continent history based on the name
+const getContinentBadgeVariant = (continentName) => {
+    switch (continentName) {
+        case 'Europe': return 'primary';
+        case 'Asia': return 'warning';
+        case 'Africa': return 'success';
+        case 'North America': return 'info';
+        case 'South America': return 'danger';
+        case 'Oceania': return 'secondary';
+        default: return 'light text-dark';
+    }
+};
+
 const CountryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [country, setCountry] = useState(null);
-  const [provinces, setProvinces] = useState([]);
+  const [provinceData, setProvinceData] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openProvince, setOpenProvince] = useState(null);
@@ -27,24 +40,28 @@ const CountryDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch ALL data (Country, Continent History, and Provinces) in ONE call
         const countryData = await apiGet(`/api/countries/${id}`);
         setCountry(countryData);
 
-        const provincesData = await apiGet(`/api/countries/${id}/provinces`);
-        const sortedProvinces = [...provincesData].sort((a, b) =>
-          a.provinceName.localeCompare(b.provinceName, undefined, {
+        // Extract and sort Provinces (now nested in countryData)
+        const provincesFromDTO = countryData.provinces || []; 
+
+        const sortedProvinces = [...provincesFromDTO].sort((a, b) =>
+          // FIX 1: Sort by the corrected province field 'name'
+          a.name.localeCompare(b.name, undefined, {
             sensitivity: "base",
           })
         );
-        setProvinces(sortedProvinces);
+        setProvinceData(sortedProvinces);
 
-        // ✅ default tab to first province
+        // Set default tab to first province
         if (sortedProvinces.length > 0) {
           setOpenProvince(sortedProvinces[0]._id);
         }
       } catch (err) {
         console.error("Error fetching data:", err);
-        setError(`Error loading data: ${err.message || err}`);
+        setError(`Error loading data: ${err.message || String(err)}`);
       } finally {
         setLoading(false);
       }
@@ -85,12 +102,15 @@ const CountryDetail = () => {
   }
 
   const {
-    countryNameInPolish,
-    countryNameInEnglish,
-    countryEstablishmentYear,
-    countryCancellationYear,
-    countryFlagImgUrl,
+    nameInPolish,
+    nameInEnglish,
+    establishmentYear,
+    cancellationYear,
+    flagImgUrl,
+    continentHistory,
   } = country;
+  
+  const provinces = provinceData; 
 
   return (
     <Container className="mt-5">
@@ -114,20 +134,50 @@ const CountryDetail = () => {
               <i className="fas fa-globe me-2"></i>Country Details
             </Card.Header>
             <Card.Body className="p-4">
-              <h3 className="fw-bold mb-4">{countryNameInPolish}</h3>
+              <h3 className="fw-bold mb-4">{nameInPolish}</h3>
               <ListGroup variant="flush">
                 <ListGroup.Item>
-                  <strong>English Name:</strong> {countryNameInEnglish || "N/A"}
+                  <strong>English Name:</strong> {nameInEnglish || "N/A"}
                 </ListGroup.Item>
                 <ListGroup.Item>
                   <strong>Establishment Year:</strong>{" "}
-                  {countryEstablishmentYear || "N/A"}
+                  {establishmentYear || "N/A"}
                 </ListGroup.Item>
+
+                {/* --- NEW: Detailed Continent History List --- */}
+                {continentHistory && continentHistory.length > 0 && (
+                    <ListGroup.Item className="p-0">
+                        <div className="pt-2 pb-1 ps-3 fw-bold bg-light-subtle">
+                            Geographic History:
+                        </div>
+                        <ListGroup variant="flush" className="border-top">
+                            {continentHistory.map((history) => (
+                                <ListGroup.Item 
+                                    key={history._id} 
+                                    className="d-flex justify-content-between align-items-center py-2"
+                                >
+                                    <div>
+                                        <span 
+                                            className={`badge bg-${getContinentBadgeVariant(history.continentName)} me-2`}
+                                        >
+                                            {history.continentName}
+                                        </span>
+                                    </div>
+                                    <div className="fw-semibold">
+                                        {history.startYear} – {history.endYear || 'Present'}
+                                    </div>
+                                </ListGroup.Item>
+                            ))}
+                        </ListGroup>
+                    </ListGroup.Item>
+                )}
+                {/* --- END NEW --- */}
+                
                 <ListGroup.Item>
                   <strong>Status:</strong>{" "}
-                  {countryCancellationYear ? (
+                  {cancellationYear ? (
                     <>
-                      Dissolved in {countryCancellationYear}{" "}
+                      Dissolved in {cancellationYear}{" "}
                       <span className="badge bg-danger ms-2">Dissolved</span>
                     </>
                   ) : (
@@ -152,10 +202,10 @@ const CountryDetail = () => {
               <i className="fas fa-flag me-2"></i>National Flag
             </Card.Header>
             <Card.Body className="p-4 d-flex justify-content-center align-items-center">
-              {countryFlagImgUrl ? (
+              {flagImgUrl ? (
                 <img
-                  src={countryFlagImgUrl}
-                  alt={`${countryNameInPolish} flag`}
+                  src={flagImgUrl}
+                  alt={`${nameInPolish} flag`}
                   style={{
                     maxWidth: "100%",
                     height: "auto",
@@ -174,10 +224,10 @@ const CountryDetail = () => {
           </Card>
         </Col>
       </Row>
-
+      
       {/* --- Provinces Section --- */}
       <h2 className="fw-bold text-dark mt-5 mb-4">
-        II. Administrative Hierarchies & Provincial Divisions
+        I. Administrative Hierarchies & Provincial Divisions
       </h2>
 
       {provinces.length > 0 ? (
@@ -200,7 +250,8 @@ const CountryDetail = () => {
                       className="text-start mb-1 fw-semibold"
                     >
                       <i className="fas fa-landmark me-2 text-secondary"></i>
-                      {province.provinceName}
+                      {/* FIX 2: Display province 'name' */}
+                      {province.name}
                       {province.districts?.length > 0 && (
                         <span className="badge bg-primary ms-2">
                           {province.districts.length}
@@ -212,25 +263,29 @@ const CountryDetail = () => {
               </Nav>
             </Col>
 
-{/* Province Content */}
-<Col md={9}>
-  <Tab.Content className="p-4 bg-white rounded-3 shadow border">
-    {provinces.map((province) => (
-      <Tab.Pane key={province._id} eventKey={province._id}>
-        <h4 className="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center">
-          <Link
-            to={`/countries/${id}/provinces/${province._id}`}
-            className="text-decoration-none text-primary me-2"
-          >
-            <i className="fas fa-landmark me-2"></i>
-            {province.provinceName}
-          </Link>
-        </h4>
+            {/* Province Content */}
+            <Col md={9}>
+              <Tab.Content className="p-4 bg-white rounded-3 shadow border">
+                {provinces.map((province) => (
+                  <Tab.Pane key={province._id} eventKey={province._id}>
+                    <h4 className="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center">
+                      <Link
+                        to={`/countries/${id}/provinces/${province._id}`}
+                        className="text-decoration-none text-primary me-2"
+                      >
+                        <i className="fas fa-landmark me-2"></i>
+                        {/* FIX 3: Link text uses province 'name' */}
+                        {province.name}
+                      </Link>
+                    </h4>
 
-        <p className="text-muted mb-4">
-          {province.description ||
-            "This province is a primary administrative division within the country."}
-        </p>
+                    <p className="text-muted mb-4">
+                      {/* FIX 4: Province DTO doesn't have a description or context field, 
+                                 but if it did, it would be 'description' or 'context'. 
+                                 Assuming 'description' is not intended here as per your DTO.
+                                 I'll leave it as is, or use a general fallback.*/}
+                      {"This province is a primary administrative division within the country."}
+                    </p>
 
                     <h5 className="fw-bold text-primary mb-3">
                       District Structure:
@@ -248,7 +303,8 @@ const CountryDetail = () => {
                                     to={`/countries/${id}/provinces/${province._id}/districts/${district._id}`}
                                     className="text-decoration-none text-dark fw-semibold"
                                   >
-                                    {district.districtName}
+                                    {/* FIX 5: District name uses district 'name' */}
+                                    {district.name}
                                   </Link>
                                 </h6>
                                 <p className="small text-muted mb-0">
@@ -272,7 +328,7 @@ const CountryDetail = () => {
                     <p className="small fst-italic text-muted mt-4 mb-0 border-top pt-3">
                       <i className="fas fa-info-circle me-1 text-primary"></i>
                       Contextual Note:{" "}
-                      {province.context ||
+                      {province.context || // If you added a 'context' field to ProvinceDTO, it would work here
                         "This province has historical, cultural, and administrative significance within the country."}
                     </p>
                   </Tab.Pane>

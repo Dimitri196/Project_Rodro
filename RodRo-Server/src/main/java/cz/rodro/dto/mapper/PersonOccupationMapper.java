@@ -16,10 +16,17 @@ public interface PersonOccupationMapper {
     @Mapping(target = "startYear", source = "startYear")
     @Mapping(target = "endYear", source = "endYear")
     @Mapping(target = "occupationName", source = "occupation.occupationName")
+
+    // Institution Name (Corrected in previous step)
     @Mapping(target = "institutionId", source = "occupation.institution.id")
-    @Mapping(target = "institutionName", source = "occupation.institution.institutionName")
-    @Mapping(target = "institutionLocationId", source = "occupation.institution.institutionLocation.id")
-    @Mapping(target = "institutionLocationName", source = "occupation.institution.institutionLocation.locationName")
+    @Mapping(target = "institutionName", source = "occupation.institution.name")
+
+    // Institution Location ID (Corrected in previous step)
+    @Mapping(target = "institutionLocationId", source = "occupation.institution.location.id")
+
+    // --- FINAL CORRECTION: Using 'locationName' field on LocationEntity ---
+    @Mapping(target = "institutionLocationName", source = "occupation.institution.location.locationName")
+
     PersonOccupationDTO toDTO(PersonOccupationEntity entity);
 
     @Mapping(target = "person", ignore = true) // Relationship handled in service

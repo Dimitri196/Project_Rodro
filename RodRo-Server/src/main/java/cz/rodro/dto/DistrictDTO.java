@@ -12,8 +12,10 @@ public class DistrictDTO {
     @JsonProperty("_id")
     private Long id;
 
-    private String districtName;
+    private String name;
 
     private Long provinceId;
     private Long countryId;
+
+    private String imgUrl;
 }

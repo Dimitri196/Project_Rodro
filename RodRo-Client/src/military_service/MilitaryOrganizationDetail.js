@@ -21,7 +21,8 @@ const MilitaryOrganizationDetail = () => {
             setLoading(true);
             setError(null);
             try {
-                const data = await apiGet(`/api/militaryOrganizations/${id}`);
+                // Assuming your DTO uses the primary ID field 'id'
+                const data = await apiGet(`/api/militaryOrganizations/${id}`); 
                 setOrganization(data);
             } catch (err) {
                 console.error("Error fetching military organization:", err);
@@ -62,11 +63,28 @@ const MilitaryOrganizationDetail = () => {
         );
     }
 
+    // --- REFACTORED DESTRUCTURING ---
     const {
-        armyName, armyBranch, country,
-        activeFromYear, activeToYear,
-        organizationDescription, structures, organizationImageUrl
+        // Renamed 'armyName' to 'name' (Organization's official name)
+        name, 
+        // Accessing branch via complex object 'armyBranch' (name is inside)
+        armyBranch, 
+        // Denormalized fields (countryName, countryId) are directly on the DTO
+        countryName, 
+        countryId,
+        activeFromYear, 
+        activeToYear,
+        // Using 'description' (full text) or 'historyContext' (short summary)
+        description, 
+        historyContext,
+        structures, 
+        // Renamed 'organizationImageUrl' to 'imageUrl'
+        imageUrl
     } = organization;
+
+    // Determine which description field to display
+    const primaryDescription = description || historyContext;
+
 
     return (
         <Container className="my-5 py-3">
@@ -75,16 +93,21 @@ const MilitaryOrganizationDetail = () => {
             <Row className="mb-5 border-bottom pb-4 align-items-center">
                 <Col md={9}>
                     <h1 className="display-4 fw-bold text-dark mb-1">
-                        {armyName || "Unnamed Organization"}
+                        {name || "Unnamed Organization"} {/* REFACTOR: Use 'name' */}
                     </h1>
                     <h2 className="h4 text-secondary mb-0 fw-normal">
                         <i className="fas fa-shield-alt me-2 text-muted"></i>
-                        Branch: {armyBranch?.armyBranchName || "Unspecified"}
+                        {/* REFACTOR: Use armyBranch?.name */}
+                        Branch: {armyBranch?.name || "Unspecified"} 
                     </h2>
                 </Col>
                 <Col md={3} className="d-flex justify-content-end">
                     {isAdmin && (
-                        <Link to={`/militaryOrganizations/edit/${organization._id}`} className="btn btn-warning btn-lg rounded-pill px-4 py-2 shadow-sm fw-semibold">
+                        <Link 
+                            // REFACTOR: Use organization.id or organization._id
+                            to={`/militaryOrganizations/edit/${organization.id || organization._id}`} 
+                            className="btn btn-warning btn-lg rounded-pill px-4 py-2 shadow-sm fw-semibold"
+                        >
                             <i className="fas fa-edit me-2"></i>Modify Record
                         </Link>
                     )}
@@ -102,9 +125,10 @@ const MilitaryOrganizationDetail = () => {
                         <Card.Body>
                             <div className="mb-4">
                                 <strong className="d-block mb-2 text-muted">Country:</strong>
-                                {country?._id ? (
-                                    <Link to={`/countries/show/${country._id}`} className="text-decoration-none text-primary fw-semibold">
-                                        {country.countryNameInPolish}
+                                {/* REFACTOR: Use denormalized fields countryId and countryName */}
+                                {countryId ? ( 
+                                    <Link to={`/countries/show/${countryId}`} className="text-decoration-none text-primary fw-semibold">
+                                        {countryName}
                                     </Link>
                                 ) : <span className="text-secondary">Unknown</span>}
                             </div>
@@ -113,7 +137,8 @@ const MilitaryOrganizationDetail = () => {
                                 <strong className="d-block mb-2 text-muted">Description:</strong>
                                 <div className="p-3 bg-light border-start border-3 border-primary rounded shadow-sm">
                                     <p className="mb-0 small text-dark" style={{ whiteSpace: "pre-line" }}>
-                                        {organizationDescription || <em className="text-danger">[DATA GAP] No description available.</em>}
+                                        {/* REFACTOR: Use primaryDescription */}
+                                        {primaryDescription || <em className="text-danger">[DATA GAP] No description available.</em>} 
                                     </p>
                                 </div>
                             </div>
@@ -149,10 +174,11 @@ const MilitaryOrganizationDetail = () => {
                             <i className="fas fa-flag me-2"></i>Organization Image
                         </Card.Header>
                         <Card.Body className="p-4 d-flex flex-column justify-content-center align-items-center">
-                            {organizationImageUrl ? (
+                            {/* REFACTOR: Use 'imageUrl' */}
+                            {imageUrl ? ( 
                                 <img
-                                    src={organizationImageUrl}
-                                    alt={`${armyName} banner`}
+                                    src={imageUrl}
+                                    alt={`${name} banner`}
                                     style={{ width: "100%", height: "auto", maxHeight: "350px", objectFit: 'contain', borderRadius: "0.5rem" }}
                                     className="img-fluid"
                                 />
@@ -168,35 +194,35 @@ const MilitaryOrganizationDetail = () => {
             </Row>
 
             {/* --- Structures --- */}
-            <Row className="justify-content-center mt-4">
-                <Col md={12}>
-                    <Card className="shadow-lg border-0 rounded-4">
-                        <Card.Header as="h5" className="bg-secondary text-white py-3 rounded-top-4">
-                            <i className="fas fa-sitemap me-2"></i>Sub-units / Structures
-                        </Card.Header>
-                        <Card.Body>
-                            {structures && structures.length > 0 ? (
-                                <ListGroup variant="flush">
-                                    {structures.map((s, i) => (
-                                        <ListGroup.Item key={s._id || s.id}>
-                                            <Link to={`/militaryStructures/show/${s._id || s.id}`} className="text-decoration-none fw-semibold">
-                                                {s.unitName}
-                                            </Link>{" "}
-                                            {s.unitType}
-                                            {s.activeFromYear && ` (${s.activeFromYear}–${s.activeToYear || "present"})`}
-                                            {s.notes && <div className="text-muted small">{s.notes}</div>}
-                                        </ListGroup.Item>
-                                    ))}
-                                </ListGroup>
-                            ) : (
-                                <Alert variant="info" className="text-center mb-0">
-                                    <i className="fas fa-info-circle me-2"></i>No sub-units recorded for this organization.
-                                </Alert>
-                            )}
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
+<Row className="justify-content-center mt-4">
+    <Col md={12}>
+        <Card className="shadow-lg border-0 rounded-4">
+            <Card.Header as="h5" className="bg-secondary text-white py-3 rounded-top-4">
+                <i className="fas fa-sitemap me-2"></i>Sub-units / Structures
+            </Card.Header>
+            <Card.Body>
+                {structures && structures.length > 0 ? (
+                    <ListGroup variant="flush">
+                        {structures.map((s, i) => (
+                            <ListGroup.Item key={s.id || s._id}>
+                                <Link to={`/militaryStructures/show/${s.id || s._id}`} className="text-decoration-none fw-semibold">
+                                    {s.name} {/* 🌟 CORRECTED: Use s.name */}
+                                </Link>{" "}
+                                ({s.type}) {/* 🌟 CORRECTED: Use s.type, displayed in parentheses for clarity */}
+                                {s.activeFromYear && ` (${s.activeFromYear}–${s.activeToYear || "present"})`}
+                                {s.notes && <div className="text-muted small">{s.notes}</div>}
+                            </ListGroup.Item>
+                        ))}
+                    </ListGroup>
+                ) : (
+                    <Alert variant="info" className="text-center mb-0">
+                        <i className="fas fa-info-circle me-2"></i>No sub-units recorded for this organization.
+                    </Alert>
+                )}
+            </Card.Body>
+        </Card>
+    </Col>
+</Row>
 
             <div className="mt-5 pt-3 border-top text-center">
                 <Link to="/militaryOrganizations" className="btn btn-outline-secondary rounded-pill px-4">

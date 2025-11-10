@@ -12,14 +12,13 @@ import cz.rodro.entity.repository.FamilyRepository;
 import cz.rodro.entity.repository.LocationRepository;
 import cz.rodro.entity.repository.PersonRepository;
 import cz.rodro.entity.repository.specification.FamilySpecification;
+import cz.rodro.exception.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import cz.rodro.exception.NotFoundException;
-import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +45,7 @@ public class FamilyServiceImpl implements FamilyService {
      *
      * @param familyDTO The data transfer object containing the family details to be added.
      * @return The added family as a {@link FamilyDTO}.
-     * @throws NotFoundException if any related entities are not found.
+     * @throws ResourceNotFoundException if any related entities are not found.
      */
     @Override
     @Transactional
@@ -67,7 +66,7 @@ public class FamilyServiceImpl implements FamilyService {
 
         // Fetch marriage location
         LocationEntity marriageLocation = locationRepository.findById(familyDTO.getMarriageLocation().getId())
-                .orElseThrow(() -> new NotFoundException("Marriage location with id " + familyDTO.getMarriageLocation().getId() + " not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Marriage location with id " + familyDTO.getMarriageLocation().getId() + " not found."));
 
         // Map DTO to entity and set relationships
         FamilyEntity familyEntity = familyMapper.toFamilyEntity(familyDTO);
@@ -102,7 +101,7 @@ public class FamilyServiceImpl implements FamilyService {
      * @param familyId  The ID of the family to update.
      * @param familyDTO The new data for the family.
      * @return The updated family as a {@link FamilyDTO}.
-     * @throws NotFoundException if any related entities are not found.
+     * @throws ResourceNotFoundException if any related entities are not found.
      */
     @Override
     @Transactional
@@ -125,7 +124,7 @@ public class FamilyServiceImpl implements FamilyService {
 
         // Fetch the marriage location by ID
         LocationEntity marriageLocation = locationRepository.findById(familyDTO.getMarriageLocation().getId())
-                .orElseThrow(() -> new NotFoundException("Marriage location with id " + familyDTO.getMarriageLocation().getId() + " not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Marriage location with id " + familyDTO.getMarriageLocation().getId() + " not found."));
 
         // Use the mapper to update the existing entity (without overwriting relationships)
         familyMapper.updateFamilyEntity(familyDTO, existingFamily);
@@ -164,12 +163,12 @@ public class FamilyServiceImpl implements FamilyService {
 
     private FamilyEntity fetchFamilyById(Long familyId) {
         return familyRepository.findById(familyId)
-                .orElseThrow(() -> new NotFoundException("Family with id " + familyId + " wasn't found in the database."));
+                .orElseThrow(() -> new ResourceNotFoundException("Family with id " + familyId + " wasn't found in the database."));
     }
 
     private PersonEntity fetchPersonEntity(Long personId, String role) {
         return personRepository.findById(personId)
-                .orElseThrow(() -> new NotFoundException(role + " with id " + personId + " not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(role + " with id " + personId + " not found."));
     }
 
     private PersonEntity fetchOptionalPerson(PersonDTO personDTO) {

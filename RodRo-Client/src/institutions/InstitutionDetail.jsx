@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Container, Row, Col, Card, ListGroup, Alert, Spinner, Badge } from "react-bootstrap";
 import { apiGet } from "../utils/api";
-import { institutionTypes } from "../constants/institutionTypes"; // ✅ import your enum mapping
+import { institutionTypes } from "../constants/institutionTypes";
 
 const InstitutionDetail = () => {
   const { id } = useParams();
@@ -62,14 +62,28 @@ const InstitutionDetail = () => {
     );
   }
 
+  // CRITICAL CHANGE: Use the new flattened DTO field names
   const {
-    institutionName,
-    institutionDescription,
-    institutionLocation,
+    name, // The new DTO field for the institution name
+    description, // The new DTO field for the description
+    countryId, // Flat field for Country ID
+    countryName, // Flat field for Country Name
+    locationId, // Flat field for Location ID
+    locationName, // Flat field for Location Name
+    establishmentYear, // Flat field
+    cancellationYear, // Flat field
     sealImageUrl,
     occupations,
-    institutionType, // ✅ added
+    type, // The new DTO field for institution type
   } = institution;
+
+  // Helper for rendering year range
+  const formatYearRange = (start, end) => {
+    if (!start && !end) return "N/A";
+    if (start && !end) return `Established ${start}`;
+    if (!start && end) return `Ceased ${end}`;
+    return `${start} - ${end}`;
+  }
 
   return (
     <Container className="my-5 py-4 bg-light rounded shadow-lg">
@@ -85,7 +99,7 @@ const InstitutionDetail = () => {
         <Col md={12} className="text-center">
           <h1 className="display-4 fw-bold text-primary mb-3">
             <i className="fas fa-university me-3"></i>
-            {institutionName}
+            {name} {/* Use the new 'name' field */}
           </h1>
         </Col>
       </Row>
@@ -101,26 +115,19 @@ const InstitutionDetail = () => {
               <ListGroup variant="flush">
                 <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
                   <strong>Name:</strong>
-                  <span>{institutionName}</span>
+                  <span>{name}</span>
                 </ListGroup.Item>
 
-                {/* Institution Type */}
+                {/* NEW: Country Link */}
                 <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
-                  <strong>Type:</strong>
-                  <Badge bg="info" text="dark" className="px-3 py-2 rounded-pill shadow-sm">
-                    {institutionTypes[institutionType] || institutionType || "N/A"}
-                  </Badge>
-                </ListGroup.Item>
-
-                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
-                  <strong>Location:</strong>
+                  <strong>Country:</strong>
                   <span>
-                    {institutionLocation?._id ? (
+                    {countryId ? (
                       <Link
-                        to={`/locations/show/${institutionLocation._id}`}
-                        className="text-decoration-none text-primary"
+                        to={`/countries/show/${countryId}`}
+                        className="text-decoration-none text-info fw-semibold"
                       >
-                        {institutionLocation.locationName}
+                        {countryName}
                       </Link>
                     ) : (
                       "N/A"
@@ -128,9 +135,40 @@ const InstitutionDetail = () => {
                   </span>
                 </ListGroup.Item>
 
+                {/* Institution Type */}
+                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                  <strong>Type:</strong>
+                  <Badge bg="info" text="dark" className="px-3 py-2 rounded-pill shadow-sm">
+                    {institutionTypes[type] || type || "N/A"}
+                  </Badge>
+                </ListGroup.Item>
+
+                {/* Location Link (Updated to use flat fields) */}
+                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                  <strong>Location:</strong>
+                  <span>
+                    {locationId ? (
+                      <Link
+                        to={`/locations/show/${locationId}`}
+                        className="text-decoration-none text-primary"
+                      >
+                        {locationName}
+                      </Link>
+                    ) : (
+                      "N/A"
+                    )}
+                  </span>
+                </ListGroup.Item>
+                
+                {/* Years */}
+                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                  <strong>Active Period:</strong>
+                  <span className="text-muted">{formatYearRange(establishmentYear, cancellationYear)}</span>
+                </ListGroup.Item>
+
                 <ListGroup.Item className="px-0">
                   <strong>Description:</strong>
-                  <p className="mb-0">{institutionDescription || "-"}</p>
+                  <p className="mb-0">{description || "-"}</p> {/* Use the new 'description' field */}
                 </ListGroup.Item>
               </ListGroup>
             </Card.Body>
@@ -147,7 +185,7 @@ const InstitutionDetail = () => {
               {sealImageUrl ? (
                 <img
                   src={sealImageUrl}
-                  alt={`${institutionName} seal`}
+                  alt={`${name} seal`}
                   style={{
                     maxWidth: "100%",
                     height: "auto",

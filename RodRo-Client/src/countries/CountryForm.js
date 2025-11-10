@@ -12,10 +12,10 @@ const CountryForm = () => {
     const { id } = useParams(); // Retrieve ID for edit mode
     const [country, setCountry] = useState({
         id: null, // Add id to state to store _id from backend
-        countryNameInPolish: "",
-        countryNameInEnglish: "",
-        countryEstablishmentYear: "",
-        countryCancellationYear: "",
+        nameInPolish: "",
+        nameInEnglish: "",
+        establishmentYear: "",
+        cancellationYear: "",
     });
     const [sentState, setSent] = useState(false);
     const [successState, setSuccess] = useState(false);
@@ -28,10 +28,10 @@ const CountryForm = () => {
                 .then((data) => {
                     setCountry({
                         id: data._id, // Store _id in state for reference
-                        countryNameInPolish: data.countryNameInPolish || "",
-                        countryNameInEnglish: data.countryNameInEnglish || "",
-                        countryEstablishmentYear: data.countryEstablishmentYear || "",
-                        countryCancellationYear: data.countryCancellationYear || "",
+                        nameInPolish: data.nameInPolish || "",
+                        nameInEnglish: data.nameInEnglish || "",
+                        establishmentYear: data.establishmentYear || "",
+                        cancellationYear: data.cancellationYear || "",
                     });
                 })
                 .catch((error) => setError(error.message));
@@ -56,7 +56,7 @@ const CountryForm = () => {
 const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!isValidYear(country.countryEstablishmentYear)) {
+    if (!isValidYear(country.establishmentYear)) {
         setError("Please provide a valid establishment year (3-4 digits, ex. year 999 or 1000).");
         return;
     }
@@ -65,10 +65,10 @@ const handleSubmit = (e) => {
 
     // Prepare data to send (without id)
     const countryToSend = {
-        countryNameInPolish: country.countryNameInPolish,
-        countryNameInEnglish: country.countryNameInEnglish,
-        countryEstablishmentYear: country.countryEstablishmentYear,
-        countryCancellationYear: country.countryCancellationYear,
+        nameInPolish: country.nameInPolish,
+        nameInEnglish: country.nameInEnglish,
+        establishmentYear: country.establishmentYear,
+        cancellationYear: country.cancellationYear,
     };
 
     const request = id
@@ -110,13 +110,13 @@ const handleSubmit = (e) => {
                         <InputField
                             required={true}
                             type="text"
-                            name="countryNameInPolish"
+                            name="nameInPolish"
                             min="3"
                             label="Country Name (Polish)"
                             prompt="Input country name in Polish"
-                            value={country.countryNameInPolish}
+                            value={country.nameInPolish}
                             handleChange={(e) =>
-                                setCountry({ ...country, countryNameInPolish: e.target.value })
+                                setCountry({ ...country, nameInPolish: e.target.value })
                             }
                         />
                     </Col>
@@ -124,13 +124,13 @@ const handleSubmit = (e) => {
                         <InputField
                             required={true}
                             type="text"
-                            name="countryNameInEnglish"
+                            name="nameInEnglish"
                             min="3"
                             label="Country Name (English)"
                             prompt="Input country name in English"
-                            value={country.countryNameInEnglish}
+                            value={country.nameInEnglish}
                             handleChange={(e) =>
-                                setCountry({ ...country, countryNameInEnglish: e.target.value })
+                                setCountry({ ...country, nameInEnglish: e.target.value })
                             }
                         />
                     </Col>
@@ -141,24 +141,24 @@ const handleSubmit = (e) => {
                         <InputField
                             required={false}
                             type="text"
-                            name="countryEstablishmentYear"
+                            name="establishmentYear"
                             label="Establishment Year"
                             prompt="Input establishment year (e.g., 1918)"
-                            value={country.countryEstablishmentYear}
+                            value={country.establishmentYear}
                             handleChange={(e) =>
-                                setCountry({ ...country, countryEstablishmentYear: e.target.value })
+                                setCountry({ ...country, establishmentYear: e.target.value })
                             }
                         />
                     </Col>
                     <Col md={6}>
                         <InputField
                             type="text"
-                            name="countryCancellationDate"
+                            name="cancellationDate"
                             label="Cancellation Year"
                             prompt="Input cancellation year (optional)"
-                            value={country.countryCancellationYear}
+                            value={country.cancellationYear}
                             handleChange={(e) =>
-                                setCountry({ ...country, countryCancellationYear: e.target.value })
+                                setCountry({ ...country, cancellationYear: e.target.value })
                             }
                         />
                     </Col>

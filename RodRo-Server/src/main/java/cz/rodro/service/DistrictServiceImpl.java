@@ -7,9 +7,9 @@ import cz.rodro.entity.ProvinceEntity;
 import cz.rodro.entity.repository.CountryRepository;
 import cz.rodro.entity.repository.DistrictRepository;
 import cz.rodro.entity.repository.ProvinceRepository;
+import cz.rodro.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import cz.rodro.exception.NotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +33,7 @@ public class DistrictServiceImpl implements DistrictService {
     public DistrictDTO addDistrict(DistrictDTO districtDTO) {
         // Get province directly from provinceId
         ProvinceEntity provinceEntity = provinceRepository.findById(districtDTO.getProvinceId())
-                .orElseThrow(() -> new NotFoundException("Province not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Province not found"));
 
         // Map DTO to entity and set province
         DistrictEntity districtEntity = districtMapper.toDistrictEntity(districtDTO);
@@ -47,7 +47,7 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     public void removeDistrict(long districtId) {
         DistrictEntity districtEntity = districtRepository.findById(districtId)
-                .orElseThrow(() -> new NotFoundException("District not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("District not found"));
 
         districtRepository.delete(districtEntity);
     }
@@ -55,7 +55,7 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     public DistrictDTO updateDistrict(Long districtId, DistrictDTO districtDTO) {
         DistrictEntity districtEntity = districtRepository.findById(districtId)
-                .orElseThrow(() -> new NotFoundException("District not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("District not found"));
 
         // Update fields via mapper
         districtMapper.updateDistrictEntity(districtDTO, districtEntity);
@@ -63,7 +63,7 @@ public class DistrictServiceImpl implements DistrictService {
         // Update province if present
         if (districtDTO.getProvinceId() != null) {
             ProvinceEntity provinceEntity = provinceRepository.findById(districtDTO.getProvinceId())
-                    .orElseThrow(() -> new NotFoundException("Province not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Province not found"));
             districtEntity.setProvince(provinceEntity);
         }
 
@@ -74,7 +74,7 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     public DistrictDTO getDistrict(long districtId) {
         DistrictEntity districtEntity = districtRepository.findById(districtId)
-                .orElseThrow(() -> new NotFoundException("District not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("District not found"));
         return districtMapper.toDistrictDTO(districtEntity);
     }
 

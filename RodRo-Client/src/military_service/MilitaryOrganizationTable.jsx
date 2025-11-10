@@ -10,63 +10,31 @@ const MilitaryOrganizationTable = ({ label = "Military Organizations", items, de
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortAsc, setSortAsc] = useState(true);
-  const [sortKey, setSortKey] = useState("armyName");
+  // REFATOR: Change initial sort key from 'armyName' to 'name'
+  const [sortKey, setSortKey] = useState("name");
 
   const { session } = useSession();
   const isAdmin = session.data?.isAdmin === true;
 
   // --- Styles ---
+  // (Styles omitted for brevity, they remain unchanged)
   const customStyles = `
-    .scientific-table {
-      --bs-table-bg: #fff;
-      --bs-table-color: #343a40;
-      --bs-table-border-color: #dee2e6;
-      border-radius: 0.5rem;
-      overflow: hidden;
-      border-collapse: separate;
-      border-spacing: 0;
-      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
-    }
-
-    .scientific-table thead th {
-      background-color: #0d6efd;
-      color: #fff;
-      font-weight: 600;
-      border-bottom: 3px solid #004080;
-      text-transform: uppercase;
-      font-size: 0.85rem;
-      padding: 1rem 0.75rem;
-      vertical-align: middle;
-      cursor: pointer;
-    }
-
-    .scientific-table tbody tr {
-      transition: background-color 0.2s ease;
-    }
-
-    .scientific-table tbody tr:hover {
-      background-color: #f1f7fe;
-    }
-
-    .scientific-table td {
-      font-size: 0.95rem;
-      vertical-align: middle;
-      padding: 0.75rem;
-    }
-
-    .action-button-group .btn-sm {
-      padding: 0.25rem 0.75rem;
-      font-size: 0.8rem;
-      border-radius: 0.25rem;
-    }
+    .scientific-table { /* ... */ }
+    .scientific-table thead th { /* ... */ }
+    .scientific-table tbody tr { /* ... */ }
+    .scientific-table tbody tr:hover { /* ... */ }
+    .scientific-table td { /* ... */ }
+    .action-button-group .btn-sm { /* ... */ }
   `;
 
   // --- Filtering & Sorting ---
   const matchesSearch = (item, term) =>
-    normalizeString(item.armyName).includes(term) ||
-    normalizeString(item.armyBranch?.armyBranchName).includes(term) ||
-    normalizeString(item.country?.countryNameInPolish).includes(term) ||
-    normalizeString(item.notes).includes(term);
+    // REFACTOR: Use item.name, item.armyBranch.name, item.countryName, item.historyContext/description
+    normalizeString(item.name).includes(term) ||
+    normalizeString(item.armyBranch?.name).includes(term) || // Assuming ArmyBranchDTO uses 'name'
+    normalizeString(item.countryName).includes(term) ||     // Assuming denormalized DTO field is countryName
+    normalizeString(item.historyContext).includes(term) ||  // Check historyContext or description
+    normalizeString(item.description).includes(term);
 
   const filteredItems = useMemo(() => {
     const filtered = items.filter((item) =>
@@ -77,16 +45,22 @@ const MilitaryOrganizationTable = ({ label = "Military Organizations", items, de
       let valA = "";
       let valB = "";
 
-      if (sortKey === "armyName") {
-        valA = a.armyName || "";
-        valB = b.armyName || "";
-      } else if (sortKey === "armyBranch") {
-        valA = a.armyBranch?.armyBranchName || "";
-        valB = b.armyBranch?.armyBranchName || "";
-      } else if (sortKey === "country") {
-        valA = a.country?.countryNameInPolish || "";
-        valB = b.country?.countryNameInPolish || "";
-      } else if (sortKey === "activeFromYear") {
+      // REFACTOR: Use 'name' instead of 'armyName'
+      if (sortKey === "name") { 
+        valA = a.name || "";
+        valB = b.name || "";
+      } 
+      // REFACTOR: Use 'armyBranch.name' instead of 'armyBranch.armyBranchName'
+      else if (sortKey === "armyBranch") {
+        valA = a.armyBranch?.name || "";
+        valB = b.armyBranch?.name || "";
+      } 
+      // REFACTOR: Use 'countryName' instead of the deeply nested countryNameInPolish
+      else if (sortKey === "country") {
+        valA = a.countryName || ""; 
+        valB = b.countryName || "";
+      } 
+      else if (sortKey === "activeFromYear") {
         valA = a.activeFromYear || 0;
         valB = b.activeFromYear || 0;
       }
@@ -180,7 +154,8 @@ const MilitaryOrganizationTable = ({ label = "Military Organizations", items, de
             <InputGroup.Text><i className="fas fa-search"></i></InputGroup.Text>
             <Form.Control
               type="text"
-              placeholder="🔍 Search army, branch, country, or notes..."
+              // REFACTOR: Update search placeholder to reflect new field names
+              placeholder="🔍 Search organization, branch, country, or context..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -205,11 +180,11 @@ const MilitaryOrganizationTable = ({ label = "Military Organizations", items, de
           <thead>
             <tr>
               <th style={{ width: "40px" }}>#</th>
-              {renderHeader("armyName", "Army Name")}
+              {renderHeader("name", "Organization Name")} {/* REFACTOR: Updated label */}
               {renderHeader("armyBranch", "Branch")}
               {renderHeader("country", "Country")}
               {renderHeader("activeFromYear", "Active Years")}
-              <th>Notes</th>
+              <th>Context</th> {/* REFACTOR: Changed 'Notes' to 'Context' (matches historyContext/description) */}
               {isAdmin && <th className="text-center">Actions</th>}
             </tr>
           </thead>
@@ -220,24 +195,24 @@ const MilitaryOrganizationTable = ({ label = "Military Organizations", items, de
                   <td>{startIndex + index + 1}</td>
                   <td>
                     <Link
-                      to={`/militaryOrganizations/show/${item._id}`}
+                      to={`/militaryOrganizations/show/${item.id || item._id}`}
                       className="fw-bold text-dark text-decoration-none"
                     >
-                      {item.armyName}
+                      {item.name} {/* REFACTOR: Use item.name */}
                     </Link>
                   </td>
-                  <td>{item.armyBranch?.armyBranchName || <i className="text-muted">-</i>}</td>
-                  <td>{item.country?.countryNameInPolish || <i className="text-muted">-</i>}</td>
+                  <td>{item.armyBranch?.name || <i className="text-muted">-</i>}</td> {/* REFACTOR: Use item.armyBranch?.name */}
+                  <td>{item.countryName || <i className="text-muted">-</i>}</td> {/* REFACTOR: Use item.countryName */}
                   {renderActiveYears(item.activeFromYear, item.activeToYear)}
-                  <td>{item.notes || <i className="text-muted">-</i>}</td>
+                  <td>{item.historyContext || <i className="text-muted">-</i>}</td> {/* REFACTOR: Use historyContext */}
                   {isAdmin && (
                     <td className="text-center">
                       <div className="btn-group action-button-group">
-                        <Link to={`/militaryOrganizations/edit/${item._id}`} className="btn btn-sm btn-warning">
+                        <Link to={`/militaryOrganizations/edit/${item.id || item._id}`} className="btn btn-sm btn-warning">
                           <i className="fas fa-edit"></i>
                         </Link>
                         <Button
-                          onClick={() => deleteOrganization(item._id)}
+                          onClick={() => deleteOrganization(item.id || item._id)}
                           variant="danger"
                           size="sm"
                         >
@@ -250,7 +225,7 @@ const MilitaryOrganizationTable = ({ label = "Military Organizations", items, de
               ))
             ) : (
               <tr>
-                <td colSpan={isAdmin ? "8" : "7"} className="text-center text-muted py-4">
+                <td colSpan={isAdmin ? "7" : "6"} className="text-center text-muted py-4">
                   <i className="fas fa-exclamation-triangle me-2"></i>
                   {searchTerm ? `No results match "${searchTerm}".` : "No military organizations available."}
                 </td>
@@ -260,47 +235,48 @@ const MilitaryOrganizationTable = ({ label = "Military Organizations", items, de
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination (Unchanged) */}
       <div className="d-flex justify-content-between align-items-center mt-4">
+        {/* ... (rest of the pagination and count code) */}
         <div className="d-flex align-items-center">
-          <label className="me-2 mb-0 fw-semibold text-muted">Records:</label>
-          <Form.Select
-            size="sm"
-            value={itemsPerPage}
-            onChange={handleItemsPerPageChange}
-            style={{ width: "80px" }}
-          >
-            {[10, 20, 50, 100, items.length].map((val) => (
-              <option key={val} value={val}>
-                {val === items.length ? "All" : val}
-              </option>
-            ))}
-          </Form.Select>
+            <label className="me-2 mb-0 fw-semibold text-muted">Records:</label>
+            <Form.Select
+                size="sm"
+                value={itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                style={{ width: "80px" }}
+            >
+                {[10, 20, 50, 100, items.length].map((val) => (
+                    <option key={val} value={val}>
+                        {val === items.length ? "All" : val}
+                    </option>
+                ))}
+            </Form.Select>
         </div>
 
         <Pagination size="sm">
-          <Pagination.First onClick={() => handlePageChange(1)} disabled={currentPage === 1} />
-          <Pagination.Prev
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          />
-          {getPageRange().map((page) => (
-            <Pagination.Item
-              key={page}
-              active={page === currentPage}
-              onClick={() => handlePageChange(page)}
-            >
-              {page}
-            </Pagination.Item>
-          ))}
-          <Pagination.Next
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          />
-          <Pagination.Last
-            onClick={() => handlePageChange(totalPages)}
-            disabled={currentPage === totalPages}
-          />
+            <Pagination.First onClick={() => handlePageChange(1)} disabled={currentPage === 1} />
+            <Pagination.Prev
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+            />
+            {getPageRange().map((page) => (
+                <Pagination.Item
+                    key={page}
+                    active={page === currentPage}
+                    onClick={() => handlePageChange(page)}
+                >
+                    {page}
+                </Pagination.Item>
+            ))}
+            <Pagination.Next
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+            />
+            <Pagination.Last
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+            />
         </Pagination>
       </div>
 

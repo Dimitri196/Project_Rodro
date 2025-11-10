@@ -16,8 +16,8 @@ public class MilitaryRankDTO {
     @JsonProperty("_id")
     private Long id;
 
-    private String rankName; // e.g., "Major", "General"
-    private String rankDescription; // Description or notes about the role
+    private String name; // e.g., "Major", "General"
+    private String description; // Description or notes about the role
     private MilitaryRankLevel rankLevel; // Enum representing the level of the rank (e.g., Officer, NCO, Enlisted)
     private String activeFromYear; // Optional: when this rank existed
     private String activeToYear;
@@ -25,9 +25,15 @@ public class MilitaryRankDTO {
 
     private List<PersonMilitaryServiceDTO> persons; // List of persons holding this rank
 
-    private MilitaryOrganizationDTO militaryOrganization; // Link to the military organization this rank belongs to
+    /**
+     * The ID of the organization this rank belongs to.
+     */
+    private Long organizationId;
 
-    private MilitaryStructureDTO militaryStructureDTO;
+    private String organizationName;
 
-    private String rankImageUrl;
+    private String structureName;
+    private String structureId;
+
+    private String insigniaImageUrl;
 }

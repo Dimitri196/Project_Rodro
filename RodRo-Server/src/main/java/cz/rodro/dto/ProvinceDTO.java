@@ -15,12 +15,14 @@ public class ProvinceDTO {
 
     @JsonProperty("_id")
     private Long id;
-    private String provinceName;
 
-    @JsonIgnore
-    private CountryDTO country;
+    private String name;
+
+    private Long countryId;
+
+    private String countryName;
 
     private List<DistrictDTO> districts;
 
-    private String provinceFlagImgUrl;
+    private String imgUrl;
 }

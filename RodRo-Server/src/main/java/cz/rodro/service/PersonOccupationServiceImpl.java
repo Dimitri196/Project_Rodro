@@ -11,7 +11,7 @@ import cz.rodro.entity.repository.PersonRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import cz.rodro.exception.NotFoundException;
+import cz.rodro.exception.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,9 +29,9 @@ public class PersonOccupationServiceImpl implements PersonOccupationService {
     @Transactional
     public PersonOccupationDTO createLink(PersonOccupationDTO dto) {
         PersonEntity person = personRepository.findById(dto.getPersonId())
-                .orElseThrow(() -> new NotFoundException("Person not found with ID: " + dto.getPersonId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Person not found with ID: " + dto.getPersonId()));
         OccupationEntity occupation = occupationRepository.findById(dto.getOccupationId())
-                .orElseThrow(() -> new NotFoundException("Occupation not found with ID: " + dto.getOccupationId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Occupation not found with ID: " + dto.getOccupationId()));
 
         PersonOccupationEntity entity = new PersonOccupationEntity();
         entity.setPerson(person);
@@ -79,7 +79,7 @@ public class PersonOccupationServiceImpl implements PersonOccupationService {
     @Override
     public void deleteLink(Long id) {
         PersonOccupationEntity entity = personOccupationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Link not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Link not found with ID: " + id));
         personOccupationRepository.delete(entity);
     }
 }

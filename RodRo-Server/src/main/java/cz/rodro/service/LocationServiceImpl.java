@@ -1,9 +1,6 @@
 package cz.rodro.service;
 
-import cz.rodro.dto.LocationDTO;
-import cz.rodro.dto.LocationHistoryDTO;
-import cz.rodro.dto.LocationListProjection;
-import cz.rodro.dto.SourceDTO;
+import cz.rodro.dto.*;
 import cz.rodro.dto.mapper.LocationHistoryMapper;
 import cz.rodro.dto.mapper.LocationMapper;
 import cz.rodro.dto.mapper.SourceMapper;
@@ -13,11 +10,11 @@ import cz.rodro.entity.SourceEntity;
 import cz.rodro.entity.repository.LocationHistoryRepository;
 import cz.rodro.entity.repository.LocationRepository;
 import cz.rodro.entity.repository.SourceRepository;
+import cz.rodro.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import cz.rodro.exception.NotFoundException;
 import org.springframework.transaction.annotation.Transactional; // Correct import for Spring's @Transactional
 
 
@@ -26,19 +23,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-/**
- * Service implementation for managing {@link LocationEntity} and {@link LocationDTO} operations.
- * Handles business logic, data mapping, and transaction management for locations.
- */
 @Service
 public class LocationServiceImpl implements LocationService {
 
     private final LocationRepository locationRepository;
     private final LocationMapper locationMapper;
-    private final LocationHistoryMapper locationHistoryMapper; // Injected for history DTO/Entity conversion
-    private final SourceMapper sourceMapper; // Injected for source DTO/Entity conversion
-    private final LocationHistoryRepository locationHistoryRepository; // Injected for managing history entities
-    private final SourceRepository sourceRepository; // Injected for managing source entities
+    private final LocationHistoryMapper locationHistoryMapper;
+    private final SourceMapper sourceMapper;
+    private final LocationHistoryRepository locationHistoryRepository;
+    private final SourceRepository sourceRepository; // Needed for fetching existing SourceEntity
 
     @Autowired
     public LocationServiceImpl(
@@ -59,55 +52,43 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional(readOnly = true)
     public Page<LocationListProjection> getAllLocations(String searchTerm, Pageable pageable) {
-        // Uses the optimized projection method from the repository
         return locationRepository.findAllLocationsProjected(searchTerm, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public LocationDTO getLocation(long locationId) {
-        // Uses the EntityGraph method to eagerly fetch histories and sources
-        // Renamed findByIdWithDetails to findById and specified the entity graph in the repository
+        // No change needed here. LocationMapper must be configured to convert
+        // LocationEntity.getSources() to List<SourceSummaryDTO>.
         LocationEntity locationEntity = locationRepository.findById(locationId)
-                .orElseThrow(() -> new NotFoundException("Location with id " + locationId + " wasn't found in the database."));
+                .orElseThrow(() -> new ResourceNotFoundException("Location with id " + locationId + " wasn't found in the database."));
         return locationMapper.toLocationDTO(locationEntity);
     }
 
     @Override
     @Transactional
     public LocationDTO addLocation(LocationDTO locationDTO) {
-        // Use a new variable for the entity being built to ensure it's effectively final for lambdas
         LocationEntity newLocationEntity = locationMapper.toLocationEntity(locationDTO);
 
-        // Handle LocationHistoryEntity creation and association
+        // --- Handle LocationHistoryEntity creation and association (Remains the same) ---
         if (locationDTO.getLocationHistories() != null && !locationDTO.getLocationHistories().isEmpty()) {
             List<LocationHistoryEntity> histories = locationDTO.getLocationHistories().stream()
                     .map(historyDTO -> {
                         LocationHistoryEntity historyEntity = locationHistoryMapper.toLocationHistoryEntity(historyDTO);
-                        historyEntity.setLocation(newLocationEntity); // Use the effectively final newLocationEntity
+                        historyEntity.setLocation(newLocationEntity);
                         return historyEntity;
                     })
                     .collect(Collectors.toList());
             newLocationEntity.setLocationHistories(histories);
         } else {
-            newLocationEntity.setLocationHistories(new ArrayList<>()); // Initialize to empty list instead of null
+            newLocationEntity.setLocationHistories(new ArrayList<>());
         }
 
-        // Handle SourceEntity creation and association
-        if (locationDTO.getSources() != null && !locationDTO.getSources().isEmpty()) {
-            List<SourceEntity> sources = locationDTO.getSources().stream()
-                    .map(sourceDTO -> {
-                        SourceEntity sourceEntity = sourceMapper.toSourceEntity(sourceDTO);
-                        sourceEntity.setLocation(newLocationEntity); // Use the effectively final newLocationEntity
-                        return sourceEntity;
-                    })
-                    .collect(Collectors.toList());
-            newLocationEntity.setSources(sources);
-        } else {
-            newLocationEntity.setSources(new ArrayList<>()); // Initialize to empty list instead of null
-        }
+        // ❌ REMOVED: Creation of nested SourceEntity from DTO, as LocationDTO now only contains SourceSummaryDTOs,
+        // which lack mandatory fields needed for a full SourceEntity creation.
+        // We assume sources must be created separately and linked via updateLocation.
+        newLocationEntity.setSources(new ArrayList<>());
 
-        // Save the new entity, and capture the result in a new variable
         LocationEntity savedLocationEntity = locationRepository.save(newLocationEntity);
         return locationMapper.toLocationDTO(savedLocationEntity);
     }
@@ -116,22 +97,19 @@ public class LocationServiceImpl implements LocationService {
     @Transactional
     public void removeLocation(long locationId) {
         LocationEntity locationEntity = locationRepository.findById(locationId)
-                .orElseThrow(() -> new NotFoundException("Location with id " + locationId + " wasn't found in the database."));
+                .orElseThrow(() -> new ResourceNotFoundException("Location with id " + locationId + " wasn't found in the database."));
         locationRepository.delete(locationEntity);
     }
 
     @Override
     @Transactional
     public LocationDTO updateLocation(Long locationId, LocationDTO locationDTO) {
-        // Fetch with details to ensure collections are loaded and manageable within the transaction
-        // Renamed findByIdWithDetails to findById and specified the entity graph in the repository
         LocationEntity existingLocation = locationRepository.findById(locationId)
-                .orElseThrow(() -> new NotFoundException("Location with id " + locationId + " wasn't found in the database."));
+                .orElseThrow(() -> new ResourceNotFoundException("Location with id " + locationId + " wasn't found in the database."));
 
-        // Update primitive fields using MapStruct
         locationMapper.updateLocationEntity(locationDTO, existingLocation);
 
-        // --- Manage LocationHistoryEntity collection ---
+        // --- Manage LocationHistoryEntity collection (Remains the same) ---
         List<LocationHistoryEntity> currentHistories = existingLocation.getLocationHistories();
         List<LocationHistoryDTO> incomingHistories = locationDTO.getLocationHistories() != null ?
                 locationDTO.getLocationHistories() : List.of();
@@ -156,34 +134,42 @@ public class LocationServiceImpl implements LocationService {
             }
         }
 
-        // --- Manage SourceEntity collection ---
+        // --- Manage SourceEntity collection (Link Management Only via SourceSummaryDTO) ---
         List<SourceEntity> currentSources = existingLocation.getSources();
-        List<SourceDTO> incomingSources = locationDTO.getSources() != null ?
-                locationDTO.getSources() : List.of();
 
-        // Identify sources to remove (present in current but not in incoming)
+        // ✅ The incoming DTO must now be cast/typed to SourceSummaryDTO list
+        // Assuming LocationDTO.getSources() returns List<SourceSummaryDTO>:
+        List<SourceSummaryDTO> incomingSources = (List<SourceSummaryDTO>) (List<?>) (locationDTO.getSources() != null ?
+                locationDTO.getSources() : List.of());
+        // NOTE: This cast requires that your LocationDTO now uses List<SourceSummaryDTO>
+        // If your DTO doesn't allow a List<SourceDTO> property, this cast is necessary but fragile.
+
+        // 1. Identify and Remove source links (present in current but not in incoming DTO IDs)
         currentSources.removeIf(currentSource -> incomingSources.stream()
+                // Use ID from the lightweight DTO for comparison
                 .noneMatch(incomingSource -> Objects.equals(incomingSource.getId(), currentSource.getId())));
 
-        // Add or update sources
-        for (SourceDTO incomingSourceDTO : incomingSources) {
-            if (incomingSourceDTO.getId() == null) {
-                // New source - assuming SourceDTO can create a new SourceEntity
-                SourceEntity newSource = sourceMapper.toSourceEntity(incomingSourceDTO);
-                newSource.setLocation(existingLocation); // Set parent
-                currentSources.add(newSource);
-            } else {
-                // Existing source - find and update
-                // This assumes you want to update properties of the SourceEntity itself.
-                // If SourceDTO only references existing SourceEntities, you might just need to ensure the link exists.
-                currentSources.stream()
-                        .filter(currentSource -> Objects.equals(currentSource.getId(), incomingSourceDTO.getId()))
-                        .findFirst()
-                        .ifPresent(sourceToUpdate -> sourceMapper.updateSourceEntity(incomingSourceDTO, sourceToUpdate));
+        // 2. Add source links (present in incoming DTO IDs but not in current Entity links)
+        for (SourceSummaryDTO incomingSourceDTO : incomingSources) {
+            if (incomingSourceDTO.getId() != null) {
+                // Check if the link already exists in the current list
+                boolean linkExists = currentSources.stream()
+                        .anyMatch(currentSource -> Objects.equals(currentSource.getId(), incomingSourceDTO.getId()));
+
+                if (!linkExists) {
+                    // Link is missing: Fetch the SourceEntity by ID and establish the link
+                    SourceEntity sourceToAdd = sourceRepository.findById(incomingSourceDTO.getId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Source with id " + incomingSourceDTO.getId() + " not found. Cannot link."));
+
+                    sourceToAdd.setLocation(existingLocation);
+                    currentSources.add(sourceToAdd);
+                }
             }
+            // ❌ REMOVED: sourceMapper.updateSourceEntity(incomingSourceDTO, sourceToUpdate)
+            // Cannot update SourceEntity details using SourceSummaryDTO.
         }
 
-        LocationEntity updatedLocation = locationRepository.save(existingLocation); // Save the parent entity to cascade changes
+        LocationEntity updatedLocation = locationRepository.save(existingLocation);
         return locationMapper.toLocationDTO(updatedLocation);
     }
 
@@ -191,6 +177,6 @@ public class LocationServiceImpl implements LocationService {
     @Transactional(readOnly = true)
     public LocationEntity fetchLocationById(Long id, String type) {
         return locationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(type + " with id " + id + " wasn't found in the database."));
+                .orElseThrow(() -> new ResourceNotFoundException(type + " with id " + id + " wasn't found in the database."));
     }
 }

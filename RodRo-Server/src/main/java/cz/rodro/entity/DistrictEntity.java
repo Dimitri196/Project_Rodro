@@ -22,7 +22,7 @@ public class DistrictEntity {
 
     @Column(nullable = false)
     @NotNull
-    private String districtName;
+    private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "district_province_id", nullable = false)
@@ -32,6 +32,9 @@ public class DistrictEntity {
     @OneToMany(mappedBy = "district", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<SubdivisionEntity> subdivisions;
+
+    @Column(length = 2000)
+    private String imgUrl;
 
 }
 

@@ -71,7 +71,13 @@ public class LocationDTO {
     /**
      * Sources documenting this location.
      */
-    private List<SourceDTO> sources;
+    //private List<SourceDTO> sources;
+
+    /**
+     * Sources documenting this location.
+     * ✅ REFACTOR: Using SourceSummaryDTO for lightweight transfer.
+     */
+    private List<SourceSummaryDTO> sources;
 
     /**
      * Parishes associated with this location.

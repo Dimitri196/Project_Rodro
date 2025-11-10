@@ -3,6 +3,7 @@ package cz.rodro.service;
 import cz.rodro.dto.LocationDTO;
 import cz.rodro.dto.LocationListProjection;
 import cz.rodro.entity.LocationEntity;
+import cz.rodro.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -28,7 +29,7 @@ public interface LocationService {
      *
      * @param locationId The ID of the location to retrieve.
      * @return The LocationDTO with detailed information.
-     * @throws cz.rodro.exception.NotFoundException if the location is not found.
+     * @throws ResourceNotFoundException if the location is not found.
      */
     LocationDTO getLocation(long locationId);
 
@@ -44,7 +45,7 @@ public interface LocationService {
      * Removes a location from the database by its ID.
      *
      * @param locationId The ID of the location to remove.
-     * @throws cz.rodro.exception.NotFoundException if the location is not found.
+     * @throws ResourceNotFoundException if the location is not found.
      */
     void removeLocation(long locationId);
 
@@ -55,7 +56,7 @@ public interface LocationService {
      * @param locationId The ID of the location to update.
      * @param locationDTO The LocationDTO containing the updated data.
      * @return The updated LocationDTO.
-     * @throws cz.rodro.exception.NotFoundException if the location is not found.
+     * @throws ResourceNotFoundException if the location is not found.
      */
     LocationDTO updateLocation(Long locationId, LocationDTO locationDTO);
 
@@ -66,7 +67,7 @@ public interface LocationService {
      * @param id The ID of the location to fetch.
      * @param type A string describing the type of location (e.g., "Birth Place") for error messages.
      * @return The LocationEntity.
-     * @throws cz.rodro.exception.NotFoundException if the location is not found.
+     * @throws ResourceNotFoundException if the location is not found.
      */
     LocationEntity fetchLocationById(Long id, String type);
 }

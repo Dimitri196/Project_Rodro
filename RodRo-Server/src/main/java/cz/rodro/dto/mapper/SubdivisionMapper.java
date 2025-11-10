@@ -9,7 +9,7 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring", uses = { DistrictMapper.class, LocationMapper.class })
 public interface SubdivisionMapper {
 
-    @Mapping(target = "districtName", source = "district.districtName")
+    @Mapping(target = "districtName", source = "district.name")
     @Mapping(target = "administrativeCenterName", source = "administrativeCenter.locationName")
     @Mapping(target = "district.provinceId", source = "district.province.id")   // add provinceId
     @Mapping(target = "district.countryId", source = "district.province.country.id") // add countryId

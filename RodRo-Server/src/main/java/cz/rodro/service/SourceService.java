@@ -2,6 +2,7 @@ package cz.rodro.service;
 
 import cz.rodro.dto.SourceDTO;
 import cz.rodro.dto.SourceListDTO;
+import cz.rodro.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -25,7 +26,7 @@ public interface SourceService {
      *
      * @param sourceId The ID of the source to retrieve.
      * @return The {@link SourceDTO} with detailed information.
-     * @throws cz.rodro.exception.NotFoundException if the source is not found.
+     * @throws ResourceNotFoundException if the source is not found.
      */
     SourceDTO getSource(Long sourceId);
 
@@ -41,7 +42,7 @@ public interface SourceService {
      * Removes a source from the database by its ID.
      *
      * @param sourceId The ID of the source to remove.
-     * @throws cz.rodro.exception.NotFoundException if the source is not found.
+     * @throws ResourceNotFoundException if the source is not found.
      */
     void removeSource(Long sourceId);
 
@@ -51,7 +52,7 @@ public interface SourceService {
      * @param sourceId  The ID of the source to update.
      * @param sourceDTO The {@link SourceDTO} containing the updated data.
      * @return The updated {@link SourceDTO}.
-     * @throws cz.rodro.exception.NotFoundException if the source is not found.
+     * @throws ResourceNotFoundException if the source is not found.
      */
     SourceDTO updateSource(Long sourceId, SourceDTO sourceDTO);
 }

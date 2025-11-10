@@ -10,6 +10,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -114,11 +116,11 @@ public class LocationEntity {
     private List<CemeteryEntity> cemeteries;
 
     /**
-     * Institutions located at this location.
+     * Bidirectional One-to-Many relationship with InstitutionEntity.
+     * Mapped by the 'location' field in the InstitutionEntity.
      */
-    @OneToMany(mappedBy = "institutionLocation", fetch = FetchType.LAZY)
-    @JsonBackReference
-    private List<InstitutionEntity> institutions;
+    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InstitutionEntity> institutions = new ArrayList<>();
 
     /**
      * URL of an image representing this location.

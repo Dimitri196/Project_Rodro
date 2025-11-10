@@ -20,8 +20,8 @@ public class MilitaryRankEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String rankName;
-    private String rankDescription;
+    private String name;
+    private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rankLevel", nullable = false)
@@ -31,8 +31,10 @@ public class MilitaryRankEntity {
     private String activeToYear;
     private String notes;
 
-    @Column(nullable = true)
-    private String rankImageUrl;
+    /**
+     * URL of the rank insignia image.
+     */
+    private String insigniaImageUrl;
 
     @OneToMany(mappedBy = "militaryRank", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

@@ -10,9 +10,9 @@ import cz.rodro.entity.SubdivisionEntity;
 import cz.rodro.entity.repository.LocationHistoryRepository;
 import cz.rodro.entity.repository.LocationRepository;
 import cz.rodro.entity.repository.SubdivisionRepository;
+import cz.rodro.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import cz.rodro.exception.NotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,13 +46,13 @@ public class LocationHistoryServiceImpl implements LocationHistoryService {
     @Override
     public LocationHistoryDTO addLocationHistory(Long locationId, LocationHistoryDTO locationHistoryDTO) {
         LocationEntity location = locationRepository.findById(locationId)
-                .orElseThrow(() -> new NotFoundException("Location not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Location not found"));
 
         // Handle subdivision if it's provided in the DTO
         SubdivisionEntity subdivision = null;
         if (locationHistoryDTO.getSubdivisionId() != null) {
             subdivision = subdivisionRepository.findById(locationHistoryDTO.getSubdivisionId())
-                    .orElseThrow(() -> new NotFoundException("Subdivision not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Subdivision not found"));
         }
 
         // Map DTO to entity and set the location and subdivision
@@ -67,12 +67,12 @@ public class LocationHistoryServiceImpl implements LocationHistoryService {
     @Override
     public LocationHistoryDTO updateLocationHistory(Long historyId, LocationHistoryDTO locationHistoryDTO) {
         LocationHistoryEntity existingEntity = locationHistoryRepository.findById(historyId)
-                .orElseThrow(() -> new NotFoundException("Location history not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Location history not found"));
 
         // Handle subdivision update
         if (locationHistoryDTO.getSubdivisionId() != null) {
             SubdivisionEntity subdivision = subdivisionRepository.findById(locationHistoryDTO.getSubdivisionId())
-                    .orElseThrow(() -> new NotFoundException("Subdivision not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Subdivision not found"));
             existingEntity.setSubdivision(subdivision);
         }
 
@@ -86,7 +86,7 @@ public class LocationHistoryServiceImpl implements LocationHistoryService {
     @Override
     public void deleteLocationHistory(Long historyId) {
         if (!locationHistoryRepository.existsById(historyId)) {
-            throw new NotFoundException("Location history not found");
+            throw new ResourceNotFoundException("Location history not found");
         }
         locationHistoryRepository.deleteById(historyId);
     }
@@ -110,6 +110,15 @@ public class LocationHistoryServiceImpl implements LocationHistoryService {
     @Override
     public List<LocationDTO> getLocationsBySubdivisionId(Long subdivisionId) {
         List<LocationEntity> locations = locationHistoryRepository.findDistinctLocationsBySubdivisionId(subdivisionId);
+        return locations.stream()
+                .map(locationMapper::toLocationDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LocationDTO> getLocationsByDistrictId(Long districtId) {
+        List<LocationEntity> locations = locationHistoryRepository.findDistinctLocationsByDistrictId(districtId);
+        // Assuming you have a LocationMapper injected and ready
         return locations.stream()
                 .map(locationMapper::toLocationDTO)
                 .collect(Collectors.toList());

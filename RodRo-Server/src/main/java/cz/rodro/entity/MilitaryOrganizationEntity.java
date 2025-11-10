@@ -11,6 +11,10 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entity representing a specific Military Organization (e.g., Army, Corps, Division).
+ * It links branches, countries, structures, and ranks together.
+ */
 @Entity
 @Table(name = "military_organization")
 @Getter
@@ -22,31 +26,65 @@ public class MilitaryOrganizationEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String armyName;
+    /**
+     * The official name of the organization.
+     */
+    @Column(nullable = false, length = 255)
+    private String name;
 
-    @ManyToOne
-    @JoinColumn(name = "army_branch_id")
+    /**
+     * The primary branch of the organization.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "army_branch_id", nullable = false)
     private MilitaryArmyBranchEntity armyBranch;
 
-    @ManyToOne
-    @JoinColumn(name = "country_id")
+    /**
+     * The country this organization belongs to.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "country_id", nullable = false)
     @JsonBackReference
     private CountryEntity country;
 
+    /**
+     * The year the organization became active (stored as a String for flexibility with BC/approximate dates).
+     */
     private String activeFromYear;
+
+    /**
+     * The year the organization became inactive.
+     */
     private String activeToYear;
 
+    /**
+     * The subordinate structures (e.g., Brigades, Regiments) that report to this organization.
+     */
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonManagedReference // Handles bidirectional relationship with MilitaryStructureEntity
     private List<MilitaryStructureEntity> structures = new ArrayList<>();
 
-    // You might also have a OneToMany back to MilitaryRankEntity
+    /**
+     * The ranks specifically used or associated with this military organization.
+     */
     @OneToMany(mappedBy = "militaryOrganization", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MilitaryRankEntity> militaryRanks = new ArrayList<>();
 
-    private String organizationImageUrl;
+    /**
+     * A short summary or contextual note regarding the organization's history.
+     */
+    @Column(length = 500)
+    private String historyContext;
 
-    @Column(length = 2000)
-    private String organizationDescription;
+    /**
+     * The full, detailed historical description of the organization.
+     */
+    @Column(length = 4000)
+    private String description;
+
+    /**
+     * URL linking to the organization's image (flag, crest, etc.).
+     */
+    private String imageUrl;
 
 }

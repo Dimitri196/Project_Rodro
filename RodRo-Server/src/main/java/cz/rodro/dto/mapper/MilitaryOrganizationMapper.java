@@ -7,23 +7,27 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.stereotype.Component;
 
-// Ensure MilitaryArmyBranchMapper and CountryMapper are also used here
-@Mapper(componentModel = "spring", uses = {MilitaryArmyBranchMapper.class, CountryMapper.class, MilitaryStructureSimpleMapper.class})
-@Component
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.springframework.stereotype.Component;
+
+@Mapper(componentModel = "spring")
 public interface MilitaryOrganizationMapper {
 
-    @Mapping(target = "country.provinces", ignore = true)
+
+    @Mapping(target = "id", source = "id")
+    @Mapping(source = "country.id", target = "countryId")
+    @Mapping(source = "country.nameInEnglish", target = "countryName")
+    @Mapping(target = "armyBranch", source = "armyBranch")
     @Mapping(target = "structures", source = "structures")
-    @Mapping(source = "organizationImageUrl", target = "organizationImageUrl")
-    @Mapping(source = "organizationDescription", target = "organizationDescription")
     MilitaryOrganizationDTO toMilitaryOrganizationDTO(MilitaryOrganizationEntity entity);
 
-    @Mapping(target = "country", ignore = true)
-    @Mapping(target = "militaryRanks", ignore = true)
-    @Mapping(target = "structures", source = "structures")
-    @Mapping(source = "organizationDescription", target = "organizationDescription")
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "armyBranch", ignore = true)     // Service sets this
+    @Mapping(target = "militaryRanks", ignore = true)  // Managed by Entity
+    @Mapping(target = "structures", ignore = true)     // Managed by Entity
     MilitaryOrganizationEntity toMilitaryOrganizationEntity(MilitaryOrganizationDTO dto);
 
     void updateMilitaryOrganizationEntity(MilitaryOrganizationDTO dto, @MappingTarget MilitaryOrganizationEntity entity);
-
 }

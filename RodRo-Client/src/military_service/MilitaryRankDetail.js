@@ -1,132 +1,162 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Container, Row, Col, Card, ListGroup, Alert, Spinner } from "react-bootstrap";
+import { 
+    Container, Row, Col, Card, Alert, Spinner,
+    ListGroup, Badge
+} from "react-bootstrap";
 import { apiGet } from "../utils/api";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const MilitaryRankDetail = () => {
-    const { id } = useParams();
+    const { id } = useParams(); 
     const [rank, setRank] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchRank = async () => {
+        const fetchData = async () => {
             setLoading(true);
             setError(null);
             try {
-                const data = await apiGet(`/api/militaryRanks/${id}`);
-                setRank(data);
+                // Fetch the MilitaryRankDTO
+                const rankData = await apiGet(`/api/militaryRanks/${id}`);
+                setRank(rankData);
+
             } catch (err) {
-                console.error("Error fetching military rank details:", err);
-                setError(`Failed to load military rank details: ${err.message || err}`);
+                console.error("Error fetching military rank:", err);
+                setError(`Failed to load military rank details for ID ${id}.`);
             } finally {
                 setLoading(false);
             }
         };
-        fetchRank();
+
+        fetchData();
     }, [id]);
 
-    if (loading) {
-        return (
-            <Container className="my-5 text-center">
-                <Spinner animation="border" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                </Spinner>
-                <p className="mt-3 text-muted">Loading rank details...</p>
-            </Container>
-        );
-    }
+    // --- Render Helpers ---
 
-    if (error) {
-        return (
-            <Container className="my-5">
-                <Alert variant="danger" className="text-center shadow-sm rounded-3">
-                    <i className="fas fa-exclamation-triangle me-2"></i>{error}
-                </Alert>
-            </Container>
-        );
-    }
+    const renderLevelBadge = (level) => {
+        const variant = {
+            OFFICER: "primary",
+            NCO: "success", // Non-Commissioned Officer
+            ENLISTED: "info",
+            GENERAL: "danger",
+            WARRANT: "warning"
+        }[level] || "secondary";
 
-    if (!rank) {
-        return (
-            <Container className="my-5">
-                <Alert variant="info" className="text-center shadow-sm rounded-3">
-                    <i className="fas fa-info-circle me-2"></i>Military rank not found.
-                </Alert>
-            </Container>
-        );
-    }
+        return <Badge bg={variant} className="fw-semibold">{level || "N/A"}</Badge>;
+    };
 
-    const {
-        rankName,
-        rankLevel,
-        rankDescription,
-        activeFromYear,
-        activeToYear,
-        notes,
-        rankImageUrl,
-        militaryOrganization,
-        militaryStructureDTO,
-        persons
-    } = rank;
+    if (loading) return (
+        <Container className="my-5 text-center">
+            <Spinner animation="border" role="status" variant="primary" />
+            <p className="mt-3 text-muted">Loading military rank details...</p>
+        </Container>
+    );
+
+    if (error) return (
+        <Container className="my-5">
+            <Alert variant="danger" className="text-center shadow-sm rounded-3">
+                <i className="fas fa-exclamation-triangle me-2"></i>{error}
+            </Alert>
+        </Container>
+    );
+
+    if (!rank) return (
+        <Container className="my-5">
+            <Alert variant="info" className="text-center shadow-sm rounded-3">
+                <i className="fas fa-info-circle me-2"></i>Military rank not found.
+            </Alert>
+        </Container>
+    );
+
+    // ✅ Accessing properties from the flat DTO
+    const rankName = rank.name || "Unnamed Rank";
+    const rankDescription = rank.description || "No detailed description available.";
+    const activePeriod = `${rank.activeFromYear || "?"} – ${rank.activeToYear || "Present"}`;
+    const organizationLink = rank.organizationId ? `/militaryOrganizations/show/${rank.organizationId}` : null;
+    const structureLink = rank.structureId ? `/militaryStructures/show/${rank.structureId}` : null;
+
 
     return (
-        <Container className="my-5 py-4 bg-light rounded shadow-lg">
-            <link
-                rel="stylesheet"
-                href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-                crossOrigin="anonymous"
-                referrerPolicy="no-referrer"
-            />
-
-            {/* Title */}
-            <Row className="mb-4 text-center">
-                <Col>
-                    <h1 className="display-4 fw-bold text-primary mb-3">
-                        <i className="fas fa-medal me-3"></i>{rankName}
+        <Container className="my-5 py-4 bg-white rounded shadow-lg">
+            <Row className="mb-4 border-bottom pb-3">
+                <Col md={12} className="text-center">
+                    <h1 className="display-4 fw-bold text-dark mb-2">
+                        <i className="fas fa-medal me-3 text-primary"></i>{rankName}
                     </h1>
-                    <p className="lead text-muted fst-italic">{rankLevel || "Military Rank"}</p>
+                    <div className="d-flex justify-content-center align-items-center mb-3">
+                        <p className="lead text-muted fst-italic mb-0 me-3">Rank Level:</p>
+                        {renderLevelBadge(rank.rankLevel)}
+                    </div>
+                    <p className="text-secondary fst-italic">{rankDescription}</p>
                 </Col>
             </Row>
 
-            {/* Basic Info & Image (two-column layout) */}
-            <Row className="justify-content-center">
-                {/* Left: Basic Info */}
+            <Row className="justify-content-center mb-4">
+                {/* Basic Details & Context */}
                 <Col md={6} className="mb-4">
-                    <Card className="shadow-lg border-0 rounded-4 h-100">
-                        <Card.Header as="h5" className="bg-primary text-white py-3 rounded-top-4">
-                            <i className="fas fa-info-circle me-2"></i>Basic Information
+                    <Card className="shadow-sm border-0 h-100">
+                        <Card.Header className="bg-light fw-bold">
+                            <i className="fas fa-info-circle me-2 text-primary"></i>Contextual Details
                         </Card.Header>
                         <Card.Body className="p-4">
                             <ListGroup variant="flush">
-                                <ListGroup.Item><strong>Description:</strong> {rankDescription || "-"}</ListGroup.Item>
-                                <ListGroup.Item><strong>Level:</strong> {rankLevel || "-"}</ListGroup.Item>
-                                <ListGroup.Item><strong>Active From:</strong> {activeFromYear || "-"}</ListGroup.Item>
-                                <ListGroup.Item><strong>Active To:</strong> {activeToYear || "-"}</ListGroup.Item>
-                                <ListGroup.Item><strong>Notes:</strong> {notes || "-"}</ListGroup.Item>
+                                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                                    <strong>Active Period:</strong> <span>{activePeriod}</span>
+                                </ListGroup.Item>
+                                
+                                {/* ✅ FIX: Using flat DTO properties organizationName and organizationId */}
+                                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                                    <strong>Organization:</strong>
+                                    <span>
+                                        {organizationLink && rank.organizationName ? (
+                                            <Link to={organizationLink} className="text-decoration-none text-primary fw-semibold">
+                                                {rank.organizationName}
+                                            </Link>
+                                        ) : <i className="text-muted">N/A</i>}
+                                    </span>
+                                </ListGroup.Item>
+                                
+                                {/* ✅ FIX: Using flat DTO properties structureName and structureId */}
+                                <ListGroup.Item className="d-flex justify-content-between align-items-center px-0">
+                                    <strong>Specific Structure:</strong>
+                                    <span>
+                                        {structureLink && rank.structureName ? (
+                                            <Link to={structureLink} className="text-decoration-none text-info fw-semibold">
+                                                {rank.structureName}
+                                            </Link>
+                                        ) : <i className="text-muted">N/A</i>}
+                                    </span>
+                                </ListGroup.Item>
+                                
+                                <ListGroup.Item className="px-0">
+                                    <strong>Notes:</strong> 
+                                    <p className="text-muted mb-0 mt-1 fst-italic small">{rank.notes || "No additional remarks."}</p>
+                                </ListGroup.Item>
                             </ListGroup>
                         </Card.Body>
                     </Card>
                 </Col>
 
-                {/* Right: Image */}
+                {/* Insignia Image */}
                 <Col md={6} className="mb-4">
-                    <Card className="shadow-lg border-0 rounded-4 h-100">
-                        <Card.Header as="h5" className="bg-primary text-white py-3 rounded-top-4">
-                            <i className="fas fa-flag me-2"></i>Rank Insignia
+                    <Card className="shadow-sm border-0 h-100">
+                        <Card.Header className="bg-light fw-bold">
+                            <i className="fas fa-image me-2 text-primary"></i>Insignia
                         </Card.Header>
                         <Card.Body className="p-4 d-flex justify-content-center align-items-center">
-                            {rank.rankImageUrl ? (
+                            {rank.insigniaImageUrl ? (
                                 <img
-                                    src={rank.rankImageUrl}
-                                    alt={`${rank.rankName} banner`}
-                                    style={{ maxWidth: "100%", height: "auto", maxHeight: "300px", borderRadius: "0.5rem" }}
-                                    className="img-fluid"
+                                    src={rank.insigniaImageUrl}
+                                    alt={`${rankName} insignia`}
+                                    style={{ maxWidth: "100%", height: "auto", maxHeight: "250px", objectFit: 'contain', borderRadius: "0.5rem" }}
+                                    className="img-fluid border p-2"
                                 />
                             ) : (
-                                <div className="text-center text-muted">
-                                    <i className="fas fa-image fa-3x mb-3"></i>
-                                    <p>No banner image available.</p>
+                                <div className="text-center text-muted py-5">
+                                    <i className="fas fa-splotch fa-3x mb-3"></i>
+                                    <p>No insignia image available.</p>
                                 </div>
                             )}
                         </Card.Body>
@@ -134,88 +164,50 @@ const MilitaryRankDetail = () => {
                 </Col>
             </Row>
 
-            {/* Associated Units */}
-            <Row className="justify-content-center">
-                <Col md={12} className="mb-4">
-                    <Card className="shadow-lg border-0 rounded-4 h-100">
-                        <Card.Header as="h5" className="bg-secondary text-white py-3 rounded-top-4">
-                            <i className="fas fa-sitemap me-2"></i>Associated Units
+            {/* Associated Persons (Military Service Records) */}
+            <Row className="mt-4">
+                <Col md={12}>
+                    <Card className="shadow-lg border-0 rounded-4">
+                        <Card.Header className="bg-primary text-white py-3 rounded-top-4">
+                            <i className="fas fa-users me-2"></i>
+                            Associated Personnel ({rank.persons?.length || 0})
                         </Card.Header>
-                        <Card.Body className="p-4">
-                            <ListGroup variant="flush">
-                                <ListGroup.Item>
-                                    <strong>Military Organization:</strong>{" "}
-                                    {militaryOrganization?._id ? (
-                                        <Link
-                                            to={`/militaryOrganizations/show/${militaryOrganization._id}`}
-                                            className="text-decoration-none text-primary"
-                                        >
-                                            {militaryOrganization.armyName}
-                                        </Link>
-                                    ) : "Unknown"}
-                                </ListGroup.Item>
-                                <ListGroup.Item>
-                                    <strong>Military Structure:</strong>{" "}
-                                    {militaryStructureDTO?._id ? (
-                                        <Link
-                                            to={`/militaryStructures/show/${militaryStructureDTO._id}`}
-                                            className="text-decoration-none text-primary"
-                                        >
-                                            {militaryStructureDTO.unitName}
-                                        </Link>
-                                    ) : "Unknown"}
-                                </ListGroup.Item>
-                            </ListGroup>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-
-            {/* Persons */}
-            <Row className="justify-content-center">
-                <Col md={12} className="mb-4">
-                    <Card className="shadow-lg border-0 rounded-4 h-100">
-                        <Card.Header as="h5" className="bg-secondary text-white py-3 rounded-top-4">
-                            <i className="fas fa-users me-2"></i>Persons Holding This Rank ({persons?.length || 0})
-                        </Card.Header>
-                        <Card.Body className="p-4">
-                            {!persons || persons.length === 0 ? (
-                                <Alert variant="info" className="text-center mt-3">
-                                    <i className="fas fa-info-circle me-2"></i>No persons found.
-                                </Alert>
-                            ) : (
-                                <Row xs={1} md={2} lg={3} className="g-4">
-                                    {persons.map((person) => (
-                                        <Col key={person.personId}>
-                                            <Card className="shadow-sm h-100">
-                                                <Card.Body>
-                                                    <Card.Title className="text-info">
-                                                        <Link to={`/persons/show/${person.personId}`} className="text-decoration-none">
-                                                            {person.givenName} {person.surname}
-                                                        </Link>
-                                                    </Card.Title>
-                                                    <ListGroup variant="flush">
-                                                        <ListGroup.Item><strong>Enlistment Year:</strong> {person.enlistmentYear || "-"}</ListGroup.Item>
-                                                        <ListGroup.Item><strong>Discharge Year:</strong> {person.dischargeYear || "-"}</ListGroup.Item>
-                                                        <ListGroup.Item><strong>Notes:</strong> {person.notes || "-"}</ListGroup.Item>
-                                                    </ListGroup>
-                                                </Card.Body>
-                                            </Card>
-                                        </Col>
+                        <Card.Body className="p-0">
+                            {rank.persons && rank.persons.length > 0 ? (
+                                <ListGroup variant="flush">
+                                    {rank.persons.map((personService) => ( 
+                                        <ListGroup.Item key={personService.id || personService._id} className="d-flex justify-content-between align-items-center">
+                                            <span>
+                                                <i className="fas fa-user-circle me-2 text-secondary"></i>
+                                                {/* ✅ FIX: Use combined personGivenName and personSurname for display */}
+                                                <Link to={`/persons/show/${personService.personId}`} className="fw-semibold text-dark text-decoration-none">
+                                                    {personService.personGivenName} {personService.personSurname}
+                                                </Link>
+                                                {/* Display the Military Structure Name from the service record for context */}
+                                                <span className="ms-3 text-muted small">
+                                                    (Unit: {personService.militaryStructureName || personService.militaryStructure?.unitName || 'N/A'})
+                                                </span>
+                                            </span>
+                                            {/* Display service years and notes clearly */}
+                                            <div className="d-flex flex-column align-items-end small">
+                                                <span className="text-success fw-semibold">
+                                                    {personService.enlistmentYear} - {personService.dischargeYear || 'Present'}
+                                                </span>
+                                                <span className="text-muted fst-italic">Notes: {personService.notes || '-'}</span>
+                                            </div>
+                                        </ListGroup.Item>
                                     ))}
-                                </Row>
+                                </ListGroup>
+                            ) : (
+                                <div className="p-4 text-center text-muted">
+                                    <i className="fas fa-clipboard-list fa-2x mb-2"></i>
+                                    <p>No military service records currently linked to this rank.</p>
+                                </div>
                             )}
                         </Card.Body>
                     </Card>
                 </Col>
             </Row>
-
-            {/* Back button */}
-            <div className="mt-4">
-                <Link to="/militaryRanks" className="btn btn-secondary me-2">
-                    <i className="fas fa-arrow-left me-2"></i>Back to Ranks
-                </Link>
-            </div>
         </Container>
     );
 };

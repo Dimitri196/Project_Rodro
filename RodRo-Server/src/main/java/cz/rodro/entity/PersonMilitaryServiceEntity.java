@@ -7,6 +7,9 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entity representing a specific instance of a person's service in a military structure at a certain rank.
+ */
 @Entity
 @Table(name = "person_military_service")
 @Getter
@@ -19,21 +22,22 @@ public class PersonMilitaryServiceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "person_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "person_id", nullable = false)
     private PersonEntity person;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "military_structure_id")
     private MilitaryStructureEntity militaryStructure;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "military_rank_id")
     private MilitaryRankEntity militaryRank;
 
     private Integer enlistmentYear;
     private Integer dischargeYear;
 
+    @Column(length = 1000)
     private String notes;
 
 }
