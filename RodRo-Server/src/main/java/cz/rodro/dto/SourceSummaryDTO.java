@@ -13,7 +13,6 @@ public class SourceSummaryDTO {
     @JsonProperty("_id")
     private Long id;
 
-    // The main display field for the source, e.g., the title or a short citation.
     private String title;
 
     /** Optional: Include the reference/short citation for better context. */

@@ -15,7 +15,6 @@ const MilitaryRankTable = ({ label = "Military Ranks", items, deleteRank }) => {
     const { session } = useSession();
     const isAdmin = session?.data?.isAdmin === true;
 
-    // --- Custom Styles (Omitted for brevity) ---
     const customStyles = `
         .scientific-table { ... }
         .scientific-table thead th { ... }
@@ -25,16 +24,13 @@ const MilitaryRankTable = ({ label = "Military Ranks", items, deleteRank }) => {
         .action-button-group .btn-sm { ... }
     `;
 
-    // --- Filter & Sort ---
     const filteredItems = useMemo(() => {
         const filtered = items.filter(item => {
             const rankName = item.name || ""; 
             const rankLevel = item.rankLevel || ""; 
-            
-            // 🚀 DTO REFACTOR: Use flat properties for search
+
             const orgName = item.organizationName || ""; 
             const structureName = item.structureName || "";
-            // NOTE: armyBranchName is likely missing from the flat DTO. We keep it as is, expecting it might be passed separately, or remove it if not available.
             const branchName = item.armyBranchName || ""; 
 
             return (
@@ -50,18 +46,17 @@ const MilitaryRankTable = ({ label = "Military Ranks", items, deleteRank }) => {
             let valA;
             let valB;
 
-            // Handle sorting for nested/special fields using flat DTO names
             if (sortKey === "rankLevel") {
                 valA = a.rankLevel || "";
                 valB = b.rankLevel || "";
-            } else if (sortKey === "organizationName") { // 🚀 DTO REFACTOR
+            } else if (sortKey === "organizationName") { 
                 valA = a.organizationName || "";
                 valB = b.organizationName || "";
-            } else if (sortKey === "structureName") { // 🚀 DTO REFACTOR
+            } else if (sortKey === "structureName") { 
                 valA = a.structureName || "";
                 valB = b.structureName || "";
             } else if (sortKey === "armyBranchName") {
-                valA = a.armyBranchName || ""; // Assuming this is present in the DTO
+                valA = a.armyBranchName || ""; 
                 valB = b.armyBranchName || "";
             } else {
                 valA = a[sortKey] || "";
@@ -74,7 +69,6 @@ const MilitaryRankTable = ({ label = "Military Ranks", items, deleteRank }) => {
         });
     }, [items, searchTerm, sortKey, sortAsc]);
 
-    // --- Pagination Logic (Unchanged) ---
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
@@ -89,11 +83,10 @@ const MilitaryRankTable = ({ label = "Military Ranks", items, deleteRank }) => {
     };
 
     const handleSort = (key) => {
-        // Renaming keys for flat DTO sorting
         const newSortKey = {
             "militaryOrganization": "organizationName",
             "militaryStructure": "structureName",
-            "armyBranch": "armyBranchName", // Keep using 'armyBranchName' if available
+            "armyBranch": "armyBranchName",
         }[key] || key;
 
         if (sortKey === newSortKey) setSortAsc(prev => !prev);
@@ -128,9 +121,6 @@ const MilitaryRankTable = ({ label = "Military Ranks", items, deleteRank }) => {
 
     return (
         <div className="my-4 p-4 bg-light rounded shadow-lg">
-            {/* ... Custom Styles Block ... */}
-
-            {/* Control Panel (Unchanged) */}
             <Row className="mb-4 align-items-center">
                 <Col md={4}>
                     <h5 className="mb-0 fw-bold text-dark">
@@ -167,11 +157,8 @@ const MilitaryRankTable = ({ label = "Military Ranks", items, deleteRank }) => {
                             <th style={{ width: '40px' }}>#</th>
                             {renderHeader("name", "Rank Name")} 
                             {renderHeader("rankLevel", "Level")}
-                            {/* 🚀 DTO REFACTOR: Use key that maps to 'organizationName' */}
                             {renderHeader("organizationName", "Organization")} 
-                            {/* 🚀 DTO REFACTOR: Use key that maps to 'structureName' */}
                             {renderHeader("structureName", "Structure")} 
-                            {/* 🚀 DTO REFACTOR: Use key that maps to 'armyBranchName' */}
                             {renderHeader("armyBranchName", "Army Branch")}
                             {renderHeader("activeFromYear", "Active From")}
                             {renderHeader("activeToYear", "Active To")}
@@ -189,7 +176,6 @@ const MilitaryRankTable = ({ label = "Military Ranks", items, deleteRank }) => {
                                 </td>
                                 <td>{item.rankLevel || "-"}</td> 
                                 <td>
-                                    {/* 🚀 DTO REFACTOR: Use flat organizationName and ID */}
                                     {item.organizationId ? (
                                         <Link to={`/militaryOrganizations/show/${item.organizationId}`} className="text-decoration-none text-dark">
                                             {item.organizationName}
@@ -197,7 +183,6 @@ const MilitaryRankTable = ({ label = "Military Ranks", items, deleteRank }) => {
                                     ) : "-"}
                                 </td>
                                 <td>
-                                    {/* 🚀 DTO REFACTOR: Use flat structureName and ID */}
                                     {item.structureId ? (
                                         <Link to={`/militaryStructures/show/${item.structureId}`} className="text-decoration-none text-dark">
                                             {item.structureName}

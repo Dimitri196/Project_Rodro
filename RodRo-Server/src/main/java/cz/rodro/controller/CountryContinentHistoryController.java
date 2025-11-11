@@ -23,16 +23,12 @@ public class CountryContinentHistoryController {
         this.historyService = historyService;
     }
 
-    // --- READ ENDPOINTS (Public Access) ---
-
     @Operation(summary = "Get all continent history records for a specific country.")
     @PreAuthorize("permitAll()")
-    @GetMapping("/country/{countryId}") // Maps to /api/country-continent-history/country/123
+    @GetMapping("/country/{countryId}")
     public ResponseEntity<List<CountryContinentHistoryDTO>> getHistoryByCountry(@PathVariable long countryId) {
         return ResponseEntity.ok(historyService.getHistoryByCountry(countryId));
     }
-
-    // --- WRITE ENDPOINTS (Admin Only) ---
 
     @Operation(summary = "Create a new temporal continent association record.")
     @PreAuthorize("hasRole('ADMIN')")

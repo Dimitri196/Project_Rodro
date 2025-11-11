@@ -9,10 +9,6 @@ import org.springframework.data.repository.query.Param;
 
 public interface ArticleRepository extends JpaRepository<ArticleEntity, Long> {
 
-    // ----------------------------------------------------------------
-    // 1. DYNAMIC FETCHING WITH SORTING (Essential for ArticleIndex)
-    // ----------------------------------------------------------------
-
     /**
      * Retrieves a page of all articles.
      * The Pageable argument allows dynamic sorting (by title, createdAt, views)
@@ -20,11 +16,6 @@ public interface ArticleRepository extends JpaRepository<ArticleEntity, Long> {
      * This method directly replaces the simple findAll() used in the index view.
      */
     Page<ArticleEntity> findAll(Pageable pageable);
-
-
-    // ----------------------------------------------------------------
-    // 2. SEARCH AND FILTERING (Enhancement for future search bar)
-    // ----------------------------------------------------------------
 
     /**
      * Custom query to find articles that contain a specific category (tag).

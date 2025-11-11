@@ -22,8 +22,6 @@ public class MilitaryRankController {
 
     private final MilitaryRankService militaryRankService;
 
-    // --- GET (Read) Operations ---
-
     /**
      * Retrieves a list of all military ranks.
      * Maps to HTTP GET /api/militaryRanks.
@@ -52,8 +50,6 @@ public class MilitaryRankController {
         return ResponseEntity.ok(militaryRankService.getMilitaryRankWithPersons(id));
     }
 
-    // --- POST (Create) Operation ---
-
     /**
      * Creates a new military rank. Requires 'ADMIN' or 'EDITOR' role.
      * Maps to HTTP POST /api/militaryRanks.
@@ -67,8 +63,6 @@ public class MilitaryRankController {
     public ResponseEntity<MilitaryRankDTO> add(@Valid @RequestBody MilitaryRankDTO dto) {
         return new ResponseEntity<>(militaryRankService.addMilitaryRank(dto), HttpStatus.CREATED);
     }
-
-    // --- PUT (Update) Operation ---
 
     /**
      * Updates an existing military rank. Requires 'ADMIN' or 'EDITOR' role.
@@ -84,8 +78,6 @@ public class MilitaryRankController {
     public ResponseEntity<MilitaryRankDTO> update(@PathVariable Long id, @Valid @RequestBody MilitaryRankDTO dto) {
         return ResponseEntity.ok(militaryRankService.updateMilitaryRank(id, dto));
     }
-
-    // --- DELETE Operation ---
 
     /**
      * Deletes a military rank by its unique identifier. Requires 'ADMIN' role.

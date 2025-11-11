@@ -10,19 +10,14 @@ import java.util.List;
 
 public interface SourceAttributionRepository extends JpaRepository<SourceAttributionEntity, Long> {
 
-    // All attributions that attach to a specific person entity
     List<SourceAttributionEntity> findByPerson_Id(Long personId);
 
-    // Filtered by person and by attribution type
     List<SourceAttributionEntity> findByPerson_IdAndType(Long personId, AttributionType type);
 
-    // Find by occupation link (if you attach to occupation entity)
     List<SourceAttributionEntity> findByOccupation_Id(Long occupationId);
 
-    // Find by family link
     List<SourceAttributionEntity> findByFamily_Id(Long familyId);
 
-    // Find by military service link
     List<SourceAttributionEntity> findByMilitaryService_Id(Long msId);
 
     @Query("""

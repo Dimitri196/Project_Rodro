@@ -22,8 +22,6 @@ public class PersonMilitaryServiceController {
 
     private final PersonMilitaryService personMilitaryService;
 
-    // --- GET (Read) Operations ---
-
     /**
      * Retrieves a list of all military service records, or filters them by a specific person ID.
      * Requires the user to be authenticated.
@@ -58,8 +56,6 @@ public class PersonMilitaryServiceController {
         return ResponseEntity.ok(personMilitaryService.getPersonMilitaryService(id));
     }
 
-    // --- POST (Create) Operation ---
-
     /**
      * Creates a new military service record. Requires 'ADMIN' or 'EDITOR' role.
      * Maps to HTTP POST /api/personMilitaryServices.
@@ -73,8 +69,6 @@ public class PersonMilitaryServiceController {
     public ResponseEntity<PersonMilitaryServiceDTO> add(@Valid @RequestBody PersonMilitaryServiceDTO dto) {
         return new ResponseEntity<>(personMilitaryService.addPersonMilitaryService(dto), HttpStatus.CREATED);
     }
-
-    // --- PUT (Update) Operation ---
 
     /**
      * Updates an existing military service record. Requires 'ADMIN' or 'EDITOR' role.
@@ -90,8 +84,6 @@ public class PersonMilitaryServiceController {
     public ResponseEntity<PersonMilitaryServiceDTO> update(@PathVariable Long id, @Valid @RequestBody PersonMilitaryServiceDTO dto) {
         return ResponseEntity.ok(personMilitaryService.updatePersonMilitaryService(id, dto));
     }
-
-    // --- DELETE Operation ---
 
     /**
      * Deletes a military service record by its unique identifier. Requires 'ADMIN' role.

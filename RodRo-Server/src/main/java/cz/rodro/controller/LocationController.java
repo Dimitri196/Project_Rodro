@@ -68,10 +68,7 @@ public class LocationController {
     @Secured("ROLE_ADMIN")
     @PutMapping("/locations/{locationId}")
     public LocationDTO updateLocation(@PathVariable Long locationId, @Valid @RequestBody LocationDTO locationDTO) {
-        // Ensure the ID in the path matches the ID in the DTO, if provided in DTO
         if (locationDTO.getId() != null && !locationId.equals(locationDTO.getId())) {
-            // You might want to throw an IllegalArgumentException or handle this more gracefully
-            // For now, let's proceed with the path variable ID as the definitive one.
             locationDTO.setId(locationId);
         }
         return locationService.updateLocation(locationId, locationDTO);
@@ -157,10 +154,6 @@ public class LocationController {
     public void removeParishFromLocation(@PathVariable Long locationId, @PathVariable Long parishId) {
         parishLocationService.removeParishFromLocation(locationId, parishId);
     }
-
-    // -------------------------------------------------------------------------
-    // --- NEW ENDPOINTS FOR REVERSE GENEALOGICAL QUERIES (PERSON EVENTS) ---
-    // -------------------------------------------------------------------------
 
     /**
      * Retrieves all persons born at the specified location.

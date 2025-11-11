@@ -50,12 +50,9 @@ public class SourceDTO {
     @NotNull(message = "Confession cannot be null")
     private ConfessionType confession;
 
-    // --- Temporal Fields ---
     private Integer creationYear;
     private Integer startYear;
     private Integer endYear;
-
-    // --- Hybrid Fields ---
 
     /**
      * Flexible, type-specific metadata stored as JSON/JSONB.
@@ -66,8 +63,6 @@ public class SourceDTO {
      * A standardized citation string (e.g., Chicago, MLA style).
      */
     private String citationString;
-
-    // --- Location Fields ---
 
     private Long locationId;
 

@@ -84,9 +84,7 @@ const SubdivisionDetail = () => {
     subdivisionName = "N/A",
     subdivisionFlagImgUrl,
     district,
-    districtName,
     administrativeCenter,
-    administrativeCenterName,
     subdivisionEstablishmentYear,
     subdivisionCancellationYear,
   } = subdivision;
@@ -105,7 +103,7 @@ const SubdivisionDetail = () => {
             </Card.Header>
             <Card.Body className="p-4">
               <Card.Title as="h3" className="mb-3">
-                {subdivisionName || "-"}
+                {subdivision.name || "-"}
               </Card.Title>
 
 
@@ -117,10 +115,10 @@ const SubdivisionDetail = () => {
                       <Link
                         to={`/countries/${district.countryId}/provinces/${district.provinceId}/districts/${district._id}`}
                       >
-                        {district.districtName}
+                        {district.name}
                       </Link>
                     ) : (
-                      district?.districtName || "-"
+                      district?.name || "-"
                     )}
                   </span>
                 </ListGroup.Item>

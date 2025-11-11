@@ -1,11 +1,7 @@
 package cz.rodro.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Entity representing a specific instance of a person's service in a military structure at a certain rank.

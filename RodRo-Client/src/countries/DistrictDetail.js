@@ -79,13 +79,13 @@ useEffect(() => {
       try {
         // 1. Fetch District: Use the dedicated DistrictController endpoint
         const districtData = await apiGet(
-          `/api/districts/${districtId}` 
+          `/api/countries/${countryId}/provinces/${provinceId}/districts/${districtId}`
         );
         setDistrict(districtData);
 
         // 2. Fetch Province: Use the dedicated ProvinceController endpoint
         const provinceData = await apiGet(
-          `/api/provinces/${provinceId}` // <-- FIX: Changed from /countries/{id}/provinces/{id}
+          `/api/countries/${countryId}/provinces/${provinceId}` // <-- FIX: Changed from /countries/{id}/provinces/{id}
         );
         setProvince(provinceData);
 

@@ -8,8 +8,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface ArticleService {
 
-    // --- Write Operations (Require UserEntity for ownership) ---
-
     /**
      * Creates a new article. The author is injected by the security context.
      * @param article The input DTO from the request body.
@@ -35,8 +33,6 @@ public interface ArticleService {
     void delete(Long articleId, UserEntity currentUser);
 
 
-    // --- Read Operations (Using Pageable for sorting and pagination) ---
-
     /**
      * Gets all articles with dynamic sorting and pagination.
      * @param pageable Contains sort parameters (e.g., sort=views,desc) and pagination data.
@@ -51,6 +47,5 @@ public interface ArticleService {
      */
     ArticleReadDTO getById(Long articleId);
 
-    // --- Utility Method for Views ---
     void incrementViews(Long articleId);
 }

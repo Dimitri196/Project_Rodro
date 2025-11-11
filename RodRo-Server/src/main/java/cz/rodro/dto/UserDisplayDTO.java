@@ -12,16 +12,14 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserDisplayDTO {
 
-    @JsonProperty("userId") // Use consistent casing, e.g., userId instead of _id here
+    @JsonProperty("userId")
     private long userId;
 
-    // The key field for professional display in the frontend
     @JsonProperty("authorName")
     private String fullName;
 
     private String email;
 
-    // Optional: Useful for frontend logic (e.g., displaying admin tools)
     @JsonProperty("isAdmin")
     private boolean admin;
 }

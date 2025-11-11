@@ -11,5 +11,5 @@ public interface LocationListProjection {
     Integer getEstablishmentYear();
     Double getGpsLatitude();
     Double getGpsLongitude();
-    String getSettlementType(); // Assuming SettlementType can be directly mapped to String
+    String getSettlementType();
 }

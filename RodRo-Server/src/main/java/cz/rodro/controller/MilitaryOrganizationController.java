@@ -21,8 +21,6 @@ public class MilitaryOrganizationController {
 
     private final MilitaryOrganizationService militaryOrganizationService;
 
-    // --- GET (Read) Operations ---
-
     /**
      * Retrieves a list of all military organizations. Requires no specific authorization.
      * Maps to HTTP GET /api/militaryOrganizations.
@@ -50,8 +48,6 @@ public class MilitaryOrganizationController {
         return ResponseEntity.ok(militaryOrganizationService.getMilitaryOrganization(id));
     }
 
-    // --- POST (Create) Operation ---
-
     /**
      * Creates a new military organization. Requires 'ADMIN' or 'EDITOR' role.
      * Maps to HTTP POST /api/militaryOrganizations.
@@ -65,8 +61,6 @@ public class MilitaryOrganizationController {
     public ResponseEntity<MilitaryOrganizationDTO> add(@Valid @RequestBody MilitaryOrganizationDTO dto) {
         return new ResponseEntity<>(militaryOrganizationService.addMilitaryOrganization(dto), HttpStatus.CREATED);
     }
-
-    // --- PUT (Update) Operation ---
 
     /**
      * Updates an existing military organization. Requires 'ADMIN' or 'EDITOR' role.
@@ -83,8 +77,6 @@ public class MilitaryOrganizationController {
         return ResponseEntity.ok(militaryOrganizationService.updateMilitaryOrganization(id, dto));
     }
 
-    // --- DELETE Operation ---
-
     /**
      * Deletes a military organization by its unique identifier. Requires 'ADMIN' role.
      * Maps to HTTP DELETE /api/militaryOrganizations/{id}.
@@ -96,8 +88,6 @@ public class MilitaryOrganizationController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/militaryOrganizations/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        // NOTE: The service method was deleteMilitaryOrganization(Long id),
-        // using removeMilitaryOrganization(id) from the original input for now.
         militaryOrganizationService.deleteMilitaryOrganization(id);
         return ResponseEntity.noContent().build();
     }

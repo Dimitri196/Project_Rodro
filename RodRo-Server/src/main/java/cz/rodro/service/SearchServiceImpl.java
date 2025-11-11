@@ -43,16 +43,13 @@ public class SearchServiceImpl implements SearchService {
             return new GlobalSearchResultsDTO();
         }
 
-        // Normalize the query: lowercase and replace diacritics manually if needed
         String normalizedQuery = normalizeQuery(query);
 
-        // Search using normalized repository methods
         List<PersonEntity> persons = personRepository.findByNormalizedSearchTerm(normalizedQuery);
         List<LocationEntity> locations = locationRepository.findByNormalizedLocationName(normalizedQuery);
         List<ParishEntity> parishes = parishRepository.findByNormalizedName(normalizedQuery);
 
-        // Map entities to DTOs
-        GlobalSearchResultsDTO results = new GlobalSearchResultsDTO();
+         GlobalSearchResultsDTO results = new GlobalSearchResultsDTO();
         results.setPersons(persons.stream().map(personMapper::toDTO).collect(Collectors.toList()));
         results.setLocations(locations.stream().map(locationMapper::toLocationDTO).collect(Collectors.toList()));
         results.setParishes(parishes.stream().map(parishMapper::toParishDTO).collect(Collectors.toList()));

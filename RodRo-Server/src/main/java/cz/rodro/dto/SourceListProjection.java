@@ -1,5 +1,6 @@
 package cz.rodro.dto;
 
+import cz.rodro.constant.ConfessionType;
 import cz.rodro.constant.SourceType;
 
 /**
@@ -28,6 +29,8 @@ public interface SourceListProjection {
 
     /** Type of the source (e.g., BOOK, ARTICLE, WEBSITE). */
     SourceType getType();
+
+    ConfessionType getConfession();
 
     // --- NEW TEMPORAL GETTERS ---
     /** Year the source was created or published. */

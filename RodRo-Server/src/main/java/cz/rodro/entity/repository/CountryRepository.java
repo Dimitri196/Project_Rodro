@@ -12,6 +12,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * but for basic operations, no further code is needed.
  */
 public interface CountryRepository extends JpaRepository<CountryEntity, Long> {
-    // No custom methods are required for basic country management.
-    // Methods like findById(), save(), findAll(), and delete() are inherited.
+
 }

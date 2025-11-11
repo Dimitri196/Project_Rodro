@@ -6,6 +6,8 @@ import cz.rodro.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Map;
+
 /**
  * Service interface for managing {@link cz.rodro.entity.SourceEntity} operations.
  * Provides methods for CRUD operations and optimized data retrieval for sources.
@@ -15,11 +17,11 @@ public interface SourceService {
     /**
      * Retrieves a paginated and searchable list of sources as frontend-ready DTOs.
      *
-     * @param searchTerm An optional term to filter sources by title, reference, or location name.
-     * @param pageable   Pagination and sorting information.
+     * @param params   A map containing all request parameters, including 'filter_columnName' entries.
+     * @param pageable Pagination and sorting information.
      * @return A Page of {@link SourceListDTO} containing the requested subset of data.
      */
-    Page<SourceListDTO> getAllSourcesAsDTO(String searchTerm, Pageable pageable);
+    Page<SourceListDTO> getAllSourcesAsDTO(Map<String, String> params, Pageable pageable);
 
     /**
      * Retrieves a single source by its ID.

@@ -120,7 +120,6 @@ public class PersonEntity extends AuditableEntity {
     @Column(name = "burial_day")
     private Integer burialDay;
 
-    // --- Collections ---
     @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PersonOccupationEntity> occupations = new ArrayList<>();
 

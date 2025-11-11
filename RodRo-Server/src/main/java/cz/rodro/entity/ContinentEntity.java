@@ -39,6 +39,6 @@ public class ContinentEntity {
      * This field tracks all countries that have ever been associated with this continent.
      */
     @OneToMany(mappedBy = "continent", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference // Necessary if you want to serialize a continent with its history
+    @JsonManagedReference
     private List<CountryContinentHistoryEntity> countryHistory = new ArrayList<>();
 }

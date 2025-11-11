@@ -15,7 +15,7 @@ public class SubdivisionDTO {
     @JsonProperty("_id")
     private Long id;
 
-    private String subdivisionName;
+    private String name;
 
     private DistrictDTO district;
     private String districtName;

@@ -20,11 +20,11 @@ public class SourceListDTO {
 
     private String type;
 
-    // --- NEW TEMPORAL FIELDS ---
+    private String confession;
+
     private Integer creationYear;
     private Integer startYear;
     private Integer endYear;
-    // ---------------------------
 
     private Long locationId;
     private String locationName;

@@ -2,9 +2,11 @@ package cz.rodro.controller;
 
 import cz.rodro.dto.CountryContinentHistoryDTO;
 import cz.rodro.dto.CountryDTO;
+import cz.rodro.dto.DistrictDTO;
 import cz.rodro.dto.ProvinceDTO;
 import cz.rodro.service.CountryContinentHistoryService;
 import cz.rodro.service.CountryService;
+import cz.rodro.service.DistrictService;
 import cz.rodro.service.ProvinceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,19 +26,17 @@ public class CountryController {
     private final CountryService countryService;
     private final ProvinceService provinceService;
     private final CountryContinentHistoryService historyService;
+    private final DistrictService districtService;
 
     public CountryController(
             CountryService countryService,
             ProvinceService provinceService,
-            CountryContinentHistoryService historyService) {
+            CountryContinentHistoryService historyService, DistrictService districtService) {
         this.countryService = countryService;
         this.provinceService = provinceService;
         this.historyService = historyService;
+        this.districtService = districtService;
     }
-
-    // ------------------------------------
-    // --- 1. CORE COUNTRY ENDPOINTS ---
-    // ------------------------------------
 
     @Operation(summary = "Get a list of all countries.")
     @PreAuthorize("permitAll()")
@@ -68,11 +68,7 @@ public class CountryController {
         return ResponseEntity.ok(countryService.updateCountry(countryId, countryDTO));
     }
 
-    // ------------------------------------
-    // --- 2. HISTORY ENDPOINTS (Nested) ---
-    // ------------------------------------
-
-    @Operation(summary = "Get all continent history records for a specific country.")
+     @Operation(summary = "Get all continent history records for a specific country.")
     @PreAuthorize("permitAll()")
     @GetMapping("/{countryId}/continent-history")
     public ResponseEntity<List<CountryContinentHistoryDTO>> getHistoryByCountry(
@@ -113,4 +109,42 @@ public class CountryController {
         historyService.deleteHistoryRecord(historyId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @Operation(summary = "Get all provinces belonging to a specific country ID.")
+    @PreAuthorize("permitAll()")
+    @GetMapping("/{countryId}/provinces")
+    public ResponseEntity<List<ProvinceDTO>> getProvincesByCountry(@PathVariable long countryId) {
+        List<ProvinceDTO> provinces = provinceService.getProvincesByCountry(countryId);
+        return ResponseEntity.ok(provinces);
+    }
+
+    @Operation(summary = "Get a province by its ID.")
+    @PreAuthorize("permitAll()")
+    @GetMapping("/{countryId}/provinces/{provinceId}")
+    public ProvinceDTO getProvince(@PathVariable long provinceId) {
+        return provinceService.getProvince(provinceId);
+    }
+
+    @Operation(summary = "Get all districts belonging to a specific province, using the hierarchical path.")
+    @PreAuthorize("permitAll()")
+    @GetMapping("/{countryId}/provinces/{provinceId}/districts")
+    public ResponseEntity<List<DistrictDTO>> getDistrictsByProvinceHierarchical(
+            @PathVariable long countryId,
+            @PathVariable long provinceId) {
+        List<DistrictDTO> districts = districtService.getDistrictsByProvince(provinceId);
+        return ResponseEntity.ok(districts);
+    }
+
+    @Operation(summary = "Get a single district using the full hierarchical path: /countries/{id}/provinces/{id}/districts/{id}.")
+    @PreAuthorize("permitAll()")
+    @GetMapping("/{countryId}/provinces/{provinceId}/districts/{districtId}")
+    public DistrictDTO getDistrictHierarchical(
+            @PathVariable long countryId,
+            @PathVariable long provinceId,
+            @PathVariable long districtId) {
+        return districtService.getDistrict(districtId);
+
+
+
+}
 }

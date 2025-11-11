@@ -25,7 +25,7 @@ public class MilitaryRankEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rankLevel", nullable = false)
-    private MilitaryRankLevel rankLevel; // Enum representing the level of the rank (e.g., Officer, NCO, Enlisted)
+    private MilitaryRankLevel rankLevel;
 
     private String activeFromYear;
     private String activeToYear;

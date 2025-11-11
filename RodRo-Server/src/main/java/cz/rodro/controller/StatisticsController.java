@@ -18,10 +18,6 @@ public class StatisticsController {
 
     private final StatisticsService statisticsService;
 
-    // -------------------------------------------------------------------------
-    // --- INDIVIDUAL STATISTICAL ENDPOINTS (for specific access/debugging) ---
-    // -------------------------------------------------------------------------
-
     @GetMapping("/average-lifespan")
     public List<StatisticsDTO> getAverageLifespan() {
         return statisticsService.getAverageLifespanStatistics();
@@ -33,21 +29,16 @@ public class StatisticsController {
      */
     @GetMapping("/deaths-by-age-group")
     public List<StatisticsDTO> getDeathsByAgeGroup(
-            // Accept an optional 'location' query parameter
+
             @RequestParam(required = false) String location
     ) {
-        // 1. Check if a location filter was provided and is not empty
         if (location != null && !location.trim().isEmpty()) {
-            // 2. If yes, call the new, filtered service method
-            // This method must handle the conversion from List<Object[]> to List<StatisticsDTO>
             return statisticsService.countDeathsByAgeGroupAndLocation(location);
         }
 
-        // 3. If no location filter is provided, call the original, unfiltered method
         return statisticsService.getDeathsByAgeGroupStatistics();
     }
 
-    // --- Core Data Trends ---
     @GetMapping("/births-by-year")
     public List<StatisticsDTO> getBirthsByYear() {
         return statisticsService.getBirthsByYearStatistics();
@@ -57,8 +48,6 @@ public class StatisticsController {
     public List<StatisticsDTO> getDeathsByYear() {
         return statisticsService.getDeathsByYearStatistics();
     }
-
-    // --- New/Refactored Endpoints for Cause of Death ---
 
     /**
      * Retrieves death counts aggregated by the high-level DeathCauseCategory.
@@ -78,9 +67,6 @@ public class StatisticsController {
         return statisticsService.getCauseOfDeathByGenderStatistics();
     }
 
-
-    // --- Other Omitted Endpoints (for completeness) ---
-
     @GetMapping("/deaths-by-location")
     public List<StatisticsDTO> getDeathsByLocation() {
         return statisticsService.getDeathsByLocationStatistics();
@@ -95,8 +81,6 @@ public class StatisticsController {
     public List<StatisticsDTO> getPeopleBySocialStatus() {
         return statisticsService.getPeopleBySocialStatusStatistics();
     }
-
-    // --- Scientific Mortality Endpoints ---
 
     @GetMapping("/deaths-by-settlement-type")
     public List<StatisticsDTO> getDeathsBySettlementType() {

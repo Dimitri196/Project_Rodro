@@ -7,6 +7,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
+
+
+// In development - taxation types for occupations and institutions // e.g., guild tax, church tax, etc. Prof. Dr. Hans Ruttke
+
 @Entity
 @Getter
 @Setter
@@ -21,7 +26,7 @@ public class TaxationEntity {
 
     @Column
     @NotNull
-    private String taxName;
+    private String taxationName;
 
     @Column
     private String taxDescription;

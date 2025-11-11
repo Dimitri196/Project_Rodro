@@ -7,12 +7,10 @@ package cz.rodro.exception;
  */
 public class AccessDeniedException extends RuntimeException {
 
-    // Standard constructor that accepts a message
     public AccessDeniedException(String message) {
         super(message);
     }
 
-    // Optional: Constructor that accepts a message and the underlying cause
     public AccessDeniedException(String message, Throwable cause) {
         super(message, cause);
     }

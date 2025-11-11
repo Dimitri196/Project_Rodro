@@ -15,6 +15,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Map;
 
 /**
  * REST controller for managing sources.
@@ -48,27 +49,24 @@ public class SourceController {
 
     /**
      * Retrieves a paginated, filtered, and sorted list of sources.
-     * Returns frontend-ready DTOs instead of projections.
+     * Uses the request parameter map to capture dynamic column filters.
      *
-     * @param page       Page number (0-indexed, default 0).
-     * @param size       Number of items per page (default 10).
-     * @param sortBy     Field to sort by (default "title").
-     * @param sortOrder  Sort direction ("asc" or "desc", default "asc").
-     * @param searchTerm Optional search term for filtering by title, reference, or location name.
+     * @param params All query parameters, including pagination, sorting, and filters (e.g., filter_title).
      * @return A Page of {@link SourceListDTO}.
      */
     @GetMapping
     public ResponseEntity<Page<SourceListDTO>> getAllSources(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "title") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortOrder,
-            @RequestParam(required = false) String searchTerm
+            @RequestParam Map<String, String> params
     ) {
+        int page = Integer.parseInt(params.getOrDefault("page", "0"));
+        int size = Integer.parseInt(params.getOrDefault("size", "10"));
+        String sortBy = params.getOrDefault("sort", "title,asc").split(",")[0];
+        String sortOrder = params.getOrDefault("sort", "title,asc").split(",")[1];
         Sort sort = Sort.by(Sort.Direction.fromString(sortOrder.toUpperCase()), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<SourceListDTO> sources = sourceService.getAllSourcesAsDTO(searchTerm, pageable);
+        // --- 2. Call Service with the full parameter map ---
+        Page<SourceListDTO> sources = sourceService.getAllSourcesAsDTO(params, pageable);
         return ResponseEntity.ok(sources);
     }
 
@@ -97,7 +95,6 @@ public class SourceController {
             @PathVariable Long sourceId,
             @Valid @RequestBody SourceDTO sourceDTO
     ) {
-        // Ensure the DTO ID matches the path variable ID
         sourceDTO.setId(sourceId);
         SourceDTO updated = sourceService.updateSource(sourceId, sourceDTO);
         return ResponseEntity.ok(updated);

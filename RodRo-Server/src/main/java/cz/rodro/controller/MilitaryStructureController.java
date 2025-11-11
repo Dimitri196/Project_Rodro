@@ -23,8 +23,6 @@ public class MilitaryStructureController {
 
     private final MilitaryStructureService militaryStructureService;
 
-    // --- GET (Read) Operations ---
-
     /**
      * Retrieves a list of all military structures.
      * Maps to HTTP GET /api/militaryStructures.
@@ -66,8 +64,6 @@ public class MilitaryStructureController {
         return ResponseEntity.ok(militaryStructureService.getRanksForStructure(id));
     }
 
-    // --- POST (Create) Operation ---
-
     /**
      * Creates a new military structure. Requires 'ADMIN' or 'EDITOR' role.
      * Maps to HTTP POST /api/militaryStructures.
@@ -81,8 +77,6 @@ public class MilitaryStructureController {
     public ResponseEntity<MilitaryStructureDTO> add(@Valid @RequestBody MilitaryStructureDTO dto) {
         return new ResponseEntity<>(militaryStructureService.addMilitaryStructure(dto), HttpStatus.CREATED);
     }
-
-    // --- PUT (Update) Operation ---
 
     /**
      * Updates an existing military structure. Requires 'ADMIN' or 'EDITOR' role.
@@ -99,8 +93,6 @@ public class MilitaryStructureController {
         return ResponseEntity.ok(militaryStructureService.updateMilitaryStructure(id, dto));
     }
 
-    // --- DELETE Operation ---
-
     /**
      * Deletes a military structure by its unique identifier. Requires 'ADMIN' role.
      * Maps to HTTP DELETE /api/militaryStructures/{id}.
@@ -112,7 +104,6 @@ public class MilitaryStructureController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/militaryStructures/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        // Corrected service method name to match the established service interface
         militaryStructureService.deleteMilitaryStructure(id);
         return ResponseEntity.noContent().build();
     }

@@ -7,7 +7,6 @@ import java.util.List;
 
 public interface DistrictRepository extends JpaRepository<DistrictEntity, Long> {
 
-    // Fetch districts by province
     List<DistrictEntity> findByProvinceId(Long provinceId);
 
 }

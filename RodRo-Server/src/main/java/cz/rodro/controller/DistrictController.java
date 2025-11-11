@@ -32,10 +32,6 @@ public class DistrictController {
         this.locationHistoryService = locationHistoryService;
     }
 
-    // -----------------------------------------------------------
-    // --- District Retrieval (Single District) ---
-    // -----------------------------------------------------------
-
     @Operation(summary = "Get a specific district by its ID.")
     @PreAuthorize("permitAll()")
     @GetMapping("/{districtId}") // Maps to: /api/districts/{districtId}
@@ -45,12 +41,6 @@ public class DistrictController {
         return ResponseEntity.ok(districtService.getDistrict(districtId));
     }
 
-    // -----------------------------------------------------------
-    // --- District Retrieval (List by Province) ---
-    // -----------------------------------------------------------
-
-    // NOTE: This endpoint is not directly called by the frontend component you showed,
-    // but it replaces the original /api/countries/{id}/provinces/{id}/districts mapping.
     @Operation(summary = "Get all districts for a specific province.")
     @PreAuthorize("permitAll()")
     @GetMapping("/provinces/{provinceId}") // Maps to: /api/districts/provinces/{provinceId}
@@ -60,13 +50,9 @@ public class DistrictController {
 
     @Operation(summary = "Get all unique locations currently or historically associated with a specific district.")
     @PreAuthorize("permitAll()")
-    // 3. Add the required mapping: /api/districts/{districtId}/locations
     @GetMapping("/{districtId}/locations")
     public ResponseEntity<List<LocationDTO>> getLocationsInDistrict(@PathVariable long districtId) {
-
-        // 4. Call the service method to retrieve and map the LocationDTOs
         List<LocationDTO> locations = locationHistoryService.getLocationsByDistrictId(districtId);
-
         return ResponseEntity.ok(locations);
     }
 

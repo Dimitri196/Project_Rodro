@@ -24,9 +24,6 @@ public class ArticleController {
     private final ArticleService articleService;
     private final UserRepository userRepository;
 
-    // ------------------------------------------------------------------------
-    // CREATE
-    // ------------------------------------------------------------------------
     @PostMapping
     public ResponseEntity<ArticleReadDTO> addArticle(
             @Valid @RequestBody ArticleWriteDTO articleDTO,
@@ -36,7 +33,6 @@ public class ArticleController {
             throw new AccessDeniedException("User must be logged in to create an article.");
         }
 
-        // ✅ Use email-based lookup
         UserEntity author = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new NoSuchElementException("User not found: " + authentication.getName()));
 
@@ -44,9 +40,6 @@ public class ArticleController {
         return ResponseEntity.ok(saved);
     }
 
-    // ------------------------------------------------------------------------
-    // UPDATE
-    // ------------------------------------------------------------------------
     @PutMapping("/{id}")
     public ResponseEntity<ArticleReadDTO> editArticle(
             @PathVariable Long id,
@@ -64,9 +57,6 @@ public class ArticleController {
         return ResponseEntity.ok(updated);
     }
 
-    // ------------------------------------------------------------------------
-    // DELETE
-    // ------------------------------------------------------------------------
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteArticle(
             @PathVariable Long id,
@@ -83,18 +73,12 @@ public class ArticleController {
         return ResponseEntity.noContent().build();
     }
 
-    // ------------------------------------------------------------------------
-    // READ ALL
-    // ------------------------------------------------------------------------
     @GetMapping
     public ResponseEntity<Page<ArticleReadDTO>> getAllArticles(Pageable pageable) {
         Page<ArticleReadDTO> page = articleService.getAllArticles(pageable);
         return ResponseEntity.ok(page);
     }
 
-    // ------------------------------------------------------------------------
-    // READ ONE (increments views)
-    // ------------------------------------------------------------------------
     @GetMapping("/{id}")
     public ResponseEntity<ArticleReadDTO> getArticleById(@PathVariable Long id) {
         ArticleReadDTO article = articleService.getById(id);

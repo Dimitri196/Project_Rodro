@@ -14,7 +14,7 @@ public interface LocationHistoryMapper {
     @Mapping(target = "districtId", source = "district.id")
     @Mapping(target = "locationName", source = "location.locationName")
     @Mapping(target = "locationId", source = "location.id")
-    @Mapping(target = "subdivisionName", source = "subdivision.subdivisionName")
+    @Mapping(target = "subdivisionName", source = "subdivision.name")
     @Mapping(target = "subdivisionId", source = "subdivision.id")
     LocationHistoryDTO toLocationHistoryDTO(LocationHistoryEntity source);
 
@@ -23,7 +23,7 @@ public interface LocationHistoryMapper {
     @Mapping(target = "countryName", source = "countryName")
     @Mapping(target = "provinceName", source = "provinceName")
     @Mapping(target = "districtName", source = "districtName")
-    @Mapping(target = "subdivisionName", source = "subdivisionName")
+    @Mapping(target = "subdivision", ignore = true)
     @Mapping(target = "startDate", source = "startDate")
     @Mapping(target = "endDate", source = "endDate")
     @Mapping(target = "notes", source = "notes")

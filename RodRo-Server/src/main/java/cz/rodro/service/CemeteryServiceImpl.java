@@ -48,41 +48,32 @@ public class CemeteryServiceImpl implements CemeteryService {
             throw new IllegalArgumentException("Cemetery location must be provided and contain a valid ID.");
         }
 
-        // Fetch the cemetery location using the provided ID
         LocationEntity cemeteryLocation = locationService.fetchLocationById(
                 cemeteryDTO.getCemeteryLocation().getId(), "Cemetery Location"
         );
 
-               // Map DTO to entity
         CemeteryEntity cemeteryEntity = cemeteryMapper.toCemeteryEntity(cemeteryDTO);
 
-        // Set the fetched location and parish to the cemetery entity
         cemeteryEntity.setCemeteryLocation(cemeteryLocation);
 
-        // Save the cemetery entity to the database
         cemeteryEntity = cemeteryRepository.save(cemeteryEntity);
 
-        // Map the saved entity back to a DTO and return it
         return cemeteryMapper.toCemeteryDTO(cemeteryEntity);
     }
 
     @Override
     @Transactional
     public CemeteryDTO updateCemetery(Long cemeteryId, CemeteryDTO cemeteryDTO) {
-        // Fetch the existing cemetery
+
         CemeteryEntity existingCemetery = fetchCemeteryById(cemeteryId);
 
-        // Validate the location ID if necessary
         LocationEntity cemeteryLocation = locationService.fetchLocationById(cemeteryDTO.getCemeteryLocation().getId(), "Cemetery Location");
 
-                // Update the cemetery entity
         cemeteryMapper.updateCemeteryEntity(cemeteryDTO, existingCemetery);
         existingCemetery.setCemeteryLocation(cemeteryLocation);
 
-        // Save the updated cemetery entity
         existingCemetery = cemeteryRepository.save(existingCemetery);
 
-        // Return the updated DTO
         return cemeteryMapper.toCemeteryDTO(existingCemetery);
     }
 

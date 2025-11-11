@@ -18,31 +18,22 @@ import java.util.List;
 @NoArgsConstructor
 public class PersonMilitaryServiceDTO {
 
-    // Primary ID for the Service record instance itself
     @JsonProperty("id")
     private Long id;
 
-    // --- References (Use Simple DTOs/IDs) ---
-
-    // Reference to the Person (REQUIRED for context if not nested)
     private Long personId;
 
-    // Reference to structure (Use simple DTO or IDs/Names)
     private MilitaryStructureDTO militaryStructure;
 
-    // Reference to rank (Use simple DTO)
     private MilitaryRankDTO militaryRank;
 
-    // --- Denormalized Data (For quick display) ---
-    // These fields are populated by the service layer using the relationship IDs
     private String personGivenName; // Renamed for clarity
     private String personSurname;   // Renamed for clarity
 
-    private String militaryStructureName; // Redundant if MilitaryStructureSimpleDTO is used, but kept if preferred
-    private String armyBranchName;        // Renamed from armyBranch for clarity
-    private String rankName;              // Redundant if MilitaryRankSimpleDTO is used, but kept if preferred
+    private String militaryStructureName;
+    private String armyBranchName;
+    private String rankName;
 
-    // --- Service Details ---
     @Min(value = 0, message = "Enlistment year cannot be negative")
     @Max(value = 9999, message = "Enlistment year cannot exceed 9999") // Changed max value
     private Integer enlistmentYear;

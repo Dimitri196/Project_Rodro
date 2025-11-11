@@ -28,7 +28,6 @@ public class SourceAttributionServiceImpl implements SourceAttributionService {
 
     private final SourceAttributionMapper mapper;
 
-    // --- Fetch all sources for a person ---
     @Override
     @Transactional(readOnly = true)
     public List<SourceAttributionDTO> getByPersonId(Long personId) {
@@ -39,7 +38,6 @@ public class SourceAttributionServiceImpl implements SourceAttributionService {
                 .collect(Collectors.toList());
     }
 
-    // --- Fetch by person and event type (BIRTH, DEATH, etc.) ---
     @Override
     @Transactional(readOnly = true)
     public List<SourceAttributionDTO> getByPersonIdAndEventType(Long personId, String eventType) {
@@ -59,7 +57,6 @@ public class SourceAttributionServiceImpl implements SourceAttributionService {
                 .collect(Collectors.toList());
     }
 
-    // --- Create new source attribution ---
     @Override
     public SourceAttributionDTO create(SourceAttributionDTO dto) {
         if (dto == null) throw new IllegalArgumentException("dto is required");
@@ -72,7 +69,6 @@ public class SourceAttributionServiceImpl implements SourceAttributionService {
         SourceAttributionEntity entity = mapper.toEntity(dto);
         entity.setSource(source);
 
-        // Attach the correct parent entity depending on type
         switch (dto.getType()) {
             case BIRTH:
             case BAPTISM:
@@ -111,7 +107,6 @@ public class SourceAttributionServiceImpl implements SourceAttributionService {
         return mapper.toDTO(saved);
     }
 
-    // --- Delete attribution ---
     @Override
     public void delete(Long id) {
         if (id == null) throw new IllegalArgumentException("id must not be null");

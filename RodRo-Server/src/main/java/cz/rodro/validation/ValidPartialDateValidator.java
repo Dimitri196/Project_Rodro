@@ -43,22 +43,19 @@ public class ValidPartialDateValidator implements ConstraintValidator<ValidParti
             Integer month = (Integer) monthGetter.invoke(value);
             Integer day = (Integer) dayGetter.invoke(value);
 
-            // allow partial dates
             if (year == null || month == null || day == null) return true;
 
-            // Reject negative year if not allowed
             if (!allowNegativeYear && year < 0) return false;
 
             return isValidDate(year, month, day);
         } catch (Exception e) {
-            // optionally log the exception
+
             return false;
         }
     }
 
     private boolean isValidDate(int year, int month, int day) {
         try {
-            // LocalDate supports years >= -999_999_999
             LocalDate.of(year, month, day);
             return true;
         } catch (DateTimeException e) {

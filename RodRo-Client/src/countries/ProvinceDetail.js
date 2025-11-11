@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { apiGet } from "../utils/api";
 import {
@@ -19,7 +19,9 @@ const ProvinceDetail = () => {
   const navigate = useNavigate();
 
   const [province, setProvince] = useState(null);
-  const [country, setCountry] = useState(null);
+  // REMOVED: const [country, setCountry] = useState(null); 
+  // We'll extract country info directly from the province DTO
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeDistrict, setActiveDistrict] = useState(null);
@@ -27,15 +29,18 @@ const ProvinceDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch province details
+        // Note: The backend endpoint /api/provinces/{provinceId} should work based on the previous context
+        // We'll use the combined path as you have it, assuming your backend expects it for validation:
         const provinceData = await apiGet(
           `/api/countries/${countryId}/provinces/${provinceId}`
         );
         setProvince(provinceData);
-
-        // Fetching country details is still necessary if you need complex country info
-        // or its name, even though ProvinceDTO now contains countryId/countryName.
-        const countryData = await apiGet(`/api/countries/${countryId}`);
-        setCountry(countryData);
+        
+        // Set initial active district tab
+        if (provinceData.districts?.length > 0) {
+          setActiveDistrict(provinceData.districts[0]._id);
+        }
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(`Error loading province details: ${err.message || err}`);
@@ -45,7 +50,25 @@ const ProvinceDetail = () => {
     };
 
     fetchData();
-  }, [countryId, provinceId]);
+  // We only need to re-run when IDs change
+  }, [countryId, provinceId]); 
+  
+  // Use useMemo to calculate derived values based on the province state
+  const { 
+    name, 
+    imgUrl, 
+    districts = [], 
+    // ✅ Extract country name directly from ProvinceDTO (assuming fields are countryName and countryId)
+    countryName: provinceCountryName, 
+    countryId: provinceCountryId 
+  } = province || {};
+
+
+  // Fallback/Display Country Name using province DTO fields
+  const displayCountryName = useMemo(() => {
+    return provinceCountryName || "Unknown Country";
+  }, [provinceCountryName]);
+
 
   if (loading) {
     return (
@@ -78,28 +101,17 @@ const ProvinceDetail = () => {
     );
   }
 
-  // 1. DTO FIELD CORRECTION:
-  // ProvinceDTO now uses 'name' and 'imgUrl', not 'provinceName' and 'provinceFlagImgUrl'
-  const { name, imgUrl, districts = [] } = province;
-  
-  // Note: We use the country data fetched from /api/countries/{countryId}
-  // The backend CountryDTO uses 'nameInEnglish' and 'nameInPolish'
-  const countryName =
-    country?.nameInEnglish || // Corrected from countryNameInEnglish
-    country?.nameInPolish || // Corrected from countryNameInPolish
-    "Unknown Country";
-
   return (
     <Container className="mt-5">
       {/* Back Button */}
       <Button
         as={Link}
-        // Use the ID from the country object (if fetched successfully) or the param
-        to={`/countries/show/${country?._id || countryId}`} 
+        // Use the ID from the province DTO for consistency, defaulting to param
+        to={`/countries/show/${provinceCountryId || countryId}`} 
         variant="secondary"
         className="mb-4"
       >
-        ← Back to {countryName}
+        ← Back to {displayCountryName}
       </Button>
 
       {/* Province Info & Flag */}
@@ -117,15 +129,15 @@ const ProvinceDetail = () => {
               <h3 className="fw-bold mb-4">{name}</h3>
               <ListGroup variant="flush">
                 <ListGroup.Item>
-                  <strong>Province Name:</strong> {name} 
+                  <strong>Province Name:</strong> {name}
                 </ListGroup.Item>
                 <ListGroup.Item>
                   <strong>Country:</strong>{" "}
                   <Link
-                    to={`/countries/show/${country?._id || countryId}`}
+                    to={`/countries/${provinceCountryId || countryId}`}
                     className="text-decoration-none text-primary fw-semibold"
                   >
-                    {countryName}
+                    {displayCountryName}
                   </Link>
                 </ListGroup.Item>
               </ListGroup>
@@ -143,7 +155,7 @@ const ProvinceDetail = () => {
               <i className="fas fa-flag me-2"></i>Province Flag
             </Card.Header>
             <Card.Body className="p-4 d-flex justify-content-center align-items-center">
-              {imgUrl ? ( // Use 'imgUrl'
+              {imgUrl ? (
                 <img
                   src={imgUrl}
                   alt={`${name} flag`}
@@ -170,7 +182,8 @@ const ProvinceDetail = () => {
       <h4 className="fw-bold text-dark mt-4 mb-3">Districts</h4>
       <Tab.Container
         id="province-district-tabs"
-        activeKey={activeDistrict || (districts[0]?._id || null)}
+        // Use the activeDistrict state which is set on initial load
+        activeKey={activeDistrict} 
         onSelect={(k) => setActiveDistrict(k)}
       >
         <Row>
@@ -188,8 +201,8 @@ const ProvinceDetail = () => {
                       className="text-start mb-1 fw-semibold"
                     >
                       <i className="fas fa-circle me-2 text-secondary"></i>
-                      {/* 2. DTO FIELD CORRECTION: Use 'district.name' */}
-                      {district.name} 
+                      {/* ✅ Correctly using 'district.name' */}
+                      {district.name}
                     </Nav.Link>
                   </Nav.Item>
                 ))
@@ -213,8 +226,8 @@ const ProvinceDetail = () => {
                         to={`/countries/${countryId}/provinces/${provinceId}/districts/${district._id}`}
                         className="text-decoration-none text-primary"
                       >
-                        {/* 3. DTO FIELD CORRECTION: Use 'district.name' */}
-                        {district.name} 
+                        {/* ✅ Correctly using 'district.name' */}
+                        {district.name}
                       </Link>
                     </h5>
                     <p className="text-muted">

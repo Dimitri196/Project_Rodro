@@ -18,14 +18,14 @@ public class CemeteryEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cemetery_location_id")
     @JsonManagedReference
-    private LocationEntity cemeteryLocation;  // Foreign key to the location
+    private LocationEntity cemeteryLocation;
 
     @Column(nullable = false)
-    private String cemeteryName;  // Name of the cemetery (required)
+    private String cemeteryName;
 
     @Column
-    private String description;  // Description of the cemetery (optional)
+    private String description;
 
     @Column
-    private String webLink;  // Web link (URL) related to the cemetery (optional)
+    private String webLink;
 }

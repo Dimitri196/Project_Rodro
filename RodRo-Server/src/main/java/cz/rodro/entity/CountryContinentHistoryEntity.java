@@ -33,7 +33,7 @@ public class CountryContinentHistoryEntity {
     /** The Continent associated with this geographical history record. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "continent_id", nullable = false)
-    @JsonBackReference // The 'back' side of the Continent -> History relation
+    @JsonBackReference
     private ContinentEntity continent;
 
     /** The year this geographical association began (inclusive). */

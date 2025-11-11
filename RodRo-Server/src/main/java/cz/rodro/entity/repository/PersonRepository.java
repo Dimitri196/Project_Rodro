@@ -134,11 +134,6 @@ public interface PersonRepository extends JpaRepository<PersonEntity, Long> {
     List<PersonInLocationDTO> findByBaptismPlaceId(@Param("locationId") Long locationId);
 
 
-
-    // =========================================================================
-    // --- DEMOGRAPHIC AND SCIENTIFIC STATISTICAL QUERIES ---
-    // =========================================================================
-
     /**
      * Calculates the average lifespan (in years-of-life) grouped by gender.
      */
@@ -245,11 +240,6 @@ public interface PersonRepository extends JpaRepository<PersonEntity, Long> {
             "GROUP BY dp.settlementType " +
             "ORDER BY COUNT(p.id) DESC")
     List<Object[]> countDeathsBySettlementType();
-
-
-    // -------------------------------------------------------------------------
-    // --- ADVANCED SCIENTIFIC MORTALITY QUERIES ---
-    // -------------------------------------------------------------------------
 
     /**
      * Counts **infant deaths** (age < 1 year) by the death year.

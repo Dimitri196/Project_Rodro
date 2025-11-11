@@ -23,8 +23,6 @@ public class ContinentController {
         this.continentService = continentService;
     }
 
-    // --- READ ENDPOINTS (Public Access) ---
-
     @Operation(summary = "Get a list of all continents.")
     @PreAuthorize("permitAll()")
     @GetMapping // Maps to /api/continents
@@ -38,8 +36,6 @@ public class ContinentController {
     public ResponseEntity<ContinentDTO> getContinent(@PathVariable long continentId) {
         return ResponseEntity.ok(continentService.getContinent(continentId));
     }
-
-    // --- WRITE ENDPOINTS (Admin Only) ---
 
     @Operation(summary = "Create a new continent.")
     @PreAuthorize("hasRole('ADMIN')")

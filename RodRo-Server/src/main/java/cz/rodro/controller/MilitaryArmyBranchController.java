@@ -22,8 +22,6 @@ public class MilitaryArmyBranchController {
 
     private final MilitaryArmyBranchService militaryArmyBranchService;
 
-    // --- GET (Read) Operations ---
-
     /**
      * Retrieves a list of all military army branches. Requires no specific authorization.
      * Maps to HTTP GET /api/militaryArmyBranches.
@@ -65,8 +63,6 @@ public class MilitaryArmyBranchController {
         return ResponseEntity.ok(militaryArmyBranchService.getRanksByBranchId(id));
     }
 
-    // --- POST (Create) Operation ---
-
     /**
      * Creates a new military army branch. Requires 'ADMIN' or 'EDITOR' role.
      * Maps to HTTP POST /api/militaryArmyBranches.
@@ -80,8 +76,6 @@ public class MilitaryArmyBranchController {
     public ResponseEntity<MilitaryArmyBranchDTO> add(@Valid @RequestBody MilitaryArmyBranchDTO dto) {
         return new ResponseEntity<>(militaryArmyBranchService.create(dto), HttpStatus.CREATED);
     }
-
-    // --- PUT (Update) Operation ---
 
     /**
      * Updates an existing military army branch. Requires 'ADMIN' or 'EDITOR' role.
@@ -97,8 +91,6 @@ public class MilitaryArmyBranchController {
     public ResponseEntity<MilitaryArmyBranchDTO> update(@PathVariable Long id, @Valid @RequestBody MilitaryArmyBranchDTO dto) {
         return ResponseEntity.ok(militaryArmyBranchService.update(id, dto));
     }
-
-    // --- DELETE Operation ---
 
     /**
      * Deletes a military army branch by its unique identifier. Requires 'ADMIN' role.

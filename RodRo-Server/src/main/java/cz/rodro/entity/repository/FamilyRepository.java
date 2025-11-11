@@ -10,11 +10,9 @@ import java.util.List;
 
 public interface FamilyRepository extends JpaRepository<FamilyEntity, Long>, JpaSpecificationExecutor<FamilyEntity> {
 
-    // Fetch families where the person is the male spouse
     @Query("SELECT f FROM family f WHERE f.spouseMale.id = :personId")
     List<FamilyEntity> findBySpouseMaleId(@Param("personId") Long personId);
 
-    // Fetch families where the person is the female spouse
     @Query("SELECT f FROM family f WHERE f.spouseFemale.id = :personId")
     List<FamilyEntity> findBySpouseFemaleId(@Param("personId") Long personId);
 
